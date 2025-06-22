@@ -63,39 +63,40 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      overflow-y: auto;
-      padding-right: 5px;
+      overflow-y: auto; /* Permite el scroll cuando hay muchos mensajes */
+      padding-right: 5px; /* Espacio para la barra de scroll */
     }
 
     .message {
       background-color: #1e1e1e;
       padding: 10px 15px;
       border-radius: 10px;
-      width: fit-content;
-      max-width: 70%;
+      width: fit-content; /* Se ajusta al contenido */
+      max-width: 70%; /* Máximo ancho del mensaje */
       font-size: 14px;
-      word-wrap: break-word;
+      word-wrap: break-word; /* Rompe palabras largas para que no desborden */
     }
 
     .message.user {
-      align-self: flex-end;
+      align-self: flex-end; /* Alinea los mensajes del usuario a la derecha */
       background-color: #333333;
       color: white;
     }
     .message.bot {
-      align-self: flex-start;
-      background-color: #1e1e1e;
-      color: #e0e0e0;
+        align-self: flex-start; /* Alinea los mensajes del bot a la izquierda */
+        background-color: #1e1e1e;
+        color: #e0e0e0;
     }
 
     /* Estilos de la barra de entrada de texto */
     .input-bar {
       display: flex;
+      flex-wrap: wrap; /* Permite que los elementos se envuelvan si no hay espacio */
       margin-top: 20px;
       background-color: #1e1e1e;
       border-radius: 8px;
       overflow: hidden;
-      align-items: center;
+      align-items: center; /* Centra verticalmente los elementos en la barra de entrada */
     }
 
     .file-button {
@@ -109,7 +110,7 @@
       align-items: center;
       justify-content: center;
       transition: background-color 0.2s ease-in-out;
-      user-select: none;
+      user-select: none; /* Evita que el texto sea seleccionable */
     }
 
     .file-button:hover {
@@ -123,8 +124,9 @@
       border: none;
       background-color: transparent;
       color: white;
-      outline: none;
+      outline: none; /* Elimina el contorno azul al enfocar */
       font-size: 14px;
+      min-width: 100px; /* Asegura un mínimo de ancho para el input */
     }
 
     .input-bar button.send-button {
@@ -142,6 +144,37 @@
     .input-bar button.send-button:hover {
       background-color: #292929;
     }
+
+    /* Estilos del área de archivo adjunto */
+    .file-info {
+        display: flex;
+        align-items: center;
+        background-color: #292929;
+        padding: 4px 8px;
+        border-radius: 6px;
+        margin-left: 8px;
+        color: #e0e0e0;
+        font-size: 12px;
+        white-space: nowrap; /* Evita que el texto se rompa */
+        max-width: 150px; /* Limita el ancho para nombres largos */
+        overflow: hidden;
+        text-overflow: ellipsis; /* Añade puntos suspensivos si el texto es muy largo */
+    }
+
+    .file-info .clear-file {
+        background: none;
+        border: none;
+        color: #e0e0e0;
+        font-size: 14px;
+        margin-left: 5px;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+    }
+    .file-info .clear-file:hover {
+        color: white;
+    }
+
 
     /* Estilos del Panel de Información */
     .info-panel {
@@ -170,22 +203,22 @@
     }
 
     .menu-option:hover {
-      color: #ffffff;
+        color: #ffffff;
     }
 
     .menu-option i {
       width: 16px;
       height: 16px;
-      background-color: #333333;
+      background-color: #333333; /* Fondo para el "ícono" */
       border-radius: 4px;
-      flex-shrink: 0;
+      flex-shrink: 0; /* Evita que el ícono se comprima */
     }
 
     .avatar {
       width: 100%;
       border-radius: 8px;
       margin: 16px 0;
-      object-fit: cover;
+      object-fit: cover; /* Asegura que la imagen no se distorsione */
     }
 
     .name {
@@ -215,7 +248,7 @@
       transition: background-color 0.2s ease-in-out;
     }
     .start-button:hover {
-      background-color: #444444;
+        background-color: #444444;
     }
 
     /* Estilos del indicador de escritura */
@@ -271,11 +304,15 @@
     </div>
     <div class="input-bar">
       <!-- Botón + para adjuntar archivos -->
-      <label for="file-upload" class="file-button">+
+      <label for="file-upload" class="file-button" title="Adjuntar archivo">+
         <input type="file" id="file-upload" hidden>
       </label>
+      <div id="file-display" style="display: none;" class="file-info">
+        <span id="file-name"></span>
+        <button id="clear-file" class="clear-file" title="Limpiar archivo adjunto">x</button>
+      </div>
       <input type="text" id="user-input" placeholder="Enviar un mensaje...">
-      <button id="send-button" class="send-button">
+      <button id="send-button" class="send-button" title="Enviar mensaje">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
           <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
         </svg>
@@ -314,7 +351,11 @@
         const sendButton = document.getElementById('send-button');
         const messagesContainer = document.querySelector('.messages');
         const fileInput = document.getElementById('file-upload');
+        const fileDisplay = document.getElementById('file-display');
+        const fileNameSpan = document.getElementById('file-name');
+        const clearFileButton = document.getElementById('clear-file');
         let typingIndicatorElement = null;
+        let selectedFile = null; // Variable para almacenar el archivo seleccionado
 
         async function addMessage(sender, text) {
             const messageElement = document.createElement('div');
@@ -340,7 +381,6 @@
                 });
             } else {
                 messageElement.textContent = text;
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 return Promise.resolve();
             }
         }
@@ -377,28 +417,56 @@
             if (e.key === 'Enter') sendMessage();
         });
 
-        fileInput.addEventListener('change', async () => {
-            const file = fileInput.files[0];
-            if (file) {
-                await addMessage('user', `📎 Archivo adjunto: ${file.name}`);
-                // Aquí podrías enviar el archivo al backend si lo deseas
+        // Manejador para la selección de archivos: guarda el archivo y muestra su nombre
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                selectedFile = fileInput.files[0];
+                fileNameSpan.textContent = selectedFile.name;
+                fileDisplay.style.display = 'flex'; // Mostrar el nombre del archivo
+            } else {
+                selectedFile = null;
+                fileDisplay.style.display = 'none'; // Ocultar si no hay archivo
             }
+        });
+
+        // Botón para limpiar la selección de archivo
+        clearFileButton.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = ''; // Limpiar el input de tipo file
+            fileDisplay.style.display = 'none';
         });
 
         async function sendMessage() {
             const message = userInput.value.trim();
-            if (!message) return;
+            if (!message && !selectedFile) return; // No enviar si no hay texto ni archivo
 
-            await addMessage('user', message);
-            userInput.value = '';
+            // Muestra el mensaje del usuario y/o archivo en el chat
+            let displayMessage = message;
+            if (selectedFile) {
+                displayMessage += (message ? ' ' : '') + `📎 Archivo adjunto: ${selectedFile.name}`;
+            }
+            await addMessage('user', displayMessage);
+            
+            userInput.value = ''; // Limpiar el input de texto
+            clearFileButton.click(); // Limpiar el archivo seleccionado y ocultar su display
+
             showTypingIndicator();
 
             try {
-                const response = await fetch('/chat', {
+                const formData = new FormData();
+                formData.append('message', message); // Siempre envía el mensaje (puede estar vacío si solo es archivo)
+                if (selectedFile) {
+                    formData.append('file', selectedFile); // Adjunta el archivo si existe
+                }
+
+                // FIX: Use window.location.origin to create an absolute URL for fetch.
+                // This ensures the URL is correctly parsed regardless of the preview environment.
+                const response = await fetch(window.location.origin + '/chat', { 
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message })
+                    // No necesitas 'Content-Type' cuando usas FormData, el navegador lo configura automáticamente como multipart/form-data
+                    body: formData 
                 });
+
                 if (!response.ok) {
                     const errorText = await response.text();
                     throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. ${errorText}`);
@@ -414,7 +482,7 @@
         }
 
         (async () => {
-             await addMessage('bot', '¡Hola! Soy un asistente de IA. ¿En qué puedo ayudarte hoy?');
+            await addMessage('bot', '¡Hola! Soy un asistente de IA. ¿En qué puedo ayudarte hoy?');
         })();
     });
   </script>
