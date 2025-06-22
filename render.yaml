@@ -1,11 +1,24 @@
 # render.yaml
+# Define los servicios que Render debe desplegar.
 services:
-  - type: web
-    name: raava # Mismo nombre que tu servicio actual
-    env: python
-    region: oregon # Elige tu región
+  - type: web # Tipo de servicio: aplicación web con un puerto HTTP.
+    name: raava # Nombre de tu servicio (debe coincidir con el nombre que tienes en Render).
+    env: python # El entorno de ejecución es Python.
+    region: oregon # Región del servidor. Elige una cercana a tu ubicación para menor latencia.
+    
+    # Comando que Render ejecuta para instalar las dependencias de tu proyecto.
     buildCommand: pip install -r requirements.txt
+    
+    # Comando que Render ejecuta para iniciar tu aplicación una vez que se han instalado las dependencias.
+    # 'export PATH="/opt/render/.local/bin:$PATH"' asegura que Gunicorn se encuentre,
+    # y 'gunicorn --bind 0.0.0.0:$PORT app:app' inicia tu aplicación Flask.
     startCommand: export PATH="/opt/render/.local/bin:$PATH" && gunicorn --bind 0.0.0.0:$PORT app:app
+    
+    # Variables de entorno que tu aplicación necesitará.
     envVars:
-      - key: GEMINI_API_KEY
-        sync: false # No sincronizar con GitHub, el valor se gestiona en Render UI
+      - key: GEMINI_API_KEY # Nombre de la variable de entorno que tu app.py leerá.
+        sync: false # Indica que el valor de esta variable no debe ser sincronizado con GitHub.
+                    # Debes configurar el valor manualmente en el dashboard de Render por seguridad.
+      # Puedes añadir más variables de entorno aquí si tu aplicación las necesita.
+      # - key: OTRA_VARIABLE
+      #   value: mi_valor
