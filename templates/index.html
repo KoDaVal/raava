@@ -438,7 +438,16 @@
 
         async function sendMessage() {
             const message = userInput.value.trim();
-            if (!message && !selectedFile) return; // No enviar si no hay texto ni archivo
+            // FIX: Obtener la referencia al archivo actual del input justo antes de enviar
+            const actualFile = fileInput.files.length > 0 ? fileInput.files[0] : null;
+
+            if (!message && !actualFile) { // Verificar si no hay mensaje ni archivo real
+                console.warn("Intento de envío vacío: no hay mensaje ni archivo adjunto.");
+                return; // Abortar el envío si ambos están vacíos
+            }
+            
+            // Sincronizar selectedFile con el archivo real del input en el momento del envío
+            selectedFile = actualFile;
 
             // Muestra el mensaje del usuario y/o archivo en el chat
             let displayMessage = message;
@@ -448,7 +457,6 @@
             await addMessage('user', displayMessage);
             
             userInput.value = ''; // Limpiar el input de texto
-            clearFileButton.click(); // Limpiar el archivo seleccionado y ocultar su display
 
             showTypingIndicator();
 
@@ -459,10 +467,9 @@
                     formData.append('file', selectedFile); // Adjunta el archivo si existe
                 }
 
-                // FIX: La URL del backend debe ser absoluta y la que tienes en Render.com.
-                // Usar directamente 'https://raava.onrender.com/chat' asegura que la petición vaya al lugar correcto,
-                // independientemente del entorno de previsualización o del origen actual de la página.
-                const response = await fetch('https://raava.onrender.com/chat', {
+                // La URL del backend es 'https://raava.onrender.com/chat'
+                // Este fetch ahora usa la URL absoluta para asegurar que la petición se realice correctamente
+                const response = await fetch('https://raava.onrender.com/chat', { 
                     method: 'POST',
                     // No necesitas 'Content-Type' cuando usas FormData, el navegador lo configura automáticamente como multipart/form-data
                     body: formData 
@@ -475,10 +482,21 @@
                 const data = await response.json();
                 hideTypingIndicator();
                 await addMessage('bot', data.response);
+                
+                // Limpiar el archivo seleccionado y su visualización solo después de un envío exitoso
+                selectedFile = null;
+                fileInput.value = '';
+                fileDisplay.style.display = 'none';
+
             } catch (error) {
                 console.error('Error al comunicarse con el backend:', error);
                 hideTypingIndicator();
                 await addMessage('bot', 'Lo siento, hubo un error al conectar con el chatbot. Por favor, revisa la consola y asegúrate de que el backend esté corriendo.');
+                
+                // También limpiar el archivo en caso de error para permitir reintentar limpiamente
+                selectedFile = null;
+                fileInput.value = '';
+                fileDisplay.style.display = 'none';
             }
         }
 
