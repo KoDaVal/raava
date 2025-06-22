@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template # Añadir render_template
 from flask_cors import CORS
 import google.generativeai as genai
 import os
@@ -16,6 +16,12 @@ genai.configure(api_key=gemini_api_key)
 # Inicializa el modelo de Gemini. 'gemini-1.5-flash' es una buena opción gratuita y rápida para chat.
 model = genai.GenerativeModel('gemini-1.5-flash')
 # --- FIN CONFIGURACIÓN DE GEMINI ---
+
+# --- NUEVA RUTA PARA SERVIR EL FRONTEND ---
+@app.route('/') # Ruta para la raíz del sitio
+def index():
+    return render_template('index.html') # Renderiza tu archivo index.html
+# --- FIN NUEVA RUTA ---
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -35,8 +41,6 @@ def chat():
 
     return jsonify({"response": response_message})
 
-# Este bloque solo se ejecuta cuando corres `python app.py` directamente en tu máquina local.
-# Cuando se despliega en Render con Gunicorn, Gunicorn se encarga de iniciar la aplicación y no usa este bloque.
 if __name__ == '__main__':
-    port = int(os.getenv("PORT", 5000)) # Obtiene el puerto del entorno o usa 5000 por defecto
+    port = int(os.getenv("PORT", 5000))
     app.run(debug=True, host='0.0.0.0', port=port)
