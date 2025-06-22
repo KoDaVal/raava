@@ -63,29 +63,29 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      overflow-y: auto; /* Permite el scroll cuando hay muchos mensajes */
-      padding-right: 5px; /* Espacio para la barra de scroll */
+      overflow-y: auto;
+      padding-right: 5px;
     }
 
     .message {
       background-color: #1e1e1e;
       padding: 10px 15px;
       border-radius: 10px;
-      width: fit-content; /* Se ajusta al contenido */
-      max-width: 70%; /* Máximo ancho del mensaje */
+      width: fit-content;
+      max-width: 70%;
       font-size: 14px;
-      word-wrap: break-word; /* Rompe palabras largas para que no desborden */
+      word-wrap: break-word;
     }
 
     .message.user {
-      align-self: flex-end; /* Alinea los mensajes del usuario a la derecha */
+      align-self: flex-end;
       background-color: #333333;
       color: white;
     }
     .message.bot {
-        align-self: flex-start; /* Alinea los mensajes del bot a la izquierda */
-        background-color: #1e1e1e;
-        color: #e0e0e0;
+      align-self: flex-start;
+      background-color: #1e1e1e;
+      color: #e0e0e0;
     }
 
     /* Estilos de la barra de entrada de texto */
@@ -95,19 +95,39 @@
       background-color: #1e1e1e;
       border-radius: 8px;
       overflow: hidden;
+      align-items: center;
     }
 
-    .input-bar input {
+    .file-button {
+      background-color: transparent;
+      border: none;
+      color: #cccccc;
+      padding: 0 12px;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s ease-in-out;
+      user-select: none;
+    }
+
+    .file-button:hover {
+      background-color: #292929;
+      border-radius: 4px;
+    }
+
+    .input-bar input[type="text"] {
       flex: 1;
       padding: 12px;
       border: none;
       background-color: transparent;
       color: white;
-      outline: none; /* Elimina el contorno azul al enfocar */
+      outline: none;
       font-size: 14px;
     }
 
-    .input-bar button {
+    .input-bar button.send-button {
       background-color: transparent;
       border: none;
       color: #cccccc;
@@ -119,7 +139,7 @@
       transition: background-color 0.2s ease-in-out;
     }
 
-    .input-bar button:hover {
+    .input-bar button.send-button:hover {
       background-color: #292929;
     }
 
@@ -150,22 +170,22 @@
     }
 
     .menu-option:hover {
-        color: #ffffff;
+      color: #ffffff;
     }
 
     .menu-option i {
       width: 16px;
       height: 16px;
-      background-color: #333333; /* Fondo para el "ícono" */
+      background-color: #333333;
       border-radius: 4px;
-      flex-shrink: 0; /* Evita que el ícono se comprima */
+      flex-shrink: 0;
     }
 
     .avatar {
       width: 100%;
       border-radius: 8px;
       margin: 16px 0;
-      object-fit: cover; /* Asegura que la imagen no se distorsione */
+      object-fit: cover;
     }
 
     .name {
@@ -195,43 +215,43 @@
       transition: background-color 0.2s ease-in-out;
     }
     .start-button:hover {
-        background-color: #444444;
+      background-color: #444444;
     }
 
     /* Estilos del indicador de escritura */
     .typing-indicator {
-        display: flex;
-        align-self: flex-start;
-        background-color: #1e1e1e;
-        padding: 10px 15px;
-        border-radius: 10px;
-        width: fit-content;
-        max-width: 70%;
-        margin-right: auto;
-        opacity: 0; /* Empieza invisible para la transición */
-        transition: opacity 0.3s ease-in-out; /* Transición para la opacidad */
+      display: flex;
+      align-self: flex-start;
+      background-color: #1e1e1e;
+      padding: 10px 15px;
+      border-radius: 10px;
+      width: fit-content;
+      max-width: 70%;
+      margin-right: auto;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
     }
 
     .typing-indicator span {
-        width: 8px;
-        height: 8px;
-        background-color: #e0e0e0;
-        border-radius: 50%;
-        margin: 0 2px;
-        animation: blink 1.4s infinite ease-in-out;
+      width: 8px;
+      height: 8px;
+      background-color: #e0e0e0;
+      border-radius: 50%;
+      margin: 0 2px;
+      animation: blink 1.4s infinite ease-in-out;
     }
 
     .typing-indicator span:nth-child(2) {
-        animation-delay: 0.2s;
+      animation-delay: 0.2s;
     }
 
     .typing-indicator span:nth-child(3) {
-        animation-delay: 0.4s;
+      animation-delay: 0.4s;
     }
 
     @keyframes blink {
-        0%, 80%, 100% { opacity: 0; }
-        40% { opacity: 1; }
+      0%, 80%, 100% { opacity: 0; }
+      40% { opacity: 1; }
     }
   </style>
 </head>
@@ -250,11 +270,12 @@
       <!-- Los mensajes se agregarán aquí dinámicamente mediante JavaScript -->
     </div>
     <div class="input-bar">
-      <!-- Se añadió el ID "user-input" al campo de texto -->
+      <!-- Botón + para adjuntar archivos -->
+      <label for="file-upload" class="file-button">+
+        <input type="file" id="file-upload" hidden>
+      </label>
       <input type="text" id="user-input" placeholder="Enviar un mensaje...">
-      <!-- Se añadió el ID "send-button" al botón de enviar -->
-      <button id="send-button">
-        <!-- Ícono de enviar -->
+      <button id="send-button" class="send-button">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
           <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
         </svg>
@@ -292,132 +313,106 @@
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const messagesContainer = document.querySelector('.messages');
-        let typingIndicatorElement = null; // Variable para almacenar la referencia al indicador de escritura
+        const fileInput = document.getElementById('file-upload');
+        let typingIndicatorElement = null;
 
-        // Función para añadir mensajes al contenedor del chat
-        // Esta función ahora es asíncrona para permitir la animación de escritura caracter por caracter
         async function addMessage(sender, text) {
             const messageElement = document.createElement('div');
-            messageElement.classList.add('message'); // Agrega la clase CSS 'message'
-            messageElement.classList.add(sender); // Agrega 'user' o 'bot' para estilos específicos
-            messagesContainer.appendChild(messageElement); // Añade el elemento al DOM
-            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Hace scroll al final
+            messageElement.classList.add('message');
+            messageElement.classList.add(sender);
+            messagesContainer.appendChild(messageElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-            // Si el mensaje es del bot, anima la escritura
             if (sender === 'bot') {
                 let i = 0;
-                const typingSpeed = 25; // Velocidad de escritura en milisegundos por caracter (ajusta este valor)
-                
+                const typingSpeed = 25;
                 return new Promise(resolve => {
                     const interval = setInterval(() => {
                         if (i < text.length) {
-                            messageElement.textContent += text.charAt(i); // Añade un caracter a la vez
-                            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Mantén el scroll al final
+                            messageElement.textContent += text.charAt(i);
+                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
                             i++;
                         } else {
-                            clearInterval(interval); // Detiene la animación cuando termina el texto
-                            resolve(); // Resuelve la promesa, indicando que la animación ha terminado
+                            clearInterval(interval);
+                            resolve();
                         }
                     }, typingSpeed);
                 });
             } else {
-                // Si es un mensaje del usuario, simplemente establece el texto de una vez
                 messageElement.textContent = text;
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                return Promise.resolve(); // Resuelve inmediatamente para mensajes de usuario
+                return Promise.resolve();
             }
         }
 
-        // Función para mostrar el indicador de escritura del bot
         function showTypingIndicator() {
-            if (typingIndicatorElement) return; // Si ya existe, no crearlo de nuevo
+            if (typingIndicatorElement) return;
 
             typingIndicatorElement = document.createElement('div');
-            typingIndicatorElement.classList.add('typing-indicator'); // Clase CSS para el estilo
-            
-            // Crea los tres puntos de la animación
+            typingIndicatorElement.classList.add('typing-indicator');
             for (let i = 0; i < 3; i++) {
                 const dot = document.createElement('span');
                 typingIndicatorElement.appendChild(dot);
             }
-            
             messagesContainer.appendChild(typingIndicatorElement);
-            // Fuerza un reflow para asegurar que la transición de opacidad funcione
-            void typingIndicatorElement.offsetWidth; 
-            // Hace que el indicador aparezca suavemente
+            void typingIndicatorElement.offsetWidth;
             typingIndicatorElement.style.opacity = '1';
-            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Auto-scroll
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        // Función para ocultar el indicador de escritura del bot
         function hideTypingIndicator() {
             if (typingIndicatorElement && messagesContainer.contains(typingIndicatorElement)) {
-                // Inicia la transición de opacidad a 0
                 typingIndicatorElement.style.opacity = '0';
-                // Espera a que la transición termine (0.3s, coincide con el CSS) antes de remover el elemento del DOM
                 setTimeout(() => {
                     if (typingIndicatorElement && messagesContainer.contains(typingIndicatorElement)) {
                         messagesContainer.removeChild(typingIndicatorElement);
-                        typingIndicatorElement = null; // Resetea la referencia
+                        typingIndicatorElement = null;
                     }
-                }, 300); 
+                }, 300);
             }
         }
 
-
-        // Asigna la función sendMessage al evento click del botón
         sendButton.addEventListener('click', sendMessage);
-
-        // Asigna la función sendMessage al evento keypress (tecla Enter) en el campo de texto
         userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        fileInput.addEventListener('change', async () => {
+            const file = fileInput.files[0];
+            if (file) {
+                await addMessage('user', `📎 Archivo adjunto: ${file.name}`);
+                // Aquí podrías enviar el archivo al backend si lo deseas
             }
         });
 
-        // Función asincrónica para enviar el mensaje al backend de Flask
         async function sendMessage() {
-            const message = userInput.value.trim(); // Obtiene el texto del input y elimina espacios en blanco al inicio/fin
-            if (message === '') return; // Si el mensaje está vacío, no hace nada
+            const message = userInput.value.trim();
+            if (!message) return;
 
-            // Añade el mensaje del usuario. No necesita await porque es instantáneo.
-            await addMessage('user', message); // Se usa await para que el scroll funcione correctamente antes de todo
+            await addMessage('user', message);
+            userInput.value = '';
+            showTypingIndicator();
 
-            userInput.value = ''; // Limpia el campo de entrada después de enviar
-
-            showTypingIndicator(); // Muestra el indicador de escritura DEL BOT
-            
             try {
-                // ¡AQUÍ ESTÁ EL CAMBIO CLAVE! Apunta a la ruta relativa, ya que Flask servirá todo desde el mismo dominio.
-                const response = await fetch('/chat', { 
-                    method: 'POST', // Método HTTP POST
-                    headers: {
-                        'Content-Type': 'application/json', // Indica que el cuerpo es JSON
-                    },
-                    body: JSON.stringify({ message: message }), // Convierte el mensaje a JSON
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
                 });
-
-                // Si la respuesta no fue exitosa (código de estado 200-299), lanza un error
                 if (!response.ok) {
-                    const errorText = await response.text(); // Intenta leer el mensaje de error del servidor
-                    throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. Detalles: ${errorText}`);
+                    const errorText = await response.text();
+                    throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. ${errorText}`);
                 }
-
-                const data = await response.json(); 
-                
-                hideTypingIndicator(); // Oculta el indicador de escritura antes de mostrar la respuesta animada
-                // Espera a que la animación de escritura del bot termine antes de que el resto del código continúe
-                await addMessage('bot', data.response); 
+                const data = await response.json();
+                hideTypingIndicator();
+                await addMessage('bot', data.response);
             } catch (error) {
-                // Captura y muestra cualquier error que ocurra durante la petición o el procesamiento
                 console.error('Error al comunicarse con el backend:', error);
-                hideTypingIndicator(); // Oculta el indicador incluso si hay un error
-                // Añade un mensaje de error sin animación si la conexión falla
-                await addMessage('bot', 'Lo siento, hubo un error al conectar con el chatbot. Por favor, revisa la consola del navegador y asegúrate de que el backend esté corriendo correctamente en Render.');
+                hideTypingIndicator();
+                await addMessage('bot', 'Lo siento, hubo un error al conectar con el chatbot. Por favor, revisa la consola y asegúrate de que el backend esté corriendo.');
             }
         }
 
-        // Mensaje de bienvenida inicial cuando la página carga, usando la animación de escritura
         (async () => {
              await addMessage('bot', '¡Hola! Soy un asistente de IA. ¿En qué puedo ayudarte hoy?');
         })();
