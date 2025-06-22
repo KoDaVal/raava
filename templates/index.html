@@ -388,9 +388,8 @@
             showTypingIndicator(); // Muestra el indicador de escritura DEL BOT
             
             try {
-                // Realiza una petición POST a tu backend de Flask en Render
-                // LA URL HA SIDO ACTUALIZADA AQUÍ CON TU ENLACE DE DESPLIEGUE
-                const response = await fetch('https://raava.onrender.com/chat', { 
+                // ¡AQUÍ ESTÁ EL CAMBIO CLAVE! Apunta a la ruta relativa, ya que Flask servirá todo desde el mismo dominio.
+                const response = await fetch('/chat', { 
                     method: 'POST', // Método HTTP POST
                     headers: {
                         'Content-Type': 'application/json', // Indica que el cuerpo es JSON
@@ -426,4 +425,3 @@
   </script>
 </body>
 </html>
-
