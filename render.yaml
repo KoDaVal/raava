@@ -1,0 +1,14 @@
+# render.yaml
+services:
+  - type: web
+    name: paolo-chatbot-backend # Un nombre único para tu servicio web
+    env: python
+    region: oregon # Elige la región más cercana a ti (ej. oregon, frankfurt, etc.)
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m gunicorn --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false # No sincronizar con GitHub, el valor se gestiona en Render UI
+      # Puedes añadir otras variables de entorno si las necesitas en el futuro
+      # - key: OTRO_SECRETO
+      #   value: tu_valor_secreto
