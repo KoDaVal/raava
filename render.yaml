@@ -1,0 +1,11 @@
+# render.yaml
+services:
+  - type: web
+    name: raava # Mismo nombre que tu servicio actual
+    env: python
+    region: oregon # Elige tu región
+    buildCommand: pip install -r requirements.txt
+    startCommand: export PATH="/opt/render/.local/bin:$PATH" && gunicorn --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false # No sincronizar con GitHub, el valor se gestiona en Render UI
