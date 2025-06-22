@@ -459,9 +459,10 @@
                     formData.append('file', selectedFile); // Adjunta el archivo si existe
                 }
 
-                // FIX: Use window.location.origin to create an absolute URL for fetch.
-                // This ensures the URL is correctly parsed regardless of the preview environment.
-                const response = await fetch(window.location.origin + '/chat', { 
+                // FIX: La URL del backend debe ser absoluta y la que tienes en Render.com.
+                // Usar directamente 'https://raava.onrender.com/chat' asegura que la petición vaya al lugar correcto,
+                // independientemente del entorno de previsualización o del origen actual de la página.
+                const response = await fetch('https://raava.onrender.com/chat', {
                     method: 'POST',
                     // No necesitas 'Content-Type' cuando usas FormData, el navegador lo configura automáticamente como multipart/form-data
                     body: formData 
