@@ -198,7 +198,7 @@
         background-color: #444444;
     }
 
-    /* Nuevos estilos para la animación de escritura */
+    /* Estilos del indicador de escritura */
     .typing-indicator {
         display: flex;
         align-self: flex-start;
@@ -247,10 +247,14 @@
 
   <div class="chat-area">
     <div class="messages">
-      </div>
+      <!-- Los mensajes se agregarán aquí dinámicamente mediante JavaScript -->
+    </div>
     <div class="input-bar">
+      <!-- Se añadió el ID "user-input" al campo de texto -->
       <input type="text" id="user-input" placeholder="Enviar un mensaje...">
+      <!-- Se añadió el ID "send-button" al botón de enviar -->
       <button id="send-button">
+        <!-- Ícono de enviar -->
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
           <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
         </svg>
@@ -360,6 +364,7 @@
             }
         }
 
+
         // Asigna la función sendMessage al evento click del botón
         sendButton.addEventListener('click', sendMessage);
 
@@ -384,7 +389,8 @@
             
             try {
                 // Realiza una petición POST a tu backend de Flask en Render
-                const response = await fetch('https://raava.onrender.com/chat', { // ¡TU LINK DE RENDER AQUÍ!
+                // LA URL HA SIDO ACTUALIZADA AQUÍ CON TU ENLACE DE DESPLIEGUE
+                const response = await fetch('https://raava.onrender.com/chat', { 
                     method: 'POST', // Método HTTP POST
                     headers: {
                         'Content-Type': 'application/json', // Indica que el cuerpo es JSON
@@ -414,9 +420,10 @@
 
         // Mensaje de bienvenida inicial cuando la página carga, usando la animación de escritura
         (async () => {
-            await addMessage('bot', '¡Hola! Soy un asistente de IA. ¿En qué puedo ayudarte hoy?');
+             await addMessage('bot', '¡Hola! Soy un asistente de IA. ¿En qué puedo ayudarte hoy?');
         })();
     });
   </script>
 </body>
 </html>
+
