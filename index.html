@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paolo Chat UI</title>
+  <style>
+    /* Estilos globales */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: sans-serif;
+      font-size: 12px;
+      background-color: #000;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+    }
+
+    /* Estilos del Sidebar */
+    .sidebar {
+      background-color: #0a0a0a;
+      width: 220px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar h2 {
+      color: #ffffff;
+      margin-bottom: 30px;
+      font-size: 18px;
+    }
+
+    .sidebar a {
+      color: #cccccc;
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 18px;
+      display: block;
+      transition: color 0.2s ease-in-out;
+    }
+
+    .sidebar a:hover {
+      color: #ffffff;
+    }
+
+    /* Estilos del Área de Chat */
+    .chat-area {
+      flex: 1;
+      background-color: #121212;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px;
+    }
+
+    .messages {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto; /* Permite el scroll cuando hay muchos mensajes */
+      padding-right: 5px; /* Espacio para la barra de scroll */
+    }
+
+    .message {
+      background-color: #1e1e1e;
+      padding: 10px 15px;
+      border-radius: 10px;
+      width: fit-content; /* Se ajusta al contenido */
+      max-width: 70%; /* Máximo ancho del mensaje */
+      font-size: 14px;
+      word-wrap: break-word; /* Rompe palabras largas para que no desborden */
+    }
+
+    .message.user {
+      align-self: flex-end; /* Alinea los mensajes del usuario a la derecha */
+      background-color: #333333;
+      color: white;
+    }
+    .message.bot {
+        align-self: flex-start; /* Alinea los mensajes del bot a la izquierda */
+        background-color: #1e1e1e;
+        color: #e0e0e0;
+    }
+
+    /* Estilos de la barra de entrada de texto */
+    .input-bar {
+      display: flex;
+      margin-top: 20px;
+      background-color: #1e1e1e;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .input-bar input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background-color: transparent;
+      color: white;
+      outline: none; /* Elimina el contorno azul al enfocar */
+      font-size: 14px;
+    }
+
+    .input-bar button {
+      background-color: transparent;
+      border: none;
+      color: #cccccc;
+      padding: 0 16px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    .input-bar button:hover {
+      background-color: #292929;
+    }
+
+    /* Estilos del Panel de Información */
+    .info-panel {
+      background-color: #0a0a0a;
+      width: 260px;
+      padding: 20px;
+      border-left: 1px solid #1e1e1e;
+    }
+
+    .info-panel h4 {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      color: #ffffff;
+    }
+
+    .menu-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #cccccc;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: color 0.2s ease-in-out;
+    }
+
+    .menu-option:hover {
+        color: #ffffff;
+    }
+
+    .menu-option i {
+      width: 16px;
+      height: 16px;
+      background-color: #333333; /* Fondo para el "ícono" */
+      border-radius: 4px;
+      flex-shrink: 0; /* Evita que el ícono se comprima */
+    }
+
+    .avatar {
+      width: 100%;
+      border-radius: 8px;
+      margin: 16px 0;
+      object-fit: cover; /* Asegura que la imagen no se distorsione */
+    }
+
+    .name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f0f0f0;
+    }
+
+    .quote {
+      font-size: 12px;
+      margin-top: 8px;
+      line-height: 1.4;
+      color: #aaaaaa;
+    }
+
+    .start-button {
+      margin-top: 20px;
+      width: 100%;
+      background-color: #333333;
+      color: white;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+    .start-button:hover {
+        background-color: #444444;
+    }
+
+    /* Nuevos estilos para la animación de escritura */
+    .typing-indicator {
+        display: flex;
+        align-self: flex-start;
+        background-color: #1e1e1e;
+        padding: 10px 15px;
+        border-radius: 10px;
+        width: fit-content;
+        max-width: 70%;
+        margin-right: auto;
+        opacity: 0; /* Empieza invisible para la transición */
+        transition: opacity 0.3s ease-in-out; /* Transición para la opacidad */
+    }
+
+    .typing-indicator span {
+        width: 8px;
+        height: 8px;
+        background-color: #e0e0e0;
+        border-radius: 50%;
+        margin: 0 2px;
+        animation: blink 1.4s infinite ease-in-out;
+    }
+
+    .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes blink {
+        0%, 80%, 100% { opacity: 0; }
+        40% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>Hi, Paolo</h2>
+    <a href="#">Inicio</a>
+    <a href="#">Buscar chat</a>
+    <a href="#">Nuevo chat</a>
+    <a href="#">Comunidad</a>
+    <a href="#">Premium</a>
+  </div>
+
+  <div class="chat-area">
+    <div class="messages">
+      <!-- Los mensajes se agregarán aquí dinámicamente mediante JavaScript -->
+    </div>
+    <div class="input-bar">
+      <!-- Se añadió el ID "user-input" al campo de texto -->
+      <input type="text" id="user-input" placeholder="Enviar un mensaje...">
+      <!-- Se añadió el ID "send-button" al botón de enviar -->
+      <button id="send-button">
+        <!-- Ícono de enviar -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="info-panel">
+    <h4>Upload data</h4>
+    <div class="menu-option">
+      <i></i>
+      <span>Archivo de voz</span>
+    </div>
+    <div class="menu-option">
+      <i></i>
+      <span>Imagen</span>
+    </div>
+    <div class="menu-option">
+      <i></i>
+      <span>Información</span>
+    </div>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Kobe_Bryant_2014.jpg" alt="Kobe Bryant" class="avatar">
+    <div class="name">Kobe Bryant</div>
+    <div class="quote">
+      The most important thing<br>
+      is to try and inspire people<br>
+      so that they can be great<br>
+      in whatever they want to do.
+    </div>
+    <button class="start-button">Iniciar mente</button>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const messagesContainer = document.querySelector('.messages');
+        let typingIndicatorElement = null; // Variable para almacenar la referencia al indicador de escritura
+
+        // Función para añadir mensajes al contenedor del chat
+        // Esta función ahora es asíncrona para permitir la animación de escritura caracter por caracter
+        async function addMessage(sender, text) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message'); // Agrega la clase CSS 'message'
+            messageElement.classList.add(sender); // Agrega 'user' o 'bot' para estilos específicos
+            messagesContainer.appendChild(messageElement); // Añade el elemento al DOM
+            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Hace scroll al final
+
+            // Si el mensaje es del bot, anima la escritura
+            if (sender === 'bot') {
+                let i = 0;
+                const typingSpeed = 25; // Velocidad de escritura en milisegundos por caracter (ajusta este valor)
+                
+                return new Promise(resolve => {
+                    const interval = setInterval(() => {
+                        if (i < text.length) {
+                            messageElement.textContent += text.charAt(i); // Añade un caracter a la vez
+                            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Mantén el scroll al final
+                            i++;
+                        } else {
+                            clearInterval(interval); // Detiene la animación cuando termina el texto
+                            resolve(); // Resuelve la promesa, indicando que la animación ha terminado
+                        }
+                    }, typingSpeed);
+                });
+            } else {
+                // Si es un mensaje del usuario, simplemente establece el texto de una vez
+                messageElement.textContent = text;
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                return Promise.resolve(); // Resuelve inmediatamente para mensajes de usuario
+            }
+        }
+
+        // Función para mostrar el indicador de escritura del bot
+        function showTypingIndicator() {
+            if (typingIndicatorElement) return; // Si ya existe, no crearlo de nuevo
+
+            typingIndicatorElement = document.createElement('div');
+            typingIndicatorElement.classList.add('typing-indicator'); // Clase CSS para el estilo
+            
+            // Crea los tres puntos de la animación
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('span');
+                typingIndicatorElement.appendChild(dot);
+            }
+            
+            messagesContainer.appendChild(typingIndicatorElement);
+            // Fuerza un reflow para asegurar que la transición de opacidad funcione
+            void typingIndicatorElement.offsetWidth; 
+            // Hace que el indicador aparezca suavemente
+            typingIndicatorElement.style.opacity = '1';
+            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Auto-scroll
+        }
+
+        // Función para ocultar el indicador de escritura del bot
+        function hideTypingIndicator() {
+            if (typingIndicatorElement && messagesContainer.contains(typingIndicatorElement)) {
+                // Inicia la transición de opacidad a 0
+                typingIndicatorElement.style.opacity = '0';
+                // Espera a que la transición termine (0.3s, coincide con el CSS) antes de remover el elemento del DOM
+                setTimeout(() => {
+                    if (typingIndicatorElement && messagesContainer.contains(typingIndicatorElement)) {
+                        messagesContainer.removeChild(typingIndicatorElement);
+                        typingIndicatorElement = null; // Resetea la referencia
+                    }
+                }, 300); 
+            }
+        }
+
+
+        // Asigna la función sendMessage al evento click del botón
+        sendButton.addEventListener('click', sendMessage);
+
+        // Asigna la función sendMessage al evento keypress (tecla Enter) en el campo de texto
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Función asincrónica para enviar el mensaje al backend de Flask
+        async function sendMessage() {
+            const message = userInput.value.trim(); // Obtiene el texto del input y elimina espacios en blanco al inicio/fin
+            if (message === '') return; // Si el mensaje está vacío, no hace nada
+
+            // Añade el mensaje del usuario. No necesita await porque es instantáneo.
+            await addMessage('user', message); // Se usa await para que el scroll funcione correctamente antes de todo
+
+            userInput.value = ''; // Limpia el campo de entrada después de enviar
+
+            showTypingIndicator(); // Muestra el indicador de escritura DEL BOT
+            
+            try {
+                // Realiza una petición POST a tu backend de Flask en el puerto 5000
+                const response = await fetch('http://127.0.0.1:5000/chat', {
+                    method: 'POST', // Método HTTP POST
+                    headers: {
+                        'Content-Type': 'application/json', // Indica que el cuerpo es JSON
+                    },
+                    body: JSON.stringify({ message: message }), // Convierte el mensaje a JSON
+                });
+
+                // Si la respuesta no fue exitosa (código de estado 200-299), lanza un error
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+                }
+
+                const data = await response.json(); 
+                
+                hideTypingIndicator(); // Oculta el indicador de escritura antes de mostrar la respuesta animada
+                // Espera a que la animación de escritura del bot termine antes de que el resto del código continúe
+                await addMessage('bot', data.response); 
+            } catch (error) {
+                // Captura y muestra cualquier error que ocurra durante la petición o el procesamiento
+                console.error('Error al comunicarse con el backend:', error);
+                hideTypingIndicator(); // Oculta el indicador incluso si hay un error
+                // Añade un mensaje de error sin animación si la conexión falla
+                await addMessage('bot', 'Lo siento, hubo un error al conectar con el chatbot. Por favor, revisa la consola del navegador y asegúrate de que el backend esté corriendo.');
+            }
+        }
+
+        // Mensaje de bienvenida inicial cuando la página carga, usando la animación de escritura
+        (async () => {
+             await addMessage('bot', '¡Hola! Soy un asistente de IA. ¿En qué puedo ayudarte hoy?');
+        })();
+    });
+  </script>
+</body>
+</html>
