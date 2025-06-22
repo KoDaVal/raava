@@ -1,4 +1,5 @@
-Flask==2.3.2 # O la versión que estés usando
-flask-cors==4.0.0 # O la versión que estés usando
-google-generativeai==0.6.0 # O la versión más reciente que usas
-gunicorn==22.0.0 # Necesario para desplegar Flask en Heroku
+# requirements.txt
+Flask
+Flask-Cors
+google-generativeai
+gunicorn
