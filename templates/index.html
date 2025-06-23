@@ -20,7 +20,7 @@
       background-color: #000;
       color: #e0e0e0;
       height: 100vh;
-      display: flex;
+      display: flex; /* Para la disposición de las 3 columnas */
     }
 
     .sidebar {
@@ -83,6 +83,15 @@
       font-size: 14px;
       word-wrap: break-word;
       box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      line-height: 1.6;
+      opacity: 0; /* Estado inicial para la animación de entrada */
+      transform: translateY(10px); /* Estado inicial para la animación de entrada */
+      transition: opacity 0.3s ease-out, transform 0.3s ease-out; /* Transición suave */
+    }
+
+    .message.appeared { /* Clase para activar la animación */
+        opacity: 1;
+        transform: translateY(0);
     }
 
     .message.user {
@@ -103,7 +112,7 @@
       background-color: #1e1e1e;
       border-radius: 10px;
       padding: 4px 8px;
-      align-items: center;
+      align-items: flex-end; /* Alinea los ítems a la parte inferior (importante para textarea) */
       box-shadow: 0 2px 6px rgba(0,0,0,0.4);
     }
 
@@ -122,7 +131,7 @@
       background-color: #292929;
     }
 
-    .input-bar input[type="text"] {
+    .input-bar textarea { /* Estilos para el textarea */
       flex: 1;
       padding: 10px;
       border: none;
@@ -131,6 +140,12 @@
       outline: none;
       font-size: 14px;
       min-width: 100px;
+      resize: none; /* Deshabilita el redimensionamiento manual por el usuario */
+      overflow-y: hidden; /* Oculta el scrollbar del textarea si no es necesario */
+      min-height: 40px; /* Altura mínima similar a un input */
+      line-height: 1.5; /* Interlineado consistente con los mensajes */
+      margin-left: 8px; /* Espacio con el botón de archivo */
+      margin-right: 8px; /* Espacio con el botón de enviar */
     }
 
     .send-button {
@@ -314,7 +329,7 @@
         <span id="file-name"></span>
         <button id="clear-file" class="clear-file" title="Limpiar archivo adjunto">x</button>
       </div>
-      <input type="text" id="user-input" placeholder="Enviar un mensaje...">
+      <textarea id="user-input" placeholder="Enviar un mensaje..." rows="1"></textarea>
       <button id="send-button" class="send-button" title="Enviar mensaje">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
           <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
@@ -360,32 +375,30 @@
         let typingIndicatorElement = null;
         let selectedFile = null;
 
+        // Función para ajustar la altura del textarea dinámicamente
+        function adjustTextareaHeight() {
+            userInput.style.height = 'auto'; // Reinicia la altura para que se recalcule
+            userInput.style.height = userInput.scrollHeight + 'px'; // Establece la altura al scrollHeight
+        }
+        userInput.addEventListener('input', adjustTextareaHeight); // Ajustar al escribir
+        userInput.addEventListener('focus', adjustTextareaHeight); // Ajustar al enfocar
+        userInput.addEventListener('blur', adjustTextareaHeight); // Ajustar al desenfocar
+
         async function addMessage(sender, text) {
             const messageElement = document.createElement('div');
             messageElement.classList.add('message');
             messageElement.classList.add(sender);
+            messageElement.textContent = text; // Establece el texto completo de inmediato
             messagesContainer.appendChild(messageElement);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-            if (sender === 'bot') {
-                let i = 0;
-                const typingSpeed = 25;
-                return new Promise(resolve => {
-                    const interval = setInterval(() => {
-                        if (i < text.length) {
-                            messageElement.textContent += text.charAt(i);
-                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                            i++;
-                        } else {
-                            clearInterval(interval);
-                            resolve();
-                        }
-                    }, typingSpeed);
-                });
-            } else {
-                messageElement.textContent = text;
-                return Promise.resolve();
-            }
+            // Pequeño retardo para que el navegador aplique los estilos iniciales (opacity: 0, translateY(10px))
+            // antes de aplicar la clase 'appeared' y activar la transición.
+            setTimeout(() => {
+                messageElement.classList.add('appeared');
+                messagesContainer.scrollTop = messagesContainer.scrollHeight; // Asegura el scroll después de la transición
+            }, 50); // Puedes ajustar este retardo si es necesario.
+            return Promise.resolve(); // Resuelve inmediatamente la promesa
         }
 
         function showTypingIndicator() {
@@ -417,7 +430,10 @@
 
         sendButton.addEventListener('click', sendMessage);
         userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
+            if (e.key === 'Enter' && !e.shiftKey) { // Añadido !e.shiftKey para permitir saltos de línea con Shift+Enter
+                e.preventDefault(); // Previene el salto de línea por defecto
+                sendMessage();
+            }
         });
 
         // Manejador para la selección de archivos: guarda el archivo y muestra su nombre
@@ -437,6 +453,7 @@
             selectedFile = null;
             fileInput.value = ''; // Limpiar el input de tipo file
             fileDisplay.style.display = 'none';
+            adjustTextareaHeight(); // Reajustar altura al limpiar archivo
         });
 
         async function sendMessage() {
@@ -457,6 +474,7 @@
             await addMessage('user', displayMessage);
             
             userInput.value = '';
+            adjustTextareaHeight(); // Reajustar altura después de enviar
 
             showTypingIndicator();
 
@@ -483,6 +501,7 @@
                 selectedFile = null;
                 fileInput.value = '';
                 fileDisplay.style.display = 'none';
+                adjustTextareaHeight(); // Reajustar altura después de limpiar archivo
 
             } catch (error) {
                 console.error('Error al comunicarse con el backend:', error);
@@ -492,6 +511,7 @@
                 selectedFile = null;
                 fileInput.value = '';
                 fileDisplay.style.display = 'none';
+                adjustTextareaHeight(); // Reajustar altura en caso de error
             }
         }
 
