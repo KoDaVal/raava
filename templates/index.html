@@ -304,18 +304,14 @@
   <div class="chat-area">
     <div class="messages">
       <!-- Los mensajes se agregarán aquí dinámicamente mediante JavaScript -->
-      <div class="message bot">¡Hola! Soy un asistente de IA. ¿En qué puedo ayudarte hoy?</div>
-      <div class="message user">Hola Raava, ¿cómo estás?</div>
-      <div class="message bot">Estoy funcionando perfectamente, gracias por preguntar.</div>
-      <div class="message user">Me alegro.</div>
     </div>
     <div class="input-bar">
       <!-- Botón + para adjuntar archivos -->
       <label for="file-upload" class="file-button" title="Adjuntar archivo">+
         <input type="file" id="file-upload" hidden>
       </label>
-      <div id="file-display" style="display: flex;" class="file-info">
-        <span id="file-name">documento.txt</span>
+      <div id="file-display" style="display: none;" class="file-info">
+        <span id="file-name"></span>
         <button id="clear-file" class="clear-file" title="Limpiar archivo adjunto">x</button>
       </div>
       <input type="text" id="user-input" placeholder="Enviar un mensaje...">
@@ -506,3 +502,4 @@
   </script>
 </body>
 </html>
+
