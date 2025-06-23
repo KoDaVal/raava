@@ -3,6 +3,7 @@ from flask_cors import CORS
 import google.generativeai as genai
 import os
 import base64 # Necesario para decodificar la imagen si se envía como base64
+import json # Necesario para parsear el historial JSON
 
 app = Flask(__name__)
 CORS(app) # Habilita CORS para permitir solicitudes desde tu frontend
@@ -25,69 +26,79 @@ def index():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    # Obtener datos del formulario multipart/form-data
+    # Obtener el historial de la conversación y el mensaje actual del formulario
+    history_json = request.form.get('history', '[]')
     user_message = request.form.get('message', '')
-    uploaded_file = request.files.get('file') # Obtener el archivo directamente de request.files
+    uploaded_file = request.files.get('file')
 
-    parts = [] # Lista de "partes" para enviar a Gemini (texto, imágenes, etc.)
+    # Convertir el historial JSON a un objeto Python
+    try:
+        conversation_history = json.loads(history_json)
+    except json.JSONDecodeError:
+        return jsonify({"response": "Error: Formato de historial inválido."}), 400
+
+    # Lista de "partes" para enviar a Gemini, incluyendo el historial
+    # Cada entrada en el historial ya tiene el formato esperado por la API de Gemini:
+    # { 'role': 'user'/'model', 'parts': [{ 'text': '...' }] }
+    parts_for_gemini = conversation_history
+    
     response_message = "Lo siento, hubo un error desconocido."
 
-    # <--- INSTRUCCIÓN ACTUALIZADA PARA CONTROLAR LA LONGITUD Y EL TONO --->
-    # Esta instrucción le pide al modelo que sea conciso pero no simplista,
-    # y que mantenga un tono más humano y amable.
+    # <--- INSTRUCCIÓN PARA CONTROLAR LA LONGITUD Y EL TONO --->
     instruction = "Responde de forma concisa y clara, ofreciendo la información esencial con un tono amable y humano, evitando la simplicidad excesiva:"
-    # <--- FIN INSTRUCCIÓN ACTUALIZADA DE LONGITUD Y TONO --->
+    # <--- FIN INSTRUCCIÓN DE LONGITUD Y TONO --->
 
-    # Si hay un mensaje de texto del usuario, lo añade como una parte con la instrucción
+    # Añadir el mensaje actual del usuario y el archivo (si existe) como la última "parte"
+    current_user_parts = []
     if user_message:
-        parts.append({'text': f"{instruction} {user_message}"})
+        current_user_parts.append({'text': f"{instruction} {user_message}"}) # Aplicamos la instrucción al mensaje actual
 
-    # Si se adjuntó un archivo, lo procesa y añade como una parte
     if uploaded_file:
         file_name = uploaded_file.filename
         file_type = uploaded_file.content_type
 
         try:
             if file_type.startswith('image/'):
-                # Leer la imagen y codificarla a base64
                 image_bytes = uploaded_file.read()
                 base64_image = base64.b64encode(image_bytes).decode('utf-8')
-                
-                parts.append({
+                current_user_parts.append({
                     "inlineData": {
                         "mimeType": file_type,
                         "data": base64_image
                     }
                 })
-                # Añade un texto descriptivo para que el modelo sepa que hay una imagen
-                if not user_message: # Si no hay mensaje de texto, da una pista con la instrucción
-                    parts.append({'text': f"{instruction} Adjuntaste la imagen '{file_name}'. ¿Qué quieres saber sobre ella?"})
-                else: # Si hay mensaje, añade el contexto de la imagen
-                    parts.append({'text': f"Imagen adjunta: '{file_name}'."})
-            elif file_type.startswith('text/'):
-                # Para archivos de texto simple, añadir su contenido como texto
-                text_content = uploaded_file.read().decode('utf-8')
-                parts.append({'text': f"Contenido del archivo de texto '{file_name}':\n{text_content}"})
-                # También un mensaje inicial si no hay texto del usuario
+                # Añadir contexto de imagen al mensaje si no hay texto principal
                 if not user_message:
-                     parts.append({'text': f"{instruction} Adjuntaste el archivo de texto '{file_name}'. ¿Qué quieres que analice?"})
-                else: # Si hay mensaje, añade el contexto del texto
-                    parts.append({'text': f"Archivo de texto adjunto: '{file_name}'."})
+                    current_user_parts.append({'text': f"{instruction} Adjuntaste la imagen '{file_name}'. ¿Qué quieres saber sobre ella?"})
+                else: # Si hay mensaje de texto, solo informa que hay una imagen adjunta
+                    current_user_parts.append({'text': f"Imagen adjunta: '{file_name}'."})
+
+            elif file_type.startswith('text/'):
+                text_content = uploaded_file.read().decode('utf-8')
+                current_user_parts.append({'text': f"Contenido del archivo de texto '{file_name}':\n{text_content}"})
+                # Añadir contexto de archivo de texto si no hay texto principal
+                if not user_message:
+                     current_user_parts.append({'text': f"{instruction} Adjuntaste el archivo de texto '{file_name}'. ¿Qué quieres que analice?"})
+                else: # Si hay mensaje de texto, solo informa que hay un archivo adjunto
+                    current_user_parts.append({'text': f"Archivo de texto adjunto: '{file_name}'."})
             else:
-                # Para otros tipos de archivo no soportados directamente por este ejemplo
-                parts.append({'text': f"{instruction} Se adjuntó un archivo de tipo {file_type} ('{file_name}'). Actualmente, solo puedo procesar imágenes y texto simple directamente. ¿Hay algo más en lo que pueda ayudarte?"})
+                current_user_parts.append({'text': f"{instruction} Se adjuntó un archivo de tipo {file_type} ('{file_name}'). Actualmente, solo puedo procesar imágenes y texto simple directamente. ¿Hay algo más en lo que pueda ayudarte?"})
 
         except Exception as e:
             print(f"Error al procesar el archivo adjunto: {e}")
             return jsonify({"response": "Lo siento, hubo un error al procesar el archivo adjunto."}), 500
-
-    # Si no hay mensaje ni archivo, retorna un error
-    if not parts:
+    
+    # Si no hay ninguna parte (ni mensaje ni archivo), retorna un error
+    if not current_user_parts:
         return jsonify({"response": "Por favor, envía un mensaje o un archivo válido para que pueda responderte."}), 400
 
+    # Añadir el mensaje actual del usuario (y el archivo) al final del historial
+    parts_for_gemini.append({'role': 'user', 'parts': current_user_parts})
+
+
     try:
-        # Envía todas las "partes" (texto, imagen, etc.) al modelo de Gemini
-        gemini_response = model.generate_content(parts)
+        # Envía todas las "partes" (historial + mensaje actual) al modelo de Gemini
+        gemini_response = model.generate_content(parts_for_gemini)
         response_message = gemini_response.text
 
     except Exception as e:
@@ -100,7 +111,3 @@ if __name__ == '__main__':
     # Obtiene el puerto del entorno (para Render) o usa 5000 por defecto (para local)
     port = int(os.getenv("PORT", 5000))
     app.run(debug=True, host='0.0.0.0', port=port)
-
-
-
-
