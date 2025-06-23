@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Raava AI</title>
+  <title>Paolo Chat UI</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
@@ -318,10 +318,8 @@
 
   <div class="chat-area">
     <div class="messages">
-      <!-- Los mensajes se agregarán aquí dinámicamente mediante JavaScript -->
-    </div>
+      </div>
     <div class="input-bar">
-      <!-- Botón + para adjuntar archivos -->
       <label for="file-upload" class="file-button" title="Adjuntar archivo">+
         <input type="file" id="file-upload" hidden>
       </label>
@@ -375,10 +373,13 @@
         let typingIndicatorElement = null;
         let selectedFile = null;
 
+        // Historial de la conversación: guarda cada mensaje para enviarlo al backend
+        let conversationHistory = []; // <-- NUEVO: Array para guardar la historia
+
         // Función para ajustar la altura del textarea dinámicamente
         function adjustTextareaHeight() {
-            userInput.style.height = 'auto'; // Reinicia la altura para que se recalcule
-            userInput.style.height = userInput.scrollHeight + 'px'; // Establece la altura al scrollHeight
+            userInput.style.height = 'auto'; // Reset height to recalculate
+            userInput.style.height = userInput.scrollHeight + 'px'; // Set to scroll height
         }
         userInput.addEventListener('input', adjustTextareaHeight); // Ajustar al escribir
         userInput.addEventListener('focus', adjustTextareaHeight); // Ajustar al enfocar
@@ -388,17 +389,22 @@
             const messageElement = document.createElement('div');
             messageElement.classList.add('message');
             messageElement.classList.add(sender);
-            messageElement.textContent = text; // Establece el texto completo de inmediato
+            messageElement.textContent = text;
             messagesContainer.appendChild(messageElement);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-            // Pequeño retardo para que el navegador aplique los estilos iniciales (opacity: 0, translateY(10px))
-            // antes de aplicar la clase 'appeared' y activar la transición.
+            // Añade el mensaje al historial de la conversación
+            // El 'role' es 'user' para el usuario y 'model' para el bot (como espera la API de Gemini)
+            conversationHistory.push({
+                role: sender === 'user' ? 'user' : 'model',
+                parts: [{ text: text }]
+            });
+
             setTimeout(() => {
                 messageElement.classList.add('appeared');
-                messagesContainer.scrollTop = messagesContainer.scrollHeight; // Asegura el scroll después de la transición
-            }, 50); // Puedes ajustar este retardo si es necesario.
-            return Promise.resolve(); // Resuelve inmediatamente la promesa
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 50);
+            return Promise.resolve();
         }
 
         function showTypingIndicator() {
@@ -430,30 +436,28 @@
 
         sendButton.addEventListener('click', sendMessage);
         userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) { // Añadido !e.shiftKey para permitir saltos de línea con Shift+Enter
-                e.preventDefault(); // Previene el salto de línea por defecto
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 sendMessage();
             }
         });
 
-        // Manejador para la selección de archivos: guarda el archivo y muestra su nombre
         fileInput.addEventListener('change', () => {
             if (fileInput.files.length > 0) {
                 selectedFile = fileInput.files[0];
                 fileNameSpan.textContent = selectedFile.name;
-                fileDisplay.style.display = 'flex'; // Mostrar el nombre del archivo
+                fileDisplay.style.display = 'flex';
             } else {
                 selectedFile = null;
-                fileDisplay.style.display = 'none'; // Ocultar si no hay archivo
+                fileDisplay.style.display = 'none';
             }
         });
 
-        // Botón para limpiar la selección de archivo
         clearFileButton.addEventListener('click', () => {
             selectedFile = null;
-            fileInput.value = ''; // Limpiar el input de tipo file
+            fileInput.value = '';
             fileDisplay.style.display = 'none';
-            adjustTextareaHeight(); // Reajustar altura al limpiar archivo
+            adjustTextareaHeight();
         });
 
         async function sendMessage() {
@@ -471,16 +475,19 @@
             if (selectedFile) {
                 displayMessage += (message ? ' ' : '') + `📎 Archivo adjunto: ${selectedFile.name}`;
             }
-            await addMessage('user', displayMessage);
+            await addMessage('user', displayMessage); // Añade el mensaje del usuario al historial
             
             userInput.value = '';
-            adjustTextareaHeight(); // Reajustar altura después de enviar
+            adjustTextareaHeight();
 
             showTypingIndicator();
 
             try {
                 const formData = new FormData();
-                formData.append('message', message);
+                formData.append('message', message); // Mensaje actual del usuario
+                // Envía el historial COMPLETO de la conversación al backend
+                formData.append('history', JSON.stringify(conversationHistory.slice(0, -1))); // Excluye el mensaje actual del usuario ya que va en 'message'
+
                 if (selectedFile) {
                     formData.append('file', selectedFile);
                 }
@@ -496,27 +503,31 @@
                 }
                 const data = await response.json();
                 hideTypingIndicator();
-                await addMessage('bot', data.response);
+                await addMessage('bot', data.response); // Añade la respuesta del bot al historial
                 
                 selectedFile = null;
                 fileInput.value = '';
                 fileDisplay.style.display = 'none';
-                adjustTextareaHeight(); // Reajustar altura después de limpiar archivo
+                adjustTextareaHeight();
 
             } catch (error) {
                 console.error('Error al comunicarse con el backend:', error);
                 hideTypingIndicator();
-                await addMessage('bot', 'Lo siento, hubo un error al conectar con el chatbot. Por favor, revisa la consola y asegúrate de que el backend esté corriendo.');
+                await addMessage('bot', 'Lo siento, hubo un error al conectar con el chatbot. Por favor, revisa la consola del navegador y asegúrate de que el backend esté corriendo.');
                 
+                // Si hay un error, el último mensaje del usuario no tendrá respuesta del bot,
+                // así que lo quitamos del historial para que no se envíe en la siguiente petición.
+                conversationHistory.pop(); // Elimina el último mensaje del usuario del historial
                 selectedFile = null;
                 fileInput.value = '';
                 fileDisplay.style.display = 'none';
-                adjustTextareaHeight(); // Reajustar altura en caso de error
+                adjustTextareaHeight();
             }
         }
 
+        // Mensaje de bienvenida inicial
         (async () => {
-            await addMessage('bot', '¡Hola! Soy un asistente de IA. ¿En qué puedo ayudarte hoy?');
+             await addMessage('bot', '¡Hola! Soy un asistente de IA. ¿En qué puedo ayudarte hoy?');
         })();
     });
   </script>
