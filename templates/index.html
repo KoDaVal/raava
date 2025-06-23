@@ -4,15 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Paolo Chat UI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    /* Estilos globales */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
+
     body {
-      font-family: sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 12px;
       background-color: #000;
       color: #e0e0e0;
@@ -20,35 +23,39 @@
       display: flex;
     }
 
-    /* Estilos del Sidebar */
     .sidebar {
       background-color: #0a0a0a;
       width: 220px;
       padding: 20px;
       display: flex;
       flex-direction: column;
+      border-right: 1px solid #1e1e1e;
     }
 
     .sidebar h2 {
       color: #ffffff;
       margin-bottom: 30px;
       font-size: 18px;
+      font-weight: 600;
     }
 
     .sidebar a {
-      color: #cccccc;
+      color: #bbbbbb;
       text-decoration: none;
       font-size: 14px;
       margin-bottom: 18px;
       display: block;
-      transition: color 0.2s ease-in-out;
+      padding: 6px 0;
+      border-radius: 4px;
+      transition: all 0.25s ease-in-out;
     }
 
     .sidebar a:hover {
+      background-color: #1e1e1e;
       color: #ffffff;
+      padding-left: 8px;
     }
 
-    /* Estilos del Área de Chat */
     .chat-area {
       flex: 1;
       background-color: #121212;
@@ -63,120 +70,114 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      overflow-y: auto; /* Permite el scroll cuando hay muchos mensajes */
-      padding-right: 5px; /* Espacio para la barra de scroll */
+      overflow-y: auto;
+      padding-right: 6px;
     }
 
     .message {
       background-color: #1e1e1e;
-      padding: 10px 15px;
-      border-radius: 10px;
-      width: fit-content; /* Se ajusta al contenido */
-      max-width: 70%; /* Máximo ancho del mensaje */
+      padding: 12px 16px;
+      border-radius: 12px;
+      width: fit-content;
+      max-width: 70%;
       font-size: 14px;
-      word-wrap: break-word; /* Rompe palabras largas para que no desborden */
+      word-wrap: break-word;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
 
     .message.user {
-      align-self: flex-end; /* Alinea los mensajes del usuario a la derecha */
-      background-color: #333333;
-      color: white;
-    }
-    .message.bot {
-        align-self: flex-start; /* Alinea los mensajes del bot a la izquierda */
-        background-color: #1e1e1e;
-        color: #e0e0e0;
+      align-self: flex-end;
+      background-color: #2d2d2d;
+      color: #fff;
     }
 
-    /* Estilos de la barra de entrada de texto */
+    .message.bot {
+      align-self: flex-start;
+      color: #e0e0e0;
+    }
+
     .input-bar {
       display: flex;
-      flex-wrap: wrap; /* Permite que los elementos se envuelvan si no hay espacio */
+      flex-wrap: wrap;
       margin-top: 20px;
       background-color: #1e1e1e;
-      border-radius: 8px;
-      overflow: hidden;
-      align-items: center; /* Centra verticalmente los elementos en la barra de entrada */
+      border-radius: 10px;
+      padding: 4px 8px;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
     }
 
     .file-button {
       background-color: transparent;
       border: none;
       color: #cccccc;
-      padding: 0 12px;
-      font-size: 22px;
+      padding: 8px;
+      font-size: 20px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 0.2s ease-in-out;
-      user-select: none; /* Evita que el texto sea seleccionable */
+      transition: background-color 0.2s;
+      border-radius: 6px;
     }
 
     .file-button:hover {
       background-color: #292929;
-      border-radius: 4px;
     }
 
     .input-bar input[type="text"] {
       flex: 1;
-      padding: 12px;
+      padding: 10px;
       border: none;
       background-color: transparent;
       color: white;
-      outline: none; /* Elimina el contorno azul al enfocar */
+      outline: none;
       font-size: 14px;
-      min-width: 100px; /* Asegura un mínimo de ancho para el input */
+      min-width: 100px;
     }
 
-    .input-bar button.send-button {
+    .send-button {
       background-color: transparent;
       border: none;
       color: #cccccc;
-      padding: 0 16px;
+      padding: 8px;
       font-size: 16px;
       cursor: pointer;
       display: flex;
       align-items: center;
-      transition: background-color 0.2s ease-in-out;
+      border-radius: 6px;
+      transition: background-color 0.2s ease;
     }
 
-    .input-bar button.send-button:hover {
+    .send-button:hover {
       background-color: #292929;
     }
 
-    /* Estilos del área de archivo adjunto */
     .file-info {
-        display: flex;
-        align-items: center;
-        background-color: #292929;
-        padding: 4px 8px;
-        border-radius: 6px;
-        margin-left: 8px;
-        color: #e0e0e0;
-        font-size: 12px;
-        white-space: nowrap; /* Evita que el texto se rompa */
-        max-width: 150px; /* Limita el ancho para nombres largos */
-        overflow: hidden;
-        text-overflow: ellipsis; /* Añade puntos suspensivos si el texto es muy largo */
+      display: flex;
+      align-items: center;
+      background-color: #292929;
+      padding: 4px 8px;
+      border-radius: 6px;
+      margin-left: 8px;
+      color: #e0e0e0;
+      font-size: 12px;
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    .file-info .clear-file {
-        background: none;
-        border: none;
-        color: #e0e0e0;
-        font-size: 14px;
-        margin-left: 5px;
-        cursor: pointer;
-        padding: 0;
-        line-height: 1;
-    }
-    .file-info .clear-file:hover {
-        color: white;
+    .clear-file {
+      background: none;
+      border: none;
+      color: #e0e0e0;
+      font-size: 14px;
+      margin-left: 6px;
+      cursor: pointer;
     }
 
+    .clear-file:hover {
+      color: white;
+    }
 
-    /* Estilos del Panel de Información */
     .info-panel {
       background-color: #0a0a0a;
       width: 260px;
@@ -186,7 +187,7 @@
 
     .info-panel h4 {
       font-size: 14px;
-      font-weight: 500;
+      font-weight: 600;
       margin-bottom: 16px;
       color: #ffffff;
     }
@@ -203,22 +204,23 @@
     }
 
     .menu-option:hover {
-        color: #ffffff;
+      color: #ffffff;
     }
 
     .menu-option i {
       width: 16px;
       height: 16px;
-      background-color: #333333; /* Fondo para el "ícono" */
+      background-color: #333333;
       border-radius: 4px;
-      flex-shrink: 0; /* Evita que el ícono se comprima */
+      flex-shrink: 0;
     }
 
     .avatar {
       width: 100%;
       border-radius: 8px;
       margin: 16px 0;
-      object-fit: cover; /* Asegura que la imagen no se distorsione */
+      object-fit: cover;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
     }
 
     .name {
@@ -230,7 +232,7 @@
     .quote {
       font-size: 12px;
       margin-top: 8px;
-      line-height: 1.4;
+      line-height: 1.5;
       color: #aaaaaa;
     }
 
@@ -246,12 +248,13 @@
       border-radius: 8px;
       cursor: pointer;
       transition: background-color 0.2s ease-in-out;
-    }
-    .start-button:hover {
-        background-color: #444444;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
 
-    /* Estilos del indicador de escritura */
+    .start-button:hover {
+      background-color: #444444;
+    }
+
     .typing-indicator {
       display: flex;
       align-self: flex-start;
@@ -301,14 +304,18 @@
   <div class="chat-area">
     <div class="messages">
       <!-- Los mensajes se agregarán aquí dinámicamente mediante JavaScript -->
+      <div class="message bot">¡Hola! Soy un asistente de IA. ¿En qué puedo ayudarte hoy?</div>
+      <div class="message user">Hola Raava, ¿cómo estás?</div>
+      <div class="message bot">Estoy funcionando perfectamente, gracias por preguntar.</div>
+      <div class="message user">Me alegro.</div>
     </div>
     <div class="input-bar">
       <!-- Botón + para adjuntar archivos -->
       <label for="file-upload" class="file-button" title="Adjuntar archivo">+
         <input type="file" id="file-upload" hidden>
       </label>
-      <div id="file-display" style="display: none;" class="file-info">
-        <span id="file-name"></span>
+      <div id="file-display" style="display: flex;" class="file-info">
+        <span id="file-name">documento.txt</span>
         <button id="clear-file" class="clear-file" title="Limpiar archivo adjunto">x</button>
       </div>
       <input type="text" id="user-input" placeholder="Enviar un mensaje...">
@@ -355,7 +362,7 @@
         const fileNameSpan = document.getElementById('file-name');
         const clearFileButton = document.getElementById('clear-file');
         let typingIndicatorElement = null;
-        let selectedFile = null; // Variable para almacenar el archivo seleccionado
+        let selectedFile = null;
 
         async function addMessage(sender, text) {
             const messageElement = document.createElement('div');
@@ -438,41 +445,35 @@
 
         async function sendMessage() {
             const message = userInput.value.trim();
-            // FIX: Obtener la referencia al archivo actual del input justo antes de enviar
             const actualFile = fileInput.files.length > 0 ? fileInput.files[0] : null;
 
-            if (!message && !actualFile) { // Verificar si no hay mensaje ni archivo real
+            if (!message && !actualFile) {
                 console.warn("Intento de envío vacío: no hay mensaje ni archivo adjunto.");
-                return; // Abortar el envío si ambos están vacíos
+                return;
             }
             
-            // Sincronizar selectedFile con el archivo real del input en el momento del envío
             selectedFile = actualFile;
 
-            // Muestra el mensaje del usuario y/o archivo en el chat
             let displayMessage = message;
             if (selectedFile) {
                 displayMessage += (message ? ' ' : '') + `📎 Archivo adjunto: ${selectedFile.name}`;
             }
             await addMessage('user', displayMessage);
             
-            userInput.value = ''; // Limpiar el input de texto
+            userInput.value = '';
 
             showTypingIndicator();
 
             try {
                 const formData = new FormData();
-                formData.append('message', message); // Siempre envía el mensaje (puede estar vacío si solo es archivo)
+                formData.append('message', message);
                 if (selectedFile) {
-                    formData.append('file', selectedFile); // Adjunta el archivo si existe
+                    formData.append('file', selectedFile);
                 }
 
-                // La URL del backend es 'https://raava.onrender.com/chat'
-                // Este fetch ahora usa la URL absoluta para asegurar que la petición se realice correctamente
-                const response = await fetch('https://raava.onrender.com/chat', { 
+                const response = await fetch('https://raava.onrender.com/chat', {
                     method: 'POST',
-                    // No necesitas 'Content-Type' cuando usas FormData, el navegador lo configura automáticamente como multipart/form-data
-                    body: formData 
+                    body: formData
                 });
 
                 if (!response.ok) {
@@ -483,7 +484,6 @@
                 hideTypingIndicator();
                 await addMessage('bot', data.response);
                 
-                // Limpiar el archivo seleccionado y su visualización solo después de un envío exitoso
                 selectedFile = null;
                 fileInput.value = '';
                 fileDisplay.style.display = 'none';
@@ -493,7 +493,6 @@
                 hideTypingIndicator();
                 await addMessage('bot', 'Lo siento, hubo un error al conectar con el chatbot. Por favor, revisa la consola y asegúrate de que el backend esté corriendo.');
                 
-                // También limpiar el archivo en caso de error para permitir reintentar limpiamente
                 selectedFile = null;
                 fileInput.value = '';
                 fileDisplay.style.display = 'none';
