@@ -32,10 +32,11 @@ def chat():
     parts = [] # Lista de "partes" para enviar a Gemini (texto, imágenes, etc.)
     response_message = "Lo siento, hubo un error desconocido."
 
-    # <--- INSTRUCCIÓN PARA CONTROLAR LA LONGITUD DE LA RESPUESTA --->
-    # Puedes variar esto: "Responde brevemente:", "Resume en 2 oraciones:", "Sé conciso:"
-    instruction = "Responde de forma concisa y breve, en no más de 3 frases:" 
-    # <--- FIN INSTRUCCIÓN DE LONGITUD --->
+    # <--- NUEVA INSTRUCCIÓN PARA CONTROLAR LA LONGITUD DE LA RESPUESTA --->
+    # Esta instrucción le indica al modelo que responda con la información esencial,
+    # sin ser excesivamente breve ni demasiado extenso.
+    instruction = "Responde de forma clara y esencial, sin extenderte innecesariamente:"
+    # <--- FIN NUEVA INSTRUCCIÓN DE LONGITUD --->
 
     # Si hay un mensaje de texto del usuario, lo añade como una parte con la instrucción
     if user_message:
@@ -99,4 +100,6 @@ if __name__ == '__main__':
     # Obtiene el puerto del entorno (para Render) o usa 5000 por defecto (para local)
     port = int(os.getenv("PORT", 5000))
     app.run(debug=True, host='0.0.0.0', port=port)
+
+
 
