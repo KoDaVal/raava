@@ -1,11 +1,8 @@
-# app.py
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import google.generativeai as genai
 import os
-import io
-import base64 # Necesario para codificar imágenes
-import mimetypes # Para determinar el tipo de archivo
+import base64 # Necesario para decodificar la imagen si se envía como base64
 
 app = Flask(__name__)
 CORS(app) # Habilita CORS para permitir solicitudes desde tu frontend
@@ -13,92 +10,93 @@ CORS(app) # Habilita CORS para permitir solicitudes desde tu frontend
 # --- CONFIGURACIÓN DE GEMINI ---
 # Obtiene la API Key de las variables de entorno de Render.
 # Si no la encuentra (ej. al correr localmente sin la variable), usa la clave de respaldo.
-# ¡Asegúrate de que esta API Key esté configurada en las variables de entorno de Render!
 gemini_api_key = os.getenv("GEMINI_API_KEY", "AIzaSyAqa7wkPNR17Cmyom8EZZ1GiclxaqbEVVI")
 genai.configure(api_key=gemini_api_key)
 
-# Inicializa el modelo de Gemini. 'gemini-1.5-flash' es una buena opción rápida y económica.
-# Soporta entradas multimodales (texto e imágenes).
+# Inicializa el modelo de Gemini. 'gemini-1.5-flash' es una buena opción gratuita y rápida para chat.
 model = genai.GenerativeModel('gemini-1.5-flash')
 # --- FIN CONFIGURACIÓN DE GEMINI ---
 
 # --- RUTA PARA SERVIR EL FRONTEND ---
-# Esta ruta se encarga de servir el archivo index.html cuando alguien accede a la URL raíz de tu servicio en Render.
-@app.route('/')
+@app.route('/') # Ruta para la raíz del sitio
 def index():
-    # Flask buscará 'index.html' dentro de la carpeta 'templates'.
-    return render_template('index.html')
+    return render_template('index.html') # Renderiza tu archivo index.html
+# --- FIN RUTA DEL FRONTEND ---
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    # Obtiene el mensaje de texto del formulario (FormData). Si no hay, es una cadena vacía.
-    user_message_text = request.form.get('message', '') 
+    # Obtener datos del formulario multipart/form-data
+    user_message = request.form.get('message', '')
+    uploaded_file = request.files.get('file') # Obtener el archivo directamente de request.files
+
+    parts = [] # Lista de "partes" para enviar a Gemini (texto, imágenes, etc.)
     response_message = "Lo siento, hubo un error desconocido."
-    
-    # Esta lista contendrá las partes (texto, imágenes) que se enviarán a Gemini.
-    parts = [] 
 
-    # Si hay texto del usuario, lo añadimos a las partes.
-    if user_message_text:
-        parts.append(user_message_text)
+    # <--- INSTRUCCIÓN PARA CONTROLAR LA LONGITUD DE LA RESPUESTA --->
+    # Puedes variar esto: "Responde brevemente:", "Resume en 2 oraciones:", "Sé conciso:"
+    instruction = "Responde de forma concisa y breve, en no más de 3 frases:" 
+    # <--- FIN INSTRUCCIÓN DE LONGITUD --->
 
-    # Verifica si se envió un archivo en la solicitud.
-    if 'file' in request.files:
-        file = request.files['file']
-        # Asegúrate de que el archivo no está vacío
-        if file.filename != '':
-            # Determina el tipo MIME del archivo (ej. 'image/png', 'text/plain').
-            mime_type = file.content_type
-            if not mime_type: # Si Flask no lo detecta, intenta adivinarlo por la extensión.
-                mime_type = mimetypes.guess_type(file.filename)[0] or 'application/octet-stream'
+    # Si hay un mensaje de texto del usuario, lo añade como una parte con la instrucción
+    if user_message:
+        parts.append({'text': f"{instruction} {user_message}"})
 
-            file_content = file.read() # Lee el contenido binario completo del archivo.
+    # Si se adjuntó un archivo, lo procesa y añade como una parte
+    if uploaded_file:
+        file_name = uploaded_file.filename
+        file_type = uploaded_file.content_type
 
-            # Procesa el archivo según su tipo MIME
-            if mime_type.startswith('text/'):
-                # Si es un archivo de texto, intenta decodificarlo como UTF-8.
-                try:
-                    text_content = file_content.decode('utf-8')
-                    # Añade el contenido del archivo como parte de texto para Gemini.
-                    parts.append(f"Contenido del archivo '{file.filename}':\n```\n{text_content}\n```")
-                except UnicodeDecodeError:
-                    # Maneja el caso en que el archivo no sea UTF-8 válido.
-                    parts.append(f"Contenido del archivo '{file.filename}': (No se pudo decodificar como texto UTF-8)")
-            elif mime_type.startswith('image/'):
-                # Si es una imagen, codifícala en Base64 para enviarla a Gemini.
-                base64_image = base64.b64encode(file_content).decode('utf-8')
-                # Añade la imagen codificada como una parte de imagen.
+        try:
+            if file_type.startswith('image/'):
+                # Leer la imagen y codificarla a base64
+                image_bytes = uploaded_file.read()
+                base64_image = base64.b64encode(image_bytes).decode('utf-8')
+                
                 parts.append({
-                    "mime_type": mime_type,
-                    "data": base64_image
+                    "inlineData": {
+                        "mimeType": file_type,
+                        "data": base64_image
+                    }
                 })
+                # Añade un texto descriptivo para que el modelo sepa que hay una imagen
+                if not user_message: # Si no hay mensaje de texto, da una pista con la instrucción
+                    parts.append({'text': f"{instruction} Adjuntaste la imagen '{file_name}'. ¿Qué quieres saber sobre ella?"})
+                else: # Si hay mensaje, añade el contexto de la imagen
+                    parts.append({'text': f"Imagen adjunta: '{file_name}'."})
+            elif file_type.startswith('text/'):
+                # Para archivos de texto simple, añadir su contenido como texto
+                text_content = uploaded_file.read().decode('utf-8')
+                parts.append({'text': f"Contenido del archivo de texto '{file_name}':\n{text_content}"})
+                # También un mensaje inicial si no hay texto del usuario
+                if not user_message:
+                     parts.append({'text': f"{instruction} Adjuntaste el archivo de texto '{file_name}'. ¿Qué quieres que analice?"})
+                else: # Si hay mensaje, añade el contexto del texto
+                    parts.append({'text': f"Archivo de texto adjunto: '{file_name}'."})
             else:
-                # Para otros tipos de archivo no directamente soportados por Gemini para análisis,
-                # simplemente informa que no se puede analizar.
-                parts.append(f"Archivo adjunto: '{file.filename}' ({mime_type}). No puedo analizar este tipo de archivo directamente.")
-    
-    # Si no hay mensaje de texto ni partes de archivo válidas, devuelve un error.
+                # Para otros tipos de archivo no soportados directamente por este ejemplo
+                parts.append({'text': f"{instruction} Se adjuntó un archivo de tipo {file_type} ('{file_name}'). Actualmente, solo puedo procesar imágenes y texto simple directamente. ¿Hay algo más en lo que pueda ayudarte?"})
+
+        except Exception as e:
+            print(f"Error al procesar el archivo adjunto: {e}")
+            return jsonify({"response": "Lo siento, hubo un error al procesar el archivo adjunto."}), 500
+
+    # Si no hay mensaje ni archivo, retorna un error
     if not parts:
-        return jsonify({"response": "Por favor, envía un mensaje válido o un archivo que pueda analizar."}), 400
+        return jsonify({"response": "Por favor, envía un mensaje o un archivo válido para que pueda responderte."}), 400
 
     try:
-        # Envía todas las partes (texto y/o archivo) a la API de Gemini.
+        # Envía todas las "partes" (texto, imagen, etc.) al modelo de Gemini
         gemini_response = model.generate_content(parts)
         response_message = gemini_response.text
 
     except Exception as e:
-        # Imprime el error en los logs del servidor (Render) para depuración.
         print(f"Error al conectar con la API de Gemini: {e}")
-        # Envía un mensaje de error amigable al frontend.
         response_message = "Lo siento, hubo un problema al procesar tu solicitud con la IA. Por favor, intenta de nuevo."
 
-    # Devuelve la respuesta de Gemini (o el mensaje de error) como JSON al frontend.
     return jsonify({"response": response_message})
 
-# Este bloque es solo para ejecutar la aplicación localmente (ej. `python app.py`).
-# Render utiliza Gunicorn para iniciar la aplicación, por lo que este bloque no se ejecuta en el despliegue.
 if __name__ == '__main__':
-    # Obtiene el puerto de la variable de entorno 'PORT' (usada por Render) o usa 5000 por defecto.
+    # Obtiene el puerto del entorno (para Render) o usa 5000 por defecto (para local)
     port = int(os.getenv("PORT", 5000))
     app.run(debug=True, host='0.0.0.0', port=port)
 
