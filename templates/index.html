@@ -1,43 +1,105 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <link rel="icon" href="/static/raava_logo.png" type="image/png">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Raava AI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css">
-</head>
+const toggleTheme = document.getElementById('toggle-theme');
+toggleTheme.addEventListener('click', () => {
+  document.body.classList.toggle('light-mode');
+  toggleTheme.textContent = document.body.classList.contains('light-mode')
+    ? 'Cambiar a Modo Oscuro' : 'Cambiar a Modo Claro';
+});
 
-<body>
-  <div class="sidebar">
-    <h2>Hi, Paolo</h2>
-    <a href="#">Inicio</a>
-    <a href="#">Buscar chat</a>
-    <a href="#">Nuevo chat</a>
-    <a href="#">Comunidad</a>
-    <a href="#">Premium</a>
-    <div id="toggle-theme">Cambiar a Modo Claro</div>
-  </div>
+const userInput = document.getElementById('user-input');
+const sendButton = document.getElementById('send-button');
+const messagesContainer = document.querySelector('.messages');
 
-  <div class="chat-area">
-    <div class="messages"></div>
-    <div class="input-bar">
-      <label for="file-upload" class="file-button" title="Adjuntar archivo">+</label>
-      <input type="file" id="file-upload" hidden>
-      <textarea id="user-input" placeholder="Enviar un mensaje..." rows="1"></textarea>
-      <button id="send-button" class="send-button" title="Enviar mensaje">Enviar</button>
-    </div>
-  </div>
+/**
+ * Agrega un mensaje al contenedor del chat.
+ * @param {string} sender - El remitente del mensaje ('user' o 'bot').
+ * @param {string} text - El texto del mensaje.
+ */
+async function addMessage(sender, text) {
+  const msg = document.createElement('div');
+  msg.classList.add('message', sender);
+  msg.textContent = text;
+  messagesContainer.appendChild(msg);
+  // Anima la aparición del mensaje y lo desplaza a la vista.
+  requestAnimationFrame(() => {
+    msg.classList.add('appeared');
+    msg.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  });
+}
 
-  <div class="info-panel">
-    <h4>Subir datos</h4>
-    <img src="/static/person.png" alt="Foto de perfil de Raava" class="avatar">
-    <div class="name">Raava AI</div>
-    <div class="quote">Estoy aquí para ayudarte a explorar, aprender y crear.</div>
-    <button class="start-button" id="start-mind-button">Iniciar mente</button>
-  </div>
+/**
+ * Obtiene el historial de la conversación del DOM.
+ * @returns {Array<object>} - Un array de objetos con el historial de la conversación.
+ */
+function getConversationHistory() {
+  const messages = messagesContainer.querySelectorAll('.message');
+  return Array.from(messages).map(msg => ({
+    // 'user' para el usuario, 'model' para el bot (el rol que usa la API de Gemini).
+    role: msg.classList.contains('user') ? 'user' : 'model',
+    parts: [{ text: msg.textContent }]
+  }));
+}
 
-  <script src="/static/script.js"></script>
-</body>
-</html>
+/**
+ * Maneja el envío del mensaje al backend de Flask.
+ */
+async function sendMessage() {
+  const text = userInput.value.trim();
+  if (!text) return; // No envía el mensaje si el campo está vacío.
+
+  // 1. Muestra el mensaje del usuario en la interfaz.
+  addMessage('user', text);
+  userInput.value = ''; // Limpia el área de texto.
+
+  // 2. Obtiene el historial de la conversación y lo convierte a JSON.
+  const historyJSON = JSON.stringify(getConversationHistory());
+
+  // 3. Prepara los datos para enviar al servidor.
+  const formData = new FormData();
+  formData.append('message', text);
+  formData.append('history', historyJSON);
+  
+  // 4. Muestra un indicador de que el bot está respondiendo.
+  const typingIndicator = document.createElement('div');
+  typingIndicator.classList.add('message', 'bot', 'typing-indicator');
+  typingIndicator.innerHTML = `<span></span><span></span><span></span>`;
+  messagesContainer.appendChild(typingIndicator);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+  try {
+    // 5. Envía la solicitud al endpoint '/chat' de tu servidor Flask.
+    const response = await fetch('/chat', {
+      method: 'POST',
+      body: formData // Envía los datos como FormData.
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error en el servidor: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    
+    // 6. Elimina el indicador de escritura y muestra la respuesta del bot.
+    messagesContainer.removeChild(typingIndicator);
+    addMessage('bot', data.response);
+    
+  } catch (error) {
+    console.error('Error al comunicarse con el backend:', error);
+    // Elimina el indicador y muestra un mensaje de error si algo sale mal.
+    messagesContainer.removeChild(typingIndicator);
+    addMessage('bot', 'Lo siento, hubo un error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
+  }
+}
+
+// Escucha eventos para enviar el mensaje.
+sendButton.addEventListener('click', sendMessage);
+
+// Envía el mensaje al presionar Enter (sin Shift+Enter para una nueva línea).
+userInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// Mensaje de bienvenida inicial.
+addMessage('bot', '¡Hola! Soy Raava. ¿En qué puedo ayudarte hoy?');
