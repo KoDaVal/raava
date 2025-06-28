@@ -40,19 +40,22 @@
 
   <div class="info-panel">
     <h4>Upload data</h4>
-    <div class="menu-option">
+    <div class="menu-option" id="upload-voice-btn">
       <i></i>
       <span>Archivo de voz</span>
     </div>
-    <div class="menu-option">
+    <div class="menu-option" id="upload-image-btn">
       <i></i>
       <span>Imagen</span>
     </div>
-    <div class="menu-option">
+    <div class="menu-option" id="upload-info-btn">
       <i></i>
       <span>Información</span>
     </div>
-    <img src="/static/person.jpg" alt="Mi foto de perfil" class="avatar">
+    <input type="file" id="voice-file-input" accept="audio/*" hidden>
+    <input type="file" id="image-file-input" accept="image/*" hidden>
+    <input type="file" id="info-file-input" accept=".txt" hidden>
+    <img src="/static/person.jpg" alt="Mi foto de perfil" class="avatar" id="avatar-image">
     <div class="name">Kobe Bryant</div>
     <div class="quote">
       The most important thing<br>
