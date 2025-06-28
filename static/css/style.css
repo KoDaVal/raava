@@ -93,7 +93,7 @@ body {
   text-align: center;
   border-top: 1px solid var(--border-color);
 }
-    
+
 #toggle-theme:hover {
   color: var(--text-color);
 }
@@ -272,6 +272,24 @@ body {
   background-color: #333333;
   border-radius: 4px;
   flex-shrink: 0;
+}
+
+#fixed-prompt-input {
+  width: 100%;
+  height: 80px;
+  background-color: var(--button-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--text-color);
+  font-size: 13px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+#fixed-prompt-input:focus {
+  border-color: #555;
 }
 
 .avatar {
