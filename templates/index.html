@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Raava AI</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
@@ -39,23 +39,25 @@
   </div>
 
   <div class="info-panel">
-    <h4>Upload data</h4>
-    <div class="menu-option" id="upload-voice-btn">
+    <h4>Subir datos</h4>
+    <div class="menu-option">
       <i></i>
       <span>Archivo de voz</span>
     </div>
-    <div class="menu-option" id="upload-image-btn">
+    <div class="menu-option" id="upload-image">
       <i></i>
       <span>Imagen</span>
     </div>
-    <div class="menu-option" id="upload-info-btn">
+    <div class="menu-option" id="upload-info">
       <i></i>
       <span>Información</span>
     </div>
-    <input type="file" id="voice-file-input" accept="audio/*" hidden>
-    <input type="file" id="image-file-input" accept="image/*" hidden>
-    <input type="file" id="info-file-input" accept=".txt" hidden>
-    <img src="/static/person.jpg" alt="Mi foto de perfil" class="avatar" id="avatar-image">
+
+    <h4 style="margin-top: 20px;">Instrucción de la IA</h4>
+    <textarea id="fixed-prompt-input" placeholder="Ej: Actúa como un experto en finanzas..."></textarea>
+    <button id="set-prompt-button" class="start-button" style="margin-top: 10px;">Establecer Instrucción</button>
+
+    <img src="/static/person.jpg" alt="Mi foto de perfil" class="avatar">
     <div class="name">Kobe Bryant</div>
     <div class="quote">
       The most important thing<br>
@@ -66,6 +68,6 @@
     <button class="start-button">Iniciar mente</button>
   </div>
 
-  <script src="/static/js/script.js"></script>
+  <script src="/static/script.js"></script>
 </body>
 </html>
