@@ -7,33 +7,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileDisplay = document.getElementById('file-display');
     const fileNameSpan = document.getElementById('file-name');
     const clearFileButton = document.getElementById('clear-file');
+    const fixedPromptInput = document.getElementById('fixed-prompt-input');
+    const setPromptButton = document.getElementById('set-prompt-button');
+
     let typingIndicatorElement = null;
     let selectedFile = null;
     let conversationHistory = [];
-
-    // --- NUEVO: Elementos y lógica para la barra lateral derecha (info-panel) ---
-    const uploadVoiceBtn = document.getElementById('upload-voice-btn');
-    const uploadImageBtn = document.getElementById('upload-image-btn');
-    const uploadInfoBtn = document.getElementById('upload-info-btn');
-    const voiceFileInput = document.getElementById('voice-file-input');
-    const imageFileInput = document.getElementById('image-file-input');
-    const infoFileInput = document.getElementById('info-file-input');
-    const avatarImage = document.getElementById('avatar-image'); // Referencia a la imagen del avatar
-
-    // Asigna el evento de clic a los botones del panel de información para abrir el selector de archivos
-    uploadVoiceBtn.addEventListener('click', () => { voiceFileInput.click(); });
-    uploadImageBtn.addEventListener('click', () => { imageFileInput.click(); });
-    uploadInfoBtn.addEventListener('click', () => { infoFileInput.click(); });
-
-    // Evento para reemplazar la imagen del avatar cuando se sube una nueva
-    imageFileInput.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file && file.type.startsWith('image/')) {
-            const fileURL = URL.createObjectURL(file);
-            avatarImage.src = fileURL; // Cambia la fuente de la imagen
-        }
-    });
-    // --- FIN de la lógica de la barra lateral derecha ---
+    
+    // --- Variable para guardar el prompt fijo ---
+    let fixedPrompt = "";
 
     // Función para ajustar la altura del textarea dinámicamente
     function adjustTextareaHeight() {
@@ -98,6 +80,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Lógica para establecer el prompt fijo ---
+    setPromptButton.addEventListener('click', () => {
+        fixedPrompt = fixedPromptInput.value.trim();
+        if (fixedPrompt) {
+            addMessage('bot', `Instrucción para la IA establecida: "${fixedPrompt}". A partir de ahora, la IA seguirá estas directrices.`);
+        } else {
+            fixedPrompt = "";
+            addMessage('bot', 'La instrucción para la IA ha sido eliminada. La IA responderá de forma predeterminada.');
+        }
+    });
+
     sendButton.addEventListener('click', sendMessage);
     userInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -149,6 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const formData = new FormData();
             formData.append('message', message);
+            // --- Incluir el prompt fijo en el FormData ---
+            formData.append('fixed_prompt', fixedPrompt); 
             formData.append('history', JSON.stringify(conversationHistory.slice(0, -1)));
 
             if (selectedFile) {
