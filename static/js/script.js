@@ -11,6 +11,30 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedFile = null;
     let conversationHistory = [];
 
+    // --- NUEVO: Elementos y lógica para la barra lateral derecha (info-panel) ---
+    const uploadVoiceBtn = document.getElementById('upload-voice-btn');
+    const uploadImageBtn = document.getElementById('upload-image-btn');
+    const uploadInfoBtn = document.getElementById('upload-info-btn');
+    const voiceFileInput = document.getElementById('voice-file-input');
+    const imageFileInput = document.getElementById('image-file-input');
+    const infoFileInput = document.getElementById('info-file-input');
+    const avatarImage = document.getElementById('avatar-image'); // Referencia a la imagen del avatar
+
+    // Asigna el evento de clic a los botones del panel de información para abrir el selector de archivos
+    uploadVoiceBtn.addEventListener('click', () => { voiceFileInput.click(); });
+    uploadImageBtn.addEventListener('click', () => { imageFileInput.click(); });
+    uploadInfoBtn.addEventListener('click', () => { infoFileInput.click(); });
+
+    // Evento para reemplazar la imagen del avatar cuando se sube una nueva
+    imageFileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const fileURL = URL.createObjectURL(file);
+            avatarImage.src = fileURL; // Cambia la fuente de la imagen
+        }
+    });
+    // --- FIN de la lógica de la barra lateral derecha ---
+
     // Función para ajustar la altura del textarea dinámicamente
     function adjustTextareaHeight() {
         userInput.style.height = 'auto'; // Reset height to recalculate
