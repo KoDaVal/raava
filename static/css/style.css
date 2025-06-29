@@ -366,3 +366,22 @@ body {
   0%, 80%, 100% { opacity: 0; }
   40% { opacity: 1; }
 }
+/* ... (todo tu CSS existente) ... */
+
+/* Nuevo estilo para el botón "Iniciar mente" cuando el archivo de info esté listo */
+.start-button.info-ready {
+  background-color: #8a2be2; /* Un tono de morado */
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.7); /* Sombra brillante */
+  animation: pulse-purple 1.5s infinite alternate; /* Animación de pulsación */
+}
+
+@keyframes pulse-purple {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 15px rgba(138, 43, 226, 0.7);
+  }
+  100% {
+    transform: scale(1.02);
+    box-shadow: 0 0 25px rgba(138, 43, 226, 1);
+  }
+}
