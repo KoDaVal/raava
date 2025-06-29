@@ -12,14 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let conversationHistory = [];
 
     // --- Elementos y lógica para la barra lateral derecha (info-panel) ---
-    // (Asegúrate de que estos IDs existan en tu HTML)
     const uploadVoiceBtn = document.getElementById('upload-voice-btn');
     const uploadImageBtn = document.getElementById('upload-image-btn');
     const uploadInfoBtn = document.getElementById('upload-info-btn');
     const voiceFileInput = document.getElementById('voice-file-input');
     const imageFileInput = document.getElementById('image-file-input');
-    const infoFileInput = document.getElementById('info-file-input'); // Input para archivos de información
-    const avatarImage = document.getElementById('avatar-image'); // Referencia a la imagen del avatar
+    const infoFileInput = document.getElementById('info-file-input');
+    const avatarImage = document.getElementById('avatar-image');
 
     // --- NUEVAS variables para la instrucción inamovible ---
     let uploadedInfoFileContent = ""; // Contenido del archivo de info subido (temporal)
@@ -29,31 +28,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const startMindButton = document.getElementById('start-mind-button');
 
     // Asigna el evento de clic a los botones del panel de información para abrir el selector de archivos
+    // Se añade una verificación para asegurar que los elementos existan antes de añadir listeners.
     if (uploadVoiceBtn) uploadVoiceBtn.addEventListener('click', () => { voiceFileInput.click(); });
     if (uploadImageBtn) uploadImageBtn.addEventListener('click', () => { imageFileInput.click(); });
     if (uploadInfoBtn) uploadInfoBtn.addEventListener('click', () => { infoFileInput.click(); });
 
-    // Evento para reemplazar la imagen del avatar cuando se sube una nueva
+    // Evento para reemplazar la imagen del avatar
     if (imageFileInput && avatarImage) {
         imageFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (file && file.type.startsWith('image/')) {
                 const fileURL = URL.createObjectURL(file);
-                avatarImage.src = fileURL; // Cambia la fuente de la imagen
+                avatarImage.src = fileURL;
                 addMessage('bot', `Se ha actualizado tu avatar con la imagen: ${file.name}.`);
             }
         });
     }
 
-    // --- NUEVO: Manejo del archivo de información (botón "Información") ---
+    // --- NUEVO: Manejo del archivo de información ---
     if (infoFileInput && startMindButton) {
         infoFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
-            if (file && file.type === 'text/plain') { // Asegurarse de que sea un archivo de texto
+            if (file && file.type === 'text/plain') {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    uploadedInfoFileContent = e.target.result; // Guarda el contenido del archivo
-                    startMindButton.classList.add('info-ready'); // Activa la animación del botón
+                    uploadedInfoFileContent = e.target.result;
+                    startMindButton.classList.add('info-ready');
                     addMessage('bot', `Archivo de instrucción "${file.name}" cargado. Presiona "Iniciar mente" para activar esta instrucción.`);
                 };
                 reader.onerror = () => {
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     uploadedInfoFileContent = "";
                     startMindButton.classList.remove('info-ready');
                 };
-                reader.readAsText(file); // Lee el archivo como texto
+                reader.readAsText(file);
             } else {
                 addMessage('bot', 'Por favor, sube un archivo de texto (.txt) para la instrucción.');
                 uploadedInfoFileContent = "";
@@ -71,17 +71,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // --- NUEVO: Lógica del botón "Iniciar mente" ---
-    if (startMindButton) {
+    if (startMindButton && infoFileInput) {
         startMindButton.addEventListener('click', () => {
             if (uploadedInfoFileContent) {
-                activePersistentInstruction = uploadedInfoFileContent; // Activa la instrucción
+                activePersistentInstruction = uploadedInfoFileContent;
                 uploadedInfoFileContent = ""; // Limpia el contenido temporal
                 startMindButton.classList.remove('info-ready'); // Desactiva la animación
                 addMessage('bot', '¡Mente iniciada! La IA ahora actuará bajo tu instrucción.');
-                // Opcional: podrías limpiar el input del archivo si lo deseas
-                infoFileInput.value = ''; 
+                infoFileInput.value = ''; // Limpia el input del archivo
             } else {
-                // Si no hay un archivo cargado, informa al usuario
                 addMessage('bot', 'Por favor, carga un archivo de información antes de iniciar la mente de la IA.');
             }
         });
@@ -89,13 +87,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- FIN NUEVA LÓGICA ---
 
     // --- Funcionalidad existente del chat ---
+    // Lógica del modo oscuro y claro
+    if (toggleTheme) {
+        toggleTheme.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            toggleTheme.textContent = document.body.classList.contains('light-mode')
+                ? 'Cambiar a Modo Oscuro' : 'Cambiar a Modo Claro';
+        });
+    }
 
     // Función para ajustar la altura del textarea dinámicamente
     function adjustTextareaHeight() {
         userInput.style.height = 'auto';
         userInput.style.height = userInput.scrollHeight + 'px';
     }
-    userInput.addEventListener('input', adjustTextareaHeight);
+    if (userInput) {
+        userInput.addEventListener('input', adjustTextareaHeight);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    }
 
     async function addMessage(sender, text) {
         const messageElement = document.createElement('div');
@@ -144,32 +158,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    sendButton.addEventListener('click', sendMessage);
-    userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
+    if (sendButton) sendButton.addEventListener('click', sendMessage);
 
     // Manejo de adjuntos de archivos (Input general)
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files.length > 0) {
-            selectedFile = fileInput.files[0];
-            fileNameSpan.textContent = selectedFile.name;
-            fileDisplay.style.display = 'flex';
-        } else {
-            selectedFile = null;
-            fileDisplay.style.display = 'none';
-        }
-    });
+    if (fileInput) {
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                selectedFile = fileInput.files[0];
+                fileNameSpan.textContent = selectedFile.name;
+                fileDisplay.style.display = 'flex';
+            } else {
+                selectedFile = null;
+                fileDisplay.style.display = 'none';
+            }
+        });
+    }
 
-    clearFileButton.addEventListener('click', () => {
-        selectedFile = null;
-        fileInput.value = '';
-        fileDisplay.style.display = 'none';
-        adjustTextareaHeight();
-    });
+    if (clearFileButton) {
+        clearFileButton.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            fileDisplay.style.display = 'none';
+            adjustTextareaHeight();
+        });
+    }
 
     async function sendMessage() {
         const message = userInput.value.trim();
