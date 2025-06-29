@@ -3,19 +3,89 @@ document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const messagesContainer = document.querySelector('.messages');
-    const fileInput = document.getElementById('file-upload');
+    const fileInput = document.getElementById('file-upload'); // Botón de adjuntar general
     const fileDisplay = document.getElementById('file-display');
     const fileNameSpan = document.getElementById('file-name');
     const clearFileButton = document.getElementById('clear-file');
-    const fixedPromptInput = document.getElementById('fixed-prompt-input');
-    const setPromptButton = document.getElementById('set-prompt-button');
-
     let typingIndicatorElement = null;
     let selectedFile = null;
     let conversationHistory = [];
-    
-    // --- Variable para guardar el prompt fijo ---
-    let fixedPrompt = "";
+
+    // --- Elementos y lógica para la barra lateral derecha (info-panel) ---
+    const uploadVoiceBtn = document.getElementById('upload-voice-btn');
+    const uploadImageBtn = document.getElementById('upload-image-btn');
+    const uploadInfoBtn = document.getElementById('upload-info-btn');
+    const voiceFileInput = document.getElementById('voice-file-input');
+    const imageFileInput = document.getElementById('image-file-input');
+    const infoFileInput = document.getElementById('info-file-input'); // Input para archivos de información
+    const avatarImage = document.getElementById('avatar-image'); // Referencia a la imagen del avatar
+
+    // --- NUEVAS variables para la instrucción inamovible ---
+    let uploadedInfoFileContent = ""; // Contenido del archivo de info subido (temporal)
+    let activePersistentInstruction = ""; // La instrucción activa para Gemini
+
+    // Botón de "Iniciar mente"
+    const startMindButton = document.getElementById('start-mind-button');
+
+    // Asigna el evento de clic a los botones del panel de información para abrir el selector de archivos
+    uploadVoiceBtn.addEventListener('click', () => { voiceFileInput.click(); });
+    uploadImageBtn.addEventListener('click', () => { imageFileInput.click(); });
+    uploadInfoBtn.addEventListener('click', () => { infoFileInput.click(); });
+
+    // Evento para reemplazar la imagen del avatar cuando se sube una nueva
+    imageFileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const fileURL = URL.createObjectURL(file);
+            avatarImage.src = fileURL; // Cambia la fuente de la imagen
+            addMessage('bot', `Se ha actualizado tu avatar con la imagen: ${file.name}.`);
+        }
+    });
+
+    // --- NUEVO: Manejo del archivo de información (botón "Información") ---
+    infoFileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file && file.type === 'text/plain') { // Asegurarse de que sea un archivo de texto
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedInfoFileContent = e.target.result; // Guarda el contenido del archivo
+                startMindButton.classList.add('info-ready'); // Activa la animación del botón
+                addMessage('bot', `Archivo de instrucción "${file.name}" cargado. Presiona "Iniciar mente" para activar esta instrucción.`);
+            };
+            reader.onerror = () => {
+                addMessage('bot', 'Error al leer el archivo de instrucción. Inténtalo de nuevo.');
+                uploadedInfoFileContent = "";
+                startMindButton.classList.remove('info-ready');
+            };
+            reader.readAsText(file); // Lee el archivo como texto
+        } else {
+            addMessage('bot', 'Por favor, sube un archivo de texto (.txt) para la instrucción.');
+            uploadedInfoFileContent = "";
+            startMindButton.classList.remove('info-ready');
+        }
+    });
+
+    // --- NUEVO: Lógica del botón "Iniciar mente" ---
+    startMindButton.addEventListener('click', () => {
+        if (uploadedInfoFileContent) {
+            activePersistentInstruction = uploadedInfoFileContent; // Activa la instrucción
+            uploadedInfoFileContent = ""; // Limpia el contenido temporal
+            startMindButton.classList.remove('info-ready'); // Desactiva la animación
+            addMessage('bot', '¡Mente iniciada! La IA ahora actuará bajo tu instrucción.');
+            // Opcional: Podrías limpiar el input del archivo si lo deseas
+            infoFileInput.value = ''; 
+        } else {
+            // Si ya hay una instrucción activa, se podría preguntar si desea desactivarla
+            if (activePersistentInstruction) {
+                addMessage('bot', 'La IA ya está siguiendo una instrucción. Si deseas cambiarla, sube un nuevo archivo de información.');
+                // O si quieres que "Iniciar mente" también desactive:
+                // activePersistentInstruction = "";
+                // addMessage('bot', 'La instrucción de la IA ha sido desactivada. La IA volverá a su comportamiento predeterminado.');
+            } else {
+                addMessage('bot', 'Por favor, carga un archivo de información antes de iniciar la mente de la IA.');
+            }
+        }
+    });
 
     // Función para ajustar la altura del textarea dinámicamente
     function adjustTextareaHeight() {
@@ -80,17 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Lógica para establecer el prompt fijo ---
-    setPromptButton.addEventListener('click', () => {
-        fixedPrompt = fixedPromptInput.value.trim();
-        if (fixedPrompt) {
-            addMessage('bot', `Instrucción para la IA establecida: "${fixedPrompt}". A partir de ahora, la IA seguirá estas directrices.`);
-        } else {
-            fixedPrompt = "";
-            addMessage('bot', 'La instrucción para la IA ha sido eliminada. La IA responderá de forma predeterminada.');
-        }
-    });
-
     sendButton.addEventListener('click', sendMessage);
     userInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -121,8 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const message = userInput.value.trim();
         const actualFile = fileInput.files.length > 0 ? fileInput.files[0] : null;
 
-        if (!message && !actualFile) {
-            console.warn("Intento de envío vacío: no hay mensaje ni archivo adjunto.");
+        if (!message && !actualFile && !activePersistentInstruction) { // Permite enviar solo el prompt fijo si no hay mensaje o archivo
+            console.warn("Intento de envío vacío: no hay mensaje, archivo adjunto ni instrucción persistente activa.");
             return;
         }
         
@@ -142,9 +201,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const formData = new FormData();
             formData.append('message', message);
-            // --- Incluir el prompt fijo en el FormData ---
-            formData.append('fixed_prompt', fixedPrompt); 
             formData.append('history', JSON.stringify(conversationHistory.slice(0, -1)));
+            
+            // --- NUEVO: Añade la instrucción persistente si está activa ---
+            if (activePersistentInstruction) {
+                formData.append('persistent_instruction', activePersistentInstruction);
+            }
 
             if (selectedFile) {
                 formData.append('file', selectedFile);
@@ -173,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
             hideTypingIndicator();
             await addMessage('bot', 'Lo siento, hubo un error al conectar con el chatbot. Por favor, revisa la consola del navegador y asegúrate de que el backend esté corriendo.');
             
-            conversationHistory.pop();
+            conversationHistory.pop(); // Elimina el último mensaje del usuario del historial si hubo un error
             selectedFile = null;
             fileInput.value = '';
             fileDisplay.style.display = 'none';
