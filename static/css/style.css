@@ -147,22 +147,46 @@ body {
   color: var(--text-color);
 }
 
+.input-bar {
+  display: flex;
+  flex-wrap: nowrap;   /* ❗ Evita que los elementos salten de línea */
+  align-items: flex-end; /* ❗ Alinea todo abajo */
+  margin-top: 20px;
+  background-color: var(--button-bg);
+  border-radius: 10px;
+  padding: 4px 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  gap: 8px; /* espacio horizontal entre elementos */
+}
+
 .input-bar textarea {
-  flex: 1;
-  padding: 10px;
+  flex: 1;             /* ✅ Ocupa todo el espacio disponible */
+  min-height: 40px;
+  max-height: 120px;   /* opcional: límite de altura si crece */
+  resize: none;        /* sin redimensionar en altura */
+  overflow-y: auto;    /* scroll interno si es necesario */
+  padding: 10px 14px;  /* espacio interno */
   border: none;
   background: transparent;
   color: var(--text-color);
   outline: none;
   font-size: 14px;
-  resize: none;
-  overflow-y: hidden;
-  min-height: 40px;
   line-height: 1.5;
-  margin: 0 8px;
-  margin-bottom: 8px; /* 👈 ESPACIO VERTICAL que sube el textarea */
 }
 
+.file-button,
+.send-button {
+  background: transparent;
+  border: none;
+  color: var(--button-text-color);
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: flex-end; /* ❗ Alinea íconos con borde inferior */
+  font-size: 18px;
+}
 .file-button {
   background: transparent;
   border: none;
