@@ -156,7 +156,7 @@ body {
   padding: 4px 8px;
   align-items: flex-end;
   box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-  gap: 8px; /* <--- ÚNICO CAMBIO ---> */
+  gap: 8px; /* <--- Cambio para el espaciado ---> */
 }
 
 .file-button {
@@ -186,7 +186,8 @@ body {
   overflow-y: hidden;
   min-height: 40px;
   line-height: 1.5;
-  margin: 0 8px;
+  /* Eliminamos el margin horizontal para evitar conflictos con `gap` */
+  /* margin: 0 8px; */
 }
 
 .send-button {
@@ -236,6 +237,41 @@ body {
 
 .clear-file:hover {
   color: #fff;
+}
+
+.typing-indicator {
+  display: flex;
+  align-self: flex-start;
+  background-color: var(--message-bg);
+  padding: 10px 15px;
+  border-radius: 10px;
+  width: fit-content;
+  max-width: 70%;
+  margin-right: auto;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  background-color: var(--text-color);
+  border-radius: 50%;
+  margin: 0 2px;
+  animation: blink 1.4s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0; }
+  40% { opacity: 1; }
 }
 
 .info-panel {
@@ -331,41 +367,6 @@ body {
 
 .start-button:hover {
   background-color: #444444;
-}
-
-.typing-indicator {
-  display: flex;
-  align-self: flex-start;
-  background-color: var(--message-bg);
-  padding: 10px 15px;
-  border-radius: 10px;
-  width: fit-content;
-  max-width: 70%;
-  margin-right: auto;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-}
-
-.typing-indicator span {
-  width: 8px;
-  height: 8px;
-  background-color: var(--text-color);
-  border-radius: 50%;
-  margin: 0 2px;
-  animation: blink 1.4s infinite ease-in-out;
-}
-
-.typing-indicator span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.typing-indicator span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes blink {
-  0%, 80%, 100% { opacity: 0; }
-  40% { opacity: 1; }
 }
 
 /* Nuevo estilo para el botón "Iniciar mente" cuando el archivo de info esté listo */
