@@ -150,14 +150,16 @@ body {
 .input-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px; /* 👈 NUEVO: separa los elementos hijos */
-  margin-top: 20px;
-  background-color: var(--button-bg);
-  border-radius: 10px;
-  padding: 4px 8px;
-  align-items: flex-end;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  align-items: center; /* CENTRADO VERTICAL */
+  gap: 8px;            /* ESPACIADO ENTRE ELEMENTOS */
+  ...
 }
+
+.input-bar textarea {
+  min-height: 48px;    /* ALTURA MÍNIMA MÁS AMPLIA */
+  padding: 12px 16px;  /* RELLENO INTERNO */
+}
+
 
 
 .file-button {
