@@ -29,10 +29,10 @@ body.light-mode {
   --message-user-bg: #c1c1c1;
   --button-bg: #dddddd;
   --border-color: #d1d1d1;
-  --hover-color: #c1c1c1;
-  --button-text-color: #555;
-  --avatar-name-color: #333;
-  --quote-color: #555;
+  --hover-color: #e9e9e9;
+  --button-text-color: #333333;
+  --avatar-name-color: #111;
+  --quote-color: #666666;
 }
 
 * {
@@ -48,7 +48,7 @@ body {
   color: var(--text-color);
   height: 100vh;
   display: flex;
-  transition: background 0.3s, color 0.3s;
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
 }
 
 .sidebar {
@@ -58,211 +58,253 @@ body {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border-color);
+  transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out;
 }
 
 .sidebar h2 {
-  color: var(--text-color);
-  margin-bottom: 30px;
   font-size: 18px;
   font-weight: 600;
+  margin-bottom: 20px;
 }
 
 .sidebar a {
-  color: var(--link-color);
   text-decoration: none;
-  font-size: 14px;
-  margin-bottom: 18px;
-  display: block;
-  padding: 6px 0;
-  border-radius: 4px;
-  transition: all 0.25s ease-in-out;
+  color: var(--link-color);
+  padding: 10px 12px;
+  margin: 4px 0;
+  border-radius: 8px;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
 .sidebar a:hover {
   background-color: var(--hover-color);
   color: var(--text-color);
-  padding-left: 8px;
 }
 
 #toggle-theme {
-  margin-top: auto; /* Empuja el botón al final de la barra lateral */
-  font-size: 12px;
+  margin-top: auto;
   cursor: pointer;
-  color: var(--link-color);
-  padding: 10px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
   text-align: center;
-  border-top: 1px solid var(--border-color);
+  font-size: 11px;
+  background-color: var(--button-bg);
+  color: var(--button-text-color);
+  transition: background-color 0.2s ease-in-out;
 }
 
 #toggle-theme:hover {
-  color: var(--text-color);
+  background-color: var(--hover-color);
 }
 
 .chat-area {
-  flex: 1;
-  background-color: var(--chat-bg);
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 20px;
+  background-color: var(--chat-bg);
+  transition: background-color 0.3s ease-in-out;
 }
 
 .messages {
-  flex: 1;
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  overflow-y: auto;
-  padding-right: 6px;
+  gap: 12px;
+  scroll-behavior: smooth;
 }
 
 .message {
-  background-color: var(--message-bg);
   padding: 12px 16px;
-  border-radius: 12px;
-  width: fit-content;
+  border-radius: 20px;
   max-width: 70%;
-  font-size: 14px;
+  line-height: 1.5;
   word-wrap: break-word;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  line-height: 1.6;
   opacity: 0;
   transform: translateY(10px);
-  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .message.appeared {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.message.user {
-  align-self: flex-end;
-  background-color: var(--message-user-bg);
-  color: var(--text-color);
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .message.bot {
-  align-self: flex-start;
+  background-color: var(--message-bg);
   color: var(--text-color);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.message.user {
+  background-color: var(--message-user-bg);
+  color: var(--text-color);
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
 }
 
 .input-bar {
   display: flex;
-  flex-wrap: wrap;
-  margin-top: 20px;
-  background-color: var(--button-bg);
-  border-radius: 10px;
-  padding: 4px 8px;
-  align-items: flex-end;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-}
-
-.file-button {
-  background: transparent;
-  border: none;
-  color: var(--button-text-color);
-  padding: 8px;
-  font-size: 20px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  border-radius: 6px;
-}
-
-.file-button:hover {
-  background-color: var(--hover-color);
+  align-items: flex-end; /* Alinea los elementos en la parte inferior */
+  padding: 10px;
+  background-color: var(--sidebar-bg);
+  border-top: 1px solid var(--border-color);
+  gap: 10px; /* Espacio entre los elementos */
+  transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out;
 }
 
 .input-bar textarea {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  background: transparent;
+  flex-grow: 1;
+  padding: 12px;
+  border-radius: 20px;
+  background-color: var(--message-bg);
+  border: 1px solid var(--border-color);
   color: var(--text-color);
-  outline: none;
-  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
   resize: none;
-  overflow-y: hidden;
-  min-height: 40px;
-  line-height: 1.5;
-  margin: 0 8px;
+  min-height: 40px; /* Altura mínima */
+  max-height: 150px; /* Altura máxima */
+  overflow-y: auto;
+  outline: none;
+  transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 
+.input-bar textarea:focus {
+  border-color: #555;
+  background-color: var(--hover-color);
+}
+
+.file-button,
 .send-button {
-  background: transparent;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   border: none;
+  background-color: var(--button-bg);
   color: var(--button-text-color);
-  padding: 8px;
-  font-size: 16px;
-  cursor: pointer;
   display: flex;
+  justify-content: center;
   align-items: center;
-  border-radius: 6px;
-  transition: background-color 0.2s ease;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+  flex-shrink: 0;
+  margin-bottom: 0;
 }
 
+.file-button:hover,
 .send-button:hover {
   background-color: var(--hover-color);
 }
 
+.file-button {
+  font-size: 24px;
+}
+
+.file-button svg,
 .send-button svg {
+  width: 20px;
+  height: 20px;
   fill: currentColor;
 }
 
 .file-info {
   display: flex;
   align-items: center;
-  background-color: var(--hover-color);
-  padding: 4px 8px;
-  border-radius: 6px;
-  margin-left: 8px;
+  background-color: var(--message-bg);
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 11px;
   color: var(--text-color);
-  font-size: 12px;
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin-right: 10px;
 }
 
 .clear-file {
   background: none;
   border: none;
-  color: var(--text-color);
-  font-size: 14px;
-  margin-left: 6px;
+  color: #aaa;
   cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  margin-left: 8px;
+  padding: 0;
 }
 
-.clear-file:hover {
-  color: #fff;
+.typing-indicator {
+  padding: 12px 16px;
+  border-radius: 20px;
+  background-color: var(--message-bg);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+  width: 50px;
+  display: flex;
+  justify-content: space-around;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+.typing-indicator span {
+  width: 6px;
+  height: 6px;
+  background-color: #666;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
 }
 
 .info-panel {
+  width: 250px;
   background-color: var(--panel-bg);
-  width: 260px;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   border-left: 1px solid var(--border-color);
+  transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out;
 }
 
 .info-panel h4 {
   font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 15px;
   color: var(--text-color);
 }
 
 .menu-option {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 13px;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 15px;
+  background-color: var(--button-bg);
   color: var(--button-text-color);
-  margin-bottom: 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: color 0.2s ease-in-out;
+  margin-bottom: 10px;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
 .menu-option:hover {
+  background-color: var(--hover-color);
   color: var(--text-color);
 }
 
@@ -272,24 +314,6 @@ body {
   background-color: #333333;
   border-radius: 4px;
   flex-shrink: 0;
-}
-
-#fixed-prompt-input {
-  width: 100%;
-  height: 80px;
-  background-color: var(--button-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 10px;
-  color: var(--text-color);
-  font-size: 13px;
-  resize: vertical;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-#fixed-prompt-input:focus {
-  border-color: #555;
 }
 
 .avatar {
@@ -316,61 +340,25 @@ body {
 .start-button {
   margin-top: 20px;
   width: 100%;
-  background-color: #333333;
-  color: white;
+  background-color: var(--button-bg);
+  color: var(--button-text-color);
   font-weight: 600;
   font-size: 13px;
   padding: 10px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  transition: background-color 0.2s ease-in-out, box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
 }
 
 .start-button:hover {
-  background-color: #444444;
+  background-color: var(--hover-color);
 }
 
-.typing-indicator {
-  display: flex;
-  align-self: flex-start;
-  background-color: var(--message-bg);
-  padding: 10px 15px;
-  border-radius: 10px;
-  width: fit-content;
-  max-width: 70%;
-  margin-right: auto;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-}
-
-.typing-indicator span {
-  width: 8px;
-  height: 8px;
-  background-color: var(--text-color);
-  border-radius: 50%;
-  margin: 0 2px;
-  animation: blink 1.4s infinite ease-in-out;
-}
-
-.typing-indicator span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.typing-indicator span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes blink {
-  0%, 80%, 100% { opacity: 0; }
-  40% { opacity: 1; }
-}
-/* ... (todo tu CSS existente) ... */
-
-/* Nuevo estilo para el botón "Iniciar mente" cuando el archivo de info esté listo */
+/* NUEVO: Estilo para el botón "Iniciar mente" cuando el archivo de info está listo */
 .start-button.info-ready {
-  background-color: #8a2be2; /* Un tono de morado */
+  background-color: #8a2be2; /* Morado */
   box-shadow: 0 0 15px rgba(138, 43, 226, 0.7); /* Sombra brillante */
   animation: pulse-purple 1.5s infinite alternate; /* Animación de pulsación */
 }
