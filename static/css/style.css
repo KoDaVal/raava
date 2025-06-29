@@ -81,7 +81,6 @@ body {
   color: var(--text-color);
 }
 
-/* Regresamos el estilo de toggle-theme a un enlace, como lo tenías */
 #toggle-theme {
   margin-top: auto;
   cursor: pointer;
@@ -89,16 +88,14 @@ body {
   border-radius: 8px;
   text-align: center;
   font-size: 11px;
-  background-color: transparent; /* No es un botón, es un elemento con estilo de enlace */
-  color: var(--link-color);
+  background-color: var(--button-bg);
+  color: var(--button-text-color);
   transition: background-color 0.2s ease-in-out;
 }
 
 #toggle-theme:hover {
   background-color: var(--hover-color);
-  color: var(--text-color);
 }
-
 
 .chat-area {
   flex-grow: 1;
@@ -148,14 +145,13 @@ body {
   border-bottom-right-radius: 4px;
 }
 
-/* Modificación de la barra de entrada para el espaciado */
 .input-bar {
   display: flex;
-  align-items: flex-end; /* Alinea los elementos a la parte inferior del contenedor */
+  align-items: flex-end;
   padding: 10px;
   background-color: var(--sidebar-bg);
   border-top: 1px solid var(--border-color);
-  gap: 10px; /* **NUEVO: Espacio entre los elementos** */
+  gap: 10px; /* <--- ÚNICO CAMBIO: Añade un espacio de 10px entre los elementos hijos ---> */
   transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out;
 }
 
@@ -169,8 +165,8 @@ body {
   font-family: 'Inter', sans-serif;
   font-size: 13px;
   resize: none;
-  min-height: 40px; /* Altura mínima */
-  max-height: 150px; /* Altura máxima para evitar que crezca demasiado */
+  min-height: 40px;
+  max-height: 150px;
   overflow-y: auto;
   outline: none;
   transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
@@ -181,7 +177,6 @@ body {
   background-color: var(--hover-color);
 }
 
-/* Estilo para los botones dentro de input-bar */
 .file-button,
 .send-button {
   width: 40px;
@@ -214,7 +209,6 @@ body {
   fill: currentColor;
 }
 
-/* Estilos para el display de archivo adjunto */
 .file-info {
   display: flex;
   align-items: center;
