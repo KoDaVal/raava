@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- NUEVO: Manejo del archivo de información Y ADJUNTARLO AL CHAT ---
+    // --- CORRECCIÓN: Manejo del archivo de información (ya no adjunta al chat principal) ---
     if (infoFileInput && startMindButton) {
         infoFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
@@ -101,34 +101,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     uploadedInfoFileContent = e.target.result;
                     startMindButton.classList.add('info-ready');
                     addMessage('bot', `Archivo de instrucción "${file.name}" cargado. Presiona "Iniciar mente" para activar esta instrucción.`);
-
-                    // También prepara el archivo de texto para ser adjuntado al siguiente mensaje de chat
-                    selectedFile = file;
-                    fileNameSpan.textContent = selectedFile.name;
-                    fileDisplay.style.display = 'flex';
+                    
+                    // COMENTADO: Estas líneas ya no son necesarias aquí, ya que el archivo de información
+                    // no debe aparecer como un archivo adjunto en la barra de chat principal.
+                    // selectedFile = file;
+                    // fileNameSpan.textContent = selectedFile.name;
+                    // fileDisplay.style.display = 'flex';
                 };
                 reader.onerror = () => {
                     addMessage('bot', 'Error al leer el archivo de instrucción. Inténtalo de nuevo.');
                     uploadedInfoFileContent = "";
                     startMindButton.classList.remove('info-ready');
-                    selectedFile = null; // Limpia si hay error
-                    fileNameSpan.textContent = '';
-                    fileDisplay.style.display = 'none';
+                    // COMENTADO: Limpiar también si hay error, pero solo la lógica de información.
+                    // selectedFile = null;
+                    // fileNameSpan.textContent = '';
+                    // fileDisplay.style.display = 'none';
                 };
                 reader.readAsText(file);
             } else {
                 addMessage('bot', 'Por favor, sube un archivo de texto (.txt) para la instrucción.');
                 uploadedInfoFileContent = "";
                 startMindButton.classList.remove('info-ready');
-                selectedFile = null; // Limpia si no es un archivo de texto
-                fileNameSpan.textContent = '';
-                fileDisplay.style.display = 'none';
+                // COMENTADO: Limpiar si no es un archivo de texto válido.
+                // selectedFile = null;
+                // fileNameSpan.textContent = '';
+                // fileDisplay.style.display = 'none';
             }
             event.target.value = ''; // Limpia el input del archivo
         });
     }
     
-    // --- NUEVO: Lógica del botón "Iniciar mente" ---
+    // --- Lógica del botón "Iniciar mente" ---
     if (startMindButton && infoFileInput) {
         startMindButton.addEventListener('click', () => {
             if (uploadedInfoFileContent) {
@@ -142,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    // --- FIN NUEVA LÓGICA ---
+    // --- FIN LÓGICA ---
 
     // --- Funcionalidad existente del chat ---
     // Lógica del modo oscuro y claro
@@ -275,16 +278,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return Promise.resolve();
     }
 
-    // La función playAudio original se integró directamente en addMessage,
-    // pero si la necesitas para otros usos, aquí está por separado:
-    /*
-    function playAudio(base64String) {
-        const audio = new Audio(`data:audio/mpeg;base64,${base64String}`);
-        audio.play().catch(e => console.error("Error al reproducir audio:", e));
-    }
-    */
-
-
     function showTypingIndicator() {
         if (typingIndicatorElement) return;
 
@@ -347,17 +340,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // No sobrescribas selectedFile aquí, ya se maneja en los listeners de archivo
-        // selectedFile = actualFile;
-
         let displayMessage = message;
         if (selectedFile) {
             displayMessage += (message ? ' ' : '') + `📎 Archivo adjunto: ${selectedFile.name}`;
         }
         await addMessage('user', displayMessage);
         
-        // El historial para el usuario ya se añade dentro de addMessage
-
         userInput.value = '';
         adjustTextareaHeight();
 
