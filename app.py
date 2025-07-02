@@ -1,200 +1,349 @@
-from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
-import google.generativeai as genai
-import os
-import base64
-import json
-import requests # Necesario para Eleven Labs
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleTheme = document.getElementById('toggle-theme');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+    const messagesContainer = document.querySelector('.messages');
+    const fileInput = document.getElementById('file-upload');
+    const fileDisplay = document.getElementById('file-display');
+    const fileNameSpan = document.getElementById('file-name');
+    const clearFileButton = document.getElementById('clear-file');
+    let typingIndicatorElement = null;
+    let selectedFile = null;
+    let conversationHistory = [];
 
-app = Flask(__name__)
-CORS(app)
+    // --- NUEVO: Variables para la clonación de voz y mensajes de estado ---
+    let currentClonedVoiceId = null; // Almacena el ID de la voz clonada temporalmente
+    const statusMessageElement = document.getElementById('status-message'); // Elemento para mostrar mensajes de estado
+    // --- FIN variables de clonación de voz ---
 
-# --- CONFIGURACIÓN DE GEMINI ---
-gemini_api_key = os.getenv("GEMINI_API_KEY", "AIzaSyAqa7wkPNR17Cmyom8EZZ1GiclxaqbEVVI")
-genai.configure(api_key=gemini_api_key)
-model = genai.GenerativeModel('gemini-1.5-flash')
-# --- FIN CONFIGURACIÓN DE GEMINI ---
+    // --- NUEVO: Elementos y lógica para la barra lateral derecha (info-panel) ---
+    const uploadVoiceBtn = document.getElementById('upload-voice-btn');
+    const uploadImageBtn = document.getElementById('upload-image-btn');
+    const uploadInfoBtn = document.getElementById('upload-info-btn');
+    const voiceFileInput = document.getElementById('voice-file-input');
+    const imageFileInput = document.getElementById('image-file-input');
+    const infoFileInput = document.getElementById('info-file-input');
+    const avatarImage = document.getElementById('avatar-image'); // Referencia a la imagen del avatar
 
-# --- CONFIGURACIÓN DE ELEVEN LABS ---
-# Obtiene la API Key de las variables de entorno.
-# ¡IMPORTANTE! Reemplaza "YOUR_ELEVEN_LABS_API_KEY" con tu clave real,
-# o asegúrate de que la variable de entorno ELEVEN_LABS_API_KEY esté configurada en Render.
-eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_14db6d8f72f6b97fd8d6bd0b03c3fb8ba2325db35d317513")
+    // Asigna el evento de clic a los botones del panel de información para abrir el selector de archivos
+    uploadVoiceBtn.addEventListener('click', () => { voiceFileInput.click(); });
+    uploadImageBtn.addEventListener('click', () => { imageFileInput.click(); });
+    uploadInfoBtn.addEventListener('click', () => { infoFileInput.click(); });
 
-# ID de voz predeterminada de Eleven Labs (Rachel)
-default_eleven_labs_voice_id = "21m00Tcm4TlvDq8ikWAM"
-cloned_voice_id = None # Variable global para almacenar el ID de la voz clonada (simplificado para este ejemplo)
-# Si necesitas persistencia de la voz clonada entre sesiones de usuario,
-# deberías usar un sistema de sesiones de Flask o una base de datos.
-# --- FIN CONFIGURACIÓN DE ELEVEN LABS ---
+    // Evento para cuando se selecciona un archivo de voz y se sube para clonar
+    voiceFileInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) {
+            return;
+        }
 
-# --- RUTA PARA SERVIR EL FRONTEND ---
-@app.route('/')
-def index():
-    return render_template('index.html')
-# --- FIN RUTA DEL FRONTEND ---
+        // Validación básica para asegurar que es un archivo de audio
+        if (file.type && !file.type.startsWith('audio/')) {
+            alert('Por favor, selecciona un archivo de audio válido.');
+            voiceFileInput.value = ''; // Limpia el input
+            return;
+        }
 
-# --- RUTA PARA CLONAR VOZ (Eleven Labs) ---
-@app.route('/clone_voice', methods=['POST'])
-def clone_voice():
-    global cloned_voice_id # Declara como global para modificar la variable global
+        // Mostrar un mensaje de estado al usuario
+        statusMessageElement.textContent = 'Subiendo archivo y clonando voz... Esto puede tomar unos segundos.';
+        statusMessageElement.style.display = 'block'; // Asegura que el mensaje sea visible
+        statusMessageElement.style.color = '#888'; // Color por defecto
 
-    if 'audio_file' not in request.files:
-        return jsonify({'error': 'No se proporcionó archivo de audio.'}), 400
+        const formData = new FormData();
+        formData.append('voice_file', file); // 'voice_file' debe coincidir con el nombre esperado en app.py
 
-    audio_file = request.files['audio_file']
-    if audio_file.filename == '':
-        return jsonify({'error': 'No se seleccionó archivo de audio.'}), 400
+        try {
+            const response = await fetch('/upload_voice_sample', { // Llama al nuevo endpoint del backend
+                method: 'POST',
+                body: formData
+            });
 
-    if not eleven_labs_api_key or eleven_labs_api_key == "sk_14db6d8f72f6b97fd8d6bd0b03c3fb8ba2325db35d317513":
-        return jsonify({'error': 'Clave API de Eleven Labs no configurada o inválida.'}), 500
-
-    url = "https://api.elevenlabs.io/v1/voices/add"
-    headers = {
-        "xi-api-key": eleven_labs_api_key
-    }
-    data = {
-        "name": "Cloned Voice",
-        "description": "Voice cloned from user sample"
-    }
-    files = {
-        'files': (audio_file.filename, audio_file.read(), audio_file.content_type)
-    }
-
-    try:
-        response = requests.post(url, headers=headers, data=data, files=files)
-        response.raise_for_status() # Lanza una excepción para errores HTTP (4xx o 5xx)
-        voice_data = response.json()
-        cloned_voice_id = voice_data['voice_id'] # Almacena el ID de la voz clonada
-        print(f"Voz clonada ID: {cloned_voice_id}")
-        return jsonify({'message': 'Voz clonada exitosamente.', 'voice_id': cloned_voice_id}), 200
-    except requests.exceptions.HTTPError as e:
-        print(f"Error de conexión o API con Eleven Labs al clonar voz: {e.response.status_code} - {e.response.text}")
-        return jsonify({'error': f"Error al clonar la voz con Eleven Labs: {e.response.text}"}), e.response.status_code
-    except Exception as e:
-        print(f"Error inesperado al clonar voz: {e}")
-        return jsonify({'error': f"Error inesperado al clonar la voz: {str(e)}"}), 500
-
-# --- FIN RUTA PARA CLONAR VOZ ---
-
-
-@app.route('/chat', methods=['POST'])
-def chat():
-    # Obtener el historial de la conversación, el mensaje actual, el archivo y la instrucción persistente
-    history_json = request.form.get('history', '[]')
-    user_message = request.form.get('message', '')
-    uploaded_file = request.files.get('file')
-    
-    # <--- NUEVO: Obtiene la instrucción persistente enviada desde el frontend --->
-    persistent_instruction = request.form.get('persistent_instruction', '')
-
-    try:
-        conversation_history = json.loads(history_json)
-    except json.JSONDecodeError:
-        return jsonify({"response": "Error: Formato de historial inválido."}), 400
-
-    parts_for_gemini = conversation_history
-    
-    response_message = "Lo siento, hubo un error desconocido."
-    audio_base64 = None # Inicializar audio_base64 a None por defecto
-
-    # <--- INSTRUCCIÓN BÁSICA PARA CONTROLAR EL TONO --->
-    base_instruction = "Responde de forma concisa y clara, ofreciendo la información esencial con un tono amable y humano, evitando la simplicidad excesiva:"
-    
-    # <--- Combina la instrucción persistente con el mensaje del usuario y la instrucción básica --->
-    full_user_message_text = f"{base_instruction} {user_message}"
-    if persistent_instruction:
-        # Añade la instrucción persistente al inicio, seguida de la instrucción básica y el mensaje del usuario
-        full_user_message_text = f"{persistent_instruction}\n\n{full_user_message_text}"
-
-    # Añadir el mensaje actual del usuario (y el archivo) como la última "parte"
-    current_user_parts = []
-    if full_user_message_text:
-        current_user_parts.append({'text': full_user_message_text})
-
-    if uploaded_file:
-        file_name = uploaded_file.filename
-        file_type = uploaded_file.content_type
-
-        try:
-            if file_type.startswith('image/'):
-                image_bytes = uploaded_file.read()
-                base64_image = base64.b64encode(image_bytes).decode('utf-8')
-                current_user_parts.append({
-                    "inlineData": {
-                        "mimeType": file_type,
-                        "data": base64_image
-                    }
-                })
-                if not user_message:
-                    current_user_parts.append({'text': f"Adjuntaste la imagen '{file_name}'. ¿Qué quieres saber sobre ella?"})
-                else:
-                    current_user_parts.append({'text': f"Imagen adjunta: '{file_name}'."})
-
-            elif file_type.startswith('text/'):
-                text_content = uploaded_file.read().decode('utf-8')
-                current_user_parts.append({'text': f"Contenido del archivo de texto '{file_name}':\n{text_content}"})
-                if not user_message:
-                    current_user_parts.append({'text': f"Adjuntaste el archivo de texto '{file_name}'. ¿Qué quieres que analice?"})
-                else:
-                    current_user_parts.append({'text': f"Archivo de texto adjunto: '{file_name}'."})
-            else:
-                current_user_parts.append({'text': f"Se adjuntó un archivo de tipo {file_type} ('{file_name}'). Actualmente, solo puedo procesar imágenes y texto simple directamente. ¿Hay algo más en lo que pueda ayudarte?"})
-
-        except Exception as e:
-            print(f"Error al procesar el archivo adjunto: {e}")
-            return jsonify({"response": "Lo siento, hubo un error al procesar el archivo adjunto."}), 500
-    
-    if not current_user_parts:
-        return jsonify({"response": "Por favor, envía un mensaje o un archivo válido para que pueda responderte."}), 400
-
-    parts_for_gemini.append({'role': 'user', 'parts': current_user_parts})
-
-    try:
-        gemini_response = model.generate_content(parts_for_gemini)
-        response_message = gemini_response.text
-
-        # --- GENERACIÓN DE AUDIO CON ELEVEN LABS ---
-        if eleven_labs_api_key and eleven_labs_api_key != "YOUR_ELEVEN_LABS_API_KEY":
-            # Determina qué ID de voz usar: la clonada si existe, de lo contrario la predeterminada
-            current_voice_id = cloned_voice_id if cloned_voice_id else default_eleven_labs_voice_id
-
-            tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{current_voice_id}/stream"
-            tts_headers = {
-                "xi-api-key": eleven_labs_api_key,
-                "Content-Type": "application/json",
-                "accept": "audio/mpeg" # Asegúrate de aceptar audio/mpeg para streaming
-            }
-            tts_data = {
-                "text": response_message,
-                "model_id": "eleven_multilingual_v2", # Puedes usar "eleven_turbo_v2" o "eleven_multilingual_v2"
-                "voice_settings": {
-                    "stability": 0.5,
-                    "similarity_boost": 0.75
+            if (!response.ok) {
+                const errorText = await response.text();
+                // Intenta parsear como JSON para ver si hay un mensaje de error específico del backend
+                let errorMessage = `Error HTTP: ${response.status} - ${response.statusText}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    if (errorData.message) errorMessage += `. ${errorData.message}`;
+                } catch (e) {
+                    errorMessage += `. ${errorText}`; // Si no es JSON, usa el texto crudo
                 }
+                throw new Error(errorMessage);
             }
 
-            tts_response = requests.post(tts_url, headers=tts_headers, json=tts_data, stream=True)
-            tts_response.raise_for_status() # Lanza una excepción para errores HTTP
+            const data = await response.json();
 
-            audio_content = b''
-            for chunk in tts_response.iter_content(chunk_size=4096):
-                audio_content += chunk
+            if (data.success) {
+                currentClonedVoiceId = data.voice_id; // Almacena el ID de la voz clonada
+                statusMessageElement.textContent = `Voz clonada con éxito. ID: ${currentClonedVoiceId.substring(0, 8)}... Ahora el bot usará esta voz.`;
+                statusMessageElement.style.color = 'lightgreen'; // Mensaje de éxito en verde
+            } else {
+                statusMessageElement.textContent = `Error al clonar voz: ${data.message}`;
+                statusMessageElement.style.color = 'red'; // Mensaje de error en rojo
+            }
+        } catch (error) {
+            console.error('Error al subir archivo de voz:', error);
+            statusMessageElement.textContent = 'Error al conectar con el servidor para clonar la voz. Revisa la consola y tu clave API.';
+            statusMessageElement.style.color = 'red'; // Mensaje de error de conexión
+        } finally {
+            voiceFileInput.value = ''; // Limpiar el input para permitir futuras subidas
+        }
+    });
+
+    // Evento para reemplazar la imagen del avatar cuando se sube una nueva
+    imageFileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const fileURL = URL.createObjectURL(file);
+            avatarImage.src = fileURL; // Cambia la fuente de la imagen
+        }
+    });
+    // --- FIN de la lógica de la barra lateral derecha ---
+
+    // Función para ajustar la altura del textarea dinámicamente
+    function adjustTextareaHeight() {
+        userInput.style.height = 'auto'; // Reset height to recalculate
+        userInput.style.height = userInput.scrollHeight + 'px'; // Set to scroll height
+    }
+    userInput.addEventListener('input', adjustTextareaHeight);
+    userInput.addEventListener('focus', adjustTextareaHeight);
+    userInput.addEventListener('blur', adjustTextareaHeight);
+
+    // Lógica del modo oscuro y claro
+    toggleTheme.addEventListener('click', () => {
+      document.body.classList.toggle('light-mode');
+      toggleTheme.textContent = document.body.classList.contains('light-mode')
+        ? 'Cambiar a Modo Oscuro' : 'Cambiar a Modo Claro';
+    });
+
+    // --- MODIFICACIÓN CLAVE: addMessage para incluir botones y lógica de audio ---
+    async function addMessage(sender, text, audioBase64 = null) {
+        const msg = document.createElement('div');
+        msg.classList.add('message', sender);
+
+        const textContentElement = document.createElement('span');
+        textContentElement.textContent = text;
+        msg.appendChild(textContentElement);
+
+        // Si es un mensaje del bot, añade los botones de acción
+        if (sender === 'bot') {
+            const actionsContainer = document.createElement('div');
+            actionsContainer.classList.add('message-actions');
+
+            // Botón Copiar Mensaje
+            const copyButton = document.createElement('button');
+            copyButton.classList.add('message-action-btn', 'copy-btn');
+            copyButton.innerHTML = '<i class="far fa-copy"></i>'; // Icono de copiar de FontAwesome
+            copyButton.title = 'Copiar mensaje';
+            copyButton.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    copyButton.classList.add('copied'); // Añade clase para animación de "Copiado!"
+                    setTimeout(() => copyButton.classList.remove('copied'), 2000); // Quita la clase después de 2 segundos
+                } catch (err) {
+                    console.error('Error al copiar el texto: ', err);
+                }
+            });
+            actionsContainer.appendChild(copyButton);
+
+            // Botón Reproducir Audio
+            const playAudioButton = document.createElement('button');
+            playAudioButton.classList.add('message-action-btn', 'play-audio-btn');
+            playAudioButton.innerHTML = '<i class="fas fa-volume-up"></i>'; // Icono de volumen de FontAwesome
+            playAudioButton.title = 'Reproducir audio';
+                
+            // Variable para almacenar la instancia de Audio y controlar su estado
+            let currentAudioInstance = null;
+
+            playAudioButton.addEventListener('click', async () => {
+                if (!audioBase64) {
+                    console.warn('No hay audio disponible para este mensaje.');
+                    return;
+                }
+
+                // Si ya hay un audio reproduciéndose, páusalo y reinícialo
+                if (currentAudioInstance && !currentAudioInstance.paused) {
+                    currentAudioInstance.pause();
+                    currentAudioInstance.currentTime = 0; // Reinicia el audio
+                    playAudioButton.classList.remove('playing');
+                }
+
+                try {
+                    playAudioButton.classList.add('loading'); // Muestra indicador de carga (spinner)
+                    playAudioButton.classList.remove('playing'); // Asegura que no tenga la clase 'playing'
+
+                    currentAudioInstance = new Audio();
+                    currentAudioInstance.src = `data:audio/mpeg;base64,${audioBase64}`;
+                        
+                    // Evento para cuando el audio empieza a reproducirse
+                    currentAudioInstance.onplay = () => {
+                        playAudioButton.classList.remove('loading');
+                        playAudioButton.classList.add('playing');
+                    };
+
+                    // Evento para cuando el audio termina
+                    currentAudioInstance.onended = () => {
+                        playAudioButton.classList.remove('playing');
+                    };
+
+                    // Evento para errores de carga o reproducción
+                    currentAudioInstance.onerror = (e) => {
+                        console.error('Error al cargar o reproducir el audio:', e);
+                        playAudioButton.classList.remove('loading', 'playing');
+                        // Puedes mostrar un error visual al usuario aquí
+                    };
+
+                    await currentAudioInstance.play();
+                    console.log('Audio iniciado.');
+
+                } catch (error) {
+                    console.error('Error al reproducir el audio:', error);
+                    playAudioButton.classList.remove('loading', 'playing');
+                }
+            });
+            actionsContainer.appendChild(playAudioButton);
+
+            msg.appendChild(actionsContainer);
+        }
+
+        messagesContainer.appendChild(msg);
+
+        requestAnimationFrame(() => {
+            msg.classList.add('appeared');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        });
+        return Promise.resolve(); // Mantener la compatibilidad del retorno
+    }
+    // --- FIN MODIFICACIÓN addMessage ---
+
+
+    function showTypingIndicator() {
+        if (typingIndicatorElement) return;
+
+        typingIndicatorElement = document.createElement('div');
+        typingIndicatorElement.classList.add('message', 'bot', 'typing-indicator');
+        for (let i = 0; i < 3; i++) {
+            const dot = document.createElement('span');
+            typingIndicatorElement.appendChild(dot);
+        }
+        messagesContainer.appendChild(typingIndicatorElement);
+        void typingIndicatorElement.offsetWidth;
+        typingIndicatorElement.style.opacity = '1';
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+        if (typingIndicatorElement && messagesContainer.contains(typingIndicatorElement)) {
+            typingIndicatorElement.style.opacity = '0';
+            setTimeout(() => {
+                if (typingIndicatorElement && messagesContainer.contains(typingIndicatorElement)) {
+                    messagesContainer.removeChild(typingIndicatorElement);
+                    typingIndicatorElement = null;
+                }
+            }, 300);
+        }
+    }
+
+    sendButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            selectedFile = fileInput.files[0];
+            fileNameSpan.textContent = selectedFile.name;
+            fileDisplay.style.display = 'flex';
+        } else {
+            selectedFile = null;
+            fileDisplay.style.display = 'none';
+        }
+    });
+
+    clearFileButton.addEventListener('click', () => {
+        selectedFile = null;
+        fileInput.value = '';
+        fileDisplay.style.display = 'none';
+        adjustTextareaHeight();
+    });
+
+    async function sendMessage() {
+        const message = userInput.value.trim();
+        const actualFile = fileInput.files.length > 0 ? fileInput.files[0] : null;
+
+        if (!message && !actualFile) {
+            console.warn("Intento de envío vacío: no hay mensaje ni archivo adjunto.");
+            return;
+        }
+        
+        selectedFile = actualFile;
+
+        let displayMessage = message;
+        if (selectedFile) {
+            displayMessage += (message ? ' ' : '') + `📎 Archivo adjunto: ${selectedFile.name}`;
+        }
+        await addMessage('user', displayMessage);
+        
+        // Push user message to history here, as addMessage for user doesn't handle it
+        conversationHistory.push({
+            role: 'user',
+            parts: [{ text: displayMessage }]
+        });
+        
+        userInput.value = '';
+        adjustTextareaHeight();
+
+        showTypingIndicator();
+
+        try {
+            const formData = new FormData();
+            formData.append('message', message);
+            formData.append('history', JSON.stringify(conversationHistory.slice(0, -1)));
+
+            if (selectedFile) {
+                formData.append('file', selectedFile);
+            }
+
+            const response = await fetch('https://raava.onrender.com/chat', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. ${errorText}`);
+            }
+            const data = await response.json();
+            hideTypingIndicator();
+            // Pasa el audio (data.audio) a addMessage si existe
+            await addMessage('bot', data.response, data.audio);
             
-            audio_base64 = base64.b64encode(audio_content).decode('utf-8')
-        # --- FIN GENERACIÓN DE AUDIO ---
+            // Add bot response to history here
+            conversationHistory.push({ 'role': 'model', 'parts': [{ 'text': data.response }] });
 
-        return jsonify({"response": response_message, "audio": audio_base64})
+            selectedFile = null;
+            fileInput.value = '';
+            fileDisplay.style.display = 'none';
+            adjustTextareaHeight();
 
-    except requests.exceptions.HTTPError as e:
-        print(f"Error de conexión o API con Eleven Labs al generar audio: {e.response.status_code} - {e.response.text}")
-        response_message = f"Lo siento, hubo un problema al generar el audio: {e.response.text}. Por favor, revisa tu clave API de Eleven Labs o los límites de tu cuenta."
-        return jsonify({"response": response_message, "audio": None})
-    except Exception as e:
-        print(f"Error inesperado al conectar con la API de Gemini o generar audio: {e}")
-        response_message = "Lo siento, hubo un problema al procesar tu solicitud con la IA o generar audio. Por favor, intenta de nuevo."
-        return jsonify({"response": response_message, "audio": None})
+        } catch (error) {
+            console.error('Error al comunicarse con el backend:', error);
+            hideTypingIndicator();
+            await addMessage('bot', 'Lo siento, hubo un error al conectar con el chatbot. Por favor, revisa la consola del navegador y asegúrate de que el backend esté corriendo.');
+            
+            conversationHistory.pop(); // Remove the last user message from history if bot fails
+            selectedFile = null;
+            fileInput.value = '';
+            fileDisplay.style.display = 'none';
+            adjustTextareaHeight();
+        }
+    }
 
-if __name__ == '__main__':
-    port = int(os.getenv("PORT", 5000))
-    app.run(debug=True, host='0.0.0.0', port=port)
+    // Mensaje de bienvenida inicial
+    (async () => {
+         await addMessage('bot', '¡Hola! Soy Raava. ¿En qué puedo ayudarte hoy?');
+    })();
+});
