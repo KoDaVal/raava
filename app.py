@@ -17,9 +17,8 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 
 # --- CONFIGURACIÓN DE ELEVEN LABS (¡NUEVO BLOQUE!) ---
 # ¡IMPORTANTE! Reemplaza "TU_API_KEY_DE_ELEVEN_LABS" con tu clave real de Eleven Labs.
-eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "TU_API_KEY_DE_ELEVEN_LABS")
-# Voz predeterminada de Eleven Labs si no hay una voz clonada activa.
-# Puedes elegir una voz. Ejemplo: 'Rachel' (ID: 21m00Tcm4TlvDq8ikWAM)
+eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_14db6d8f72f6b97fd8d6bd0b03c3fb8ba2325db35d317513")
+# Voz predeterminada de Eleven Labs. Puedes elegir una voz. Ejemplo: 'Rachel' (ID: 21m00Tcm4TlvDq8ikWAM)
 default_eleven_labs_voice_id = "21m00Tcm4TlvDq8ikWAM" # Puedes cambiar este ID si lo deseas
 
 # ¡NUEVO! Variable global para almacenar el ID de la voz clonada temporalmente.
@@ -39,7 +38,7 @@ def upload_voice_sample():
     global cloned_voice_id # Indicar que modificaremos la variable global
 
     # Verificar si la API Key de Eleven Labs está configurada
-    if not eleven_labs_api_key or eleven_labs_api_key == "sk_70765be92247c36175ff6e63b876c7bb7a55e68ec81c8a1b":
+    if not eleven_labs_api_key or eleven_labs_api_key == "TU_API_KEY_DE_ELEVEN_LABS":
         return jsonify({"success": False, "message": "API Key de Eleven Labs no configurada o es el valor por defecto."}), 400
 
     # Verificar si se recibió un archivo de voz
@@ -57,7 +56,6 @@ def upload_voice_sample():
     }
     
     # Preparar los datos para la solicitud (el nombre de la voz y el archivo)
-    # Eleven Labs espera los archivos de voz como 'files' en un FormData.
     data = {
         'name': 'Temporary Cloned Voice' # Nombre temporal para la voz clonada
     }
@@ -158,7 +156,6 @@ def chat():
     if not current_user_parts:
         return jsonify({"response": "Por favor, envía un mensaje o un archivo válido para que pueda responderte."}), 400
 
-    # Añadir el mensaje/archivo del usuario al historial para Gemini
     parts_for_gemini.append({'role': 'user', 'parts': current_user_parts})
 
     try:
