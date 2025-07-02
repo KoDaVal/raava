@@ -385,3 +385,80 @@ body {
     box-shadow: 0 0 25px rgba(138, 43, 226, 1);
   }
 }
+/* --- NUEVOS ESTILOS PARA MENSAJES DEL BOT Y BOTONES DE ACCIÓN --- */
+.message.bot {
+  position: relative; /* Para posicionar los botones */
+  padding-bottom: 25px; /* Deja espacio para los botones */
+}
+
+.message-actions {
+  position: absolute;
+  bottom: 5px; /* Espacio desde la parte inferior del mensaje */
+  left: 10px; /* Alineación a la izquierda */
+  display: flex;
+  gap: 8px; /* Espacio entre los botones */
+  opacity: 0; /* Ocultos por defecto */
+  transition: opacity 0.2s ease-in-out;
+}
+
+.message.bot:hover .message-actions {
+  opacity: 1; /* Mostrar al pasar el ratón */
+}
+
+.message-action-btn {
+  background: none;
+  border: none;
+  color: var(--text-color); /* Color del icono */
+  font-size: 0.8em; /* Tamaño del icono */
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message-action-btn:hover {
+  background-color: var(--hover-color); /* Color de fondo al pasar el ratón */
+}
+
+/* Estilo para el indicador de copiado */
+.message-action-btn.copied::after {
+  content: "Copiado!";
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 0.7em;
+  bottom: 25px; /* Encima del botón */
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  animation: fadeOut 2s forwards;
+  pointer-events: none; /* Para que no interfiera con clics */
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; display: none; }
+}
+
+/* Estilo para el botón de reproducción cuando el audio está cargando */
+.message-action-btn.loading i.fas.fa-volume-up {
+    animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Estilo para cuando el audio está reproduciéndose */
+.message-action-btn.playing i.fas.fa-volume-up {
+    color: lightgreen; /* O el color que prefieras para indicar reproducción */
+}
+
+/* --- FIN NUEVOS ESTILOS --- */
