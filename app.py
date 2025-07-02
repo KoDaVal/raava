@@ -4,7 +4,7 @@ import google.generativeai as genai
 import os
 import base64
 import json
-import requests # ¡NUEVO! Necesario para las solicitudes HTTP a Eleven Labs
+import requests # Necesario para Eleven Labs
 
 app = Flask(__name__)
 CORS(app)
@@ -15,15 +15,17 @@ genai.configure(api_key=gemini_api_key)
 model = genai.GenerativeModel('gemini-1.5-flash')
 # --- FIN CONFIGURACIÓN DE GEMINI ---
 
-# --- CONFIGURACIÓN DE ELEVEN LABS (¡NUEVO BLOQUE!) ---
-# ¡IMPORTANTE! Reemplaza "TU_API_KEY_DE_ELEVEN_LABS" con tu clave real de Eleven Labs.
+# --- CONFIGURACIÓN DE ELEVEN LABS ---
+# Obtiene la API Key de las variables de entorno.
+# ¡IMPORTANTE! Reemplaza "YOUR_ELEVEN_LABS_API_KEY" con tu clave real,
+# o asegúrate de que la variable de entorno ELEVEN_LABS_API_KEY esté configurada en Render.
 eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_14db6d8f72f6b97fd8d6bd0b03c3fb8ba2325db35d317513")
-# Voz predeterminada de Eleven Labs. Puedes elegir una voz. Ejemplo: 'Rachel' (ID: 21m00Tcm4TlvDq8ikWAM)
-default_eleven_labs_voice_id = "21m00Tcm4TlvDq8ikWAM" # Puedes cambiar este ID si lo deseas
 
-# ¡NUEVO! Variable global para almacenar el ID de la voz clonada temporalmente.
-# Esto es temporal; se perderá si el servidor de Flask se reinicia.
-cloned_voice_id = None
+# ID de voz predeterminada de Eleven Labs (Rachel)
+default_eleven_labs_voice_id = "21m00Tcm4TlvDq8ikWAM"
+cloned_voice_id = None # Variable global para almacenar el ID de la voz clonada (simplificado para este ejemplo)
+# Si necesitas persistencia de la voz clonada entre sesiones de usuario,
+# deberías usar un sistema de sesiones de Flask o una base de datos.
 # --- FIN CONFIGURACIÓN DE ELEVEN LABS ---
 
 # --- RUTA PARA SERVIR EL FRONTEND ---
@@ -32,76 +34,60 @@ def index():
     return render_template('index.html')
 # --- FIN RUTA DEL FRONTEND ---
 
-# ¡NUEVO ENDPOINT! Para subir el archivo de voz y clonarlo.
-@app.route('/upload_voice_sample', methods=['POST'])
-def upload_voice_sample():
-    global cloned_voice_id # Indicar que modificaremos la variable global
+# --- RUTA PARA CLONAR VOZ (Eleven Labs) ---
+@app.route('/clone_voice', methods=['POST'])
+def clone_voice():
+    global cloned_voice_id # Declara como global para modificar la variable global
 
-    # Verificar si la API Key de Eleven Labs está configurada
-    if not eleven_labs_api_key or eleven_labs_api_key == "TU_API_KEY_DE_ELEVEN_LABS":
-        return jsonify({"success": False, "message": "API Key de Eleven Labs no configurada o es el valor por defecto."}), 400
+    if 'audio_file' not in request.files:
+        return jsonify({'error': 'No se proporcionó archivo de audio.'}), 400
 
-    # Verificar si se recibió un archivo de voz
-    if 'voice_file' not in request.files:
-        return jsonify({"success": False, "message": "No se encontró el archivo de voz en la solicitud."}), 400
-    
-    voice_file = request.files['voice_file']
-    if voice_file.filename == '':
-        return jsonify({"success": False, "message": "No se seleccionó ningún archivo de voz."}), 400
-    
-    # URL de la API de Eleven Labs para añadir voces
-    eleven_labs_add_voice_url = "https://api.elevenlabs.io/v1/voices/add"
+    audio_file = request.files['audio_file']
+    if audio_file.filename == '':
+        return jsonify({'error': 'No se seleccionó archivo de audio.'}), 400
+
+    if not eleven_labs_api_key or eleven_labs_api_key == "sk_14db6d8f72f6b97fd8d6bd0b03c3fb8ba2325db35d317513":
+        return jsonify({'error': 'Clave API de Eleven Labs no configurada o inválida.'}), 500
+
+    url = "https://api.elevenlabs.io/v1/voices/add"
     headers = {
-        "xi-api-key": eleven_labs_api_key,
+        "xi-api-key": eleven_labs_api_key
     }
-    
-    # Preparar los datos para la solicitud (el nombre de la voz y el archivo)
     data = {
-        'name': 'Temporary Cloned Voice' # Nombre temporal para la voz clonada
+        "name": "Cloned Voice",
+        "description": "Voice cloned from user sample"
     }
     files = {
-        'files': (voice_file.filename, voice_file.read(), voice_file.content_type)
+        'files': (audio_file.filename, audio_file.read(), audio_file.content_type)
     }
 
     try:
-        # Realizar la solicitud POST a la API de Eleven Labs
-        response = requests.post(eleven_labs_add_voice_url, headers=headers, data=data, files=files)
+        response = requests.post(url, headers=headers, data=data, files=files)
         response.raise_for_status() # Lanza una excepción para errores HTTP (4xx o 5xx)
-        
-        eleven_labs_data = response.json()
-        new_voice_id = eleven_labs_data.get('voice_id')
-
-        if new_voice_id:
-            cloned_voice_id = new_voice_id # ¡Guardar el ID de la voz clonada temporalmente!
-            print(f"Voz clonada exitosamente. ID temporal: {cloned_voice_id}")
-            return jsonify({
-                "success": True,
-                "message": f"Voz clonada temporalmente con éxito. ID: {new_voice_id}",
-                "voice_id": new_voice_id
-            })
-        else:
-            return jsonify({"success": False, "message": "No se pudo obtener el ID de la voz de Eleven Labs.", "details": eleven_labs_data}), 500
-
-    except requests.exceptions.RequestException as e:
-        print(f"Error de conexión o API con Eleven Labs al clonar voz: {e}")
-        return jsonify({"success": False, "message": f"Error de conexión o API con Eleven Labs: {e}"}), 500
+        voice_data = response.json()
+        cloned_voice_id = voice_data['voice_id'] # Almacena el ID de la voz clonada
+        print(f"Voz clonada ID: {cloned_voice_id}")
+        return jsonify({'message': 'Voz clonada exitosamente.', 'voice_id': cloned_voice_id}), 200
+    except requests.exceptions.HTTPError as e:
+        print(f"Error de conexión o API con Eleven Labs al clonar voz: {e.response.status_code} - {e.response.text}")
+        return jsonify({'error': f"Error al clonar la voz con Eleven Labs: {e.response.text}"}), e.response.status_code
     except Exception as e:
-        print(f"Error inesperado al procesar la clonación de voz: {e}")
-        return jsonify({"success": False, "message": f"Error interno del servidor: {e}"}), 500
+        print(f"Error inesperado al clonar voz: {e}")
+        return jsonify({'error': f"Error inesperado al clonar la voz: {str(e)}"}), 500
+
+# --- FIN RUTA PARA CLONAR VOZ ---
 
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    # Obtener los datos del formulario (historial, mensaje, archivo adjunto, instrucción persistente)
+    # Obtener el historial de la conversación, el mensaje actual, el archivo y la instrucción persistente
     history_json = request.form.get('history', '[]')
     user_message = request.form.get('message', '')
     uploaded_file = request.files.get('file')
-    persistent_instruction = request.form.get('persistent_instruction', '')
     
-    response_message = "Lo siento, hubo un error desconocido."
-    audio_base64 = None # Inicializar la variable para el audio codificado en Base64
+    # <--- NUEVO: Obtiene la instrucción persistente enviada desde el frontend --->
+    persistent_instruction = request.form.get('persistent_instruction', '')
 
-    # Cargar el historial de conversación desde JSON
     try:
         conversation_history = json.loads(history_json)
     except json.JSONDecodeError:
@@ -109,13 +95,19 @@ def chat():
 
     parts_for_gemini = conversation_history
     
-    # Combinar la instrucción básica, la instrucción persistente y el mensaje del usuario
+    response_message = "Lo siento, hubo un error desconocido."
+    audio_base64 = None # Inicializar audio_base64 a None por defecto
+
+    # <--- INSTRUCCIÓN BÁSICA PARA CONTROLAR EL TONO --->
     base_instruction = "Responde de forma concisa y clara, ofreciendo la información esencial con un tono amable y humano, evitando la simplicidad excesiva:"
+    
+    # <--- Combina la instrucción persistente con el mensaje del usuario y la instrucción básica --->
     full_user_message_text = f"{base_instruction} {user_message}"
     if persistent_instruction:
+        # Añade la instrucción persistente al inicio, seguida de la instrucción básica y el mensaje del usuario
         full_user_message_text = f"{persistent_instruction}\n\n{full_user_message_text}"
 
-    # Preparar las partes del mensaje actual del usuario (texto y/o archivo)
+    # Añadir el mensaje actual del usuario (y el archivo) como la última "parte"
     current_user_parts = []
     if full_user_message_text:
         current_user_parts.append({'text': full_user_message_text})
@@ -143,7 +135,7 @@ def chat():
                 text_content = uploaded_file.read().decode('utf-8')
                 current_user_parts.append({'text': f"Contenido del archivo de texto '{file_name}':\n{text_content}"})
                 if not user_message:
-                     current_user_parts.append({'text': f"Adjuntaste el archivo de texto '{file_name}'. ¿Qué quieres que analice?"})
+                    current_user_parts.append({'text': f"Adjuntaste el archivo de texto '{file_name}'. ¿Qué quieres que analice?"})
                 else:
                     current_user_parts.append({'text': f"Archivo de texto adjunto: '{file_name}'."})
             else:
@@ -159,46 +151,49 @@ def chat():
     parts_for_gemini.append({'role': 'user', 'parts': current_user_parts})
 
     try:
-        # Enviar la conversación al modelo de Gemini
         gemini_response = model.generate_content(parts_for_gemini)
         response_message = gemini_response.text
 
-        # --- Lógica para usar voz clonada o predeterminada (¡CAMBIO CLAVE!) ---
-        # Solo intenta generar voz si la API Key de Eleven Labs está configurada
-        if eleven_labs_api_key and eleven_labs_api_key != "TU_API_KEY_DE_ELEVEN_LABS":
-            # Si hay un cloned_voice_id activo, lo usa; de lo contrario, usa el ID de voz predeterminado
+        # --- GENERACIÓN DE AUDIO CON ELEVEN LABS ---
+        if eleven_labs_api_key and eleven_labs_api_key != "YOUR_ELEVEN_LABS_API_KEY":
+            # Determina qué ID de voz usar: la clonada si existe, de lo contrario la predeterminada
             current_voice_id = cloned_voice_id if cloned_voice_id else default_eleven_labs_voice_id
-            
-            eleven_labs_url = f"https://api.elevenlabs.io/v1/text-to-speech/{current_voice_id}"
-            headers = {
-                "Accept": "audio/mpeg", # Especifica que esperamos un archivo de audio MPEG
+
+            tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{current_voice_id}/stream"
+            tts_headers = {
                 "xi-api-key": eleven_labs_api_key,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "accept": "audio/mpeg" # Asegúrate de aceptar audio/mpeg para streaming
             }
-            data = {
+            tts_data = {
                 "text": response_message,
-                "model_id": "eleven_multilingual_v2", # Modelo para voz multilenguaje
+                "model_id": "eleven_multilingual_v2", # Puedes usar "eleven_turbo_v2" o "eleven_multilingual_v2"
                 "voice_settings": {
-                    "stability": 0.5, # Qué tan consistente es el estilo del habla (0-1)
-                    "similarity_boost": 0.75 # Qué tan similar es la voz original (0-1)
+                    "stability": 0.5,
+                    "similarity_boost": 0.75
                 }
             }
 
-            eleven_labs_response = requests.post(eleven_labs_url, headers=headers, json=data)
+            tts_response = requests.post(tts_url, headers=tts_headers, json=tts_data, stream=True)
+            tts_response.raise_for_status() # Lanza una excepción para errores HTTP
 
-            if eleven_labs_response.status_code == 200:
-                audio_content = eleven_labs_response.content
-                audio_base64 = base64.b64encode(audio_content).decode('utf-8')
-            else:
-                print(f"Error al generar voz con Eleven Labs (Código: {eleven_labs_response.status_code}): {eleven_labs_response.text}")
-        # --- FIN Lógica de voz ---
+            audio_content = b''
+            for chunk in tts_response.iter_content(chunk_size=4096):
+                audio_content += chunk
+            
+            audio_base64 = base64.b64encode(audio_content).decode('utf-8')
+        # --- FIN GENERACIÓN DE AUDIO ---
 
+        return jsonify({"response": response_message, "audio": audio_base64})
+
+    except requests.exceptions.HTTPError as e:
+        print(f"Error de conexión o API con Eleven Labs al generar audio: {e.response.status_code} - {e.response.text}")
+        response_message = f"Lo siento, hubo un problema al generar el audio: {e.response.text}. Por favor, revisa tu clave API de Eleven Labs o los límites de tu cuenta."
+        return jsonify({"response": response_message, "audio": None})
     except Exception as e:
-        print(f"Error al conectar con la API de Gemini o al generar voz: {e}")
-        response_message = "Lo siento, hubo un problema al procesar tu solicitud con la IA o al generar la voz. Por favor, intenta de nuevo."
-
-    # Devolver la respuesta de texto y el audio en Base64 (si se generó)
-    return jsonify({"response": response_message, "audio": audio_base64})
+        print(f"Error inesperado al conectar con la API de Gemini o generar audio: {e}")
+        response_message = "Lo siento, hubo un problema al procesar tu solicitud con la IA o generar audio. Por favor, intenta de nuevo."
+        return jsonify({"response": response_message, "audio": None})
 
 if __name__ == '__main__':
     port = int(os.getenv("PORT", 5000))
