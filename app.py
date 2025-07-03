@@ -19,7 +19,7 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 # Obtiene la API Key de las variables de entorno.
 # ¡IMPORTANTE! Reemplaza "YOUR_ELEVEN_LABS_API_KEY" con tu clave real,
 # o asegúrate de que la variable de entorno ELEVEN_LABS_API_KEY esté configurada en Render.
-eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_14db6d8f72f6b97fd8d6bd0b03c3fb8ba2325db35d317513")
+eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_try_only")
 
 # ID de voz predeterminada de Eleven Labs (Rachel)
 default_eleven_labs_voice_id = "21m00Tcm4TlvDq8ikWAM"
@@ -46,7 +46,7 @@ def clone_voice():
     if audio_file.filename == '':
         return jsonify({'error': 'No se seleccionó archivo de audio.'}), 400
 
-    if not eleven_labs_api_key or eleven_labs_api_key == "sk_14db6d8f72f6b97fd8d6bd0b03c3fb8ba2325db35d317513":
+    if not eleven_labs_api_key or eleven_labs_api_key == "sk_try_only":
         return jsonify({'error': 'Clave API de Eleven Labs no configurada o inválida.'}), 500
 
     url = "https://api.elevenlabs.io/v1/voices/add"
