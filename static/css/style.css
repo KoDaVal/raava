@@ -421,16 +421,18 @@ body {
 
 /* Styling for the typing indicator */
 .typing-indicator {
-  display: flex; /* Ensures the dots are horizontal */
-  flex-direction: row; /* Explicitly set to row for dots, overriding potential column from .message.bot */
-  align-self: flex-start; /* Keeps the entire typing indicator on the left, like a bot message */
+  display: flex; /* Make it a flex container */
+  flex-direction: row !important; /* Force horizontal alignment of dots */
+  align-self: flex-start; /* Explicitly align the indicator itself to the left */
+  align-items: center; /* Vertically center the dots within the indicator */
+  justify-content: center; /* Horizontally center the dots within the indicator */
   
   background-color: var(--message-bg);
   padding: 10px 15px;
   border-radius: 10px;
   width: fit-content;
-  max-width: 70%;
-  margin-right: auto;
+  max-width: 70%; /* Keep max-width for consistency */
+  margin-right: auto; /* Ensure it stays left-aligned if parent doesn't handle flex-start */
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
 }
