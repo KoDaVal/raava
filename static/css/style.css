@@ -116,19 +116,23 @@ body {
   padding-right: 6px;
 }
 
+/* **MODIFICACIÓN CLAVE EN CSS: para posicionar los botones fuera y debajo del globo** */
 .message {
-  background-color: var(--message-bg);
-  padding: 12px 16px; /* Ajustado el padding para el globo */
-  border-radius: 12px;
+  /* No se necesita padding-bottom o position: relative aquí si los botones van fuera */
   width: fit-content;
   max-width: 70%;
   font-size: 14px;
   word-wrap: break-word;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
   line-height: 1.6;
   opacity: 0;
   transform: translateY(10px);
   transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  
+  /* Añadido para apilar el globo y las acciones */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Alinea el globo y las acciones a la izquierda */
+  gap: 5px; /* Espacio entre el globo y las acciones */
 }
 
 .message.appeared {
@@ -136,35 +140,34 @@ body {
     transform: translateY(0);
 }
 
-.message.user {
-  align-self: flex-end;
+/* El globo del mensaje */
+.message-content {
+  background-color: var(--message-bg);
+  padding: 12px 16px; 
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  /* Asegura que el globo del usuario tenga su propio color de fondo */
+}
+
+.message.user .message-content {
   background-color: var(--message-user-bg);
   color: var(--text-color);
+  align-self: flex-end; /* Mueve el globo del usuario a la derecha */
 }
 
-.message.bot {
-  align-self: flex-start;
-  color: var(--text-color);
-}
-
-/* **MODIFICACIÓN CLAVE EN CSS: para posicionar los botones debajo del texto del bot** */
 .message.bot .message-content {
-  display: flex; /* Hacemos el contenido del globo flexible */
-  flex-direction: column; /* Apilamos el texto y los botones verticalmente */
-  align-items: flex-start; /* Alinea los elementos a la izquierda dentro del globo */
-  gap: 5px; /* Espacio entre el texto y los botones */
-  /* El padding del globo se define en .message-content */
-  padding: 12px 16px; /* Asegura que el padding del globo sea consistente */
-  border-radius: 12px; /* Asegura el redondeo del globo */
-  background-color: var(--message-bg); /* Fondo del globo del bot */
+  color: var(--text-color);
+  align-self: flex-start; /* Asegura que el globo del bot esté a la izquierda */
 }
+
 
 /* Estilos para el contenedor de acciones de los mensajes del bot */
 .message-actions {
   display: flex; /* Muestra los botones en fila */
   gap: 8px; /* Espacio entre los botones */
-  margin-top: 5px; /* Pequeño espacio entre el texto y los botones */
-  /* Quitamos position: absolute y opacidad inicial para que siempre estén visibles */
+  margin-top: 0px; /* Ya hay un gap en .message, esto puede ser 0 o un poco más */
+  /* Asegúrate de que no haya position: absolute aquí */
+  padding-left: 5px; /* Ajuste para alinear con el texto del globo */
 }
 
 .message-action-btn {
