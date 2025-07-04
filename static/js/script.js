@@ -178,11 +178,18 @@ document.addEventListener('DOMContentLoaded', () => {
         messageElement.classList.add('message');
         messageElement.classList.add(sender);
 
+        // Crear el contenedor de contenido del mensaje (el "globo")
+        const messageContentElement = document.createElement('div');
+        messageContentElement.classList.add('message-content');
+
         const textContentElement = document.createElement('span');
         textContentElement.textContent = text;
-        messageElement.appendChild(textContentElement);
-
+        
+        // **AQUÍ ESTÁ LA MODIFICACIÓN CLAVE EN SCRIPT.JS**
+        // Si es un mensaje del bot, añade el texto y luego el contenedor de acciones dentro del globo
         if (sender === 'bot') {
+            messageContentElement.appendChild(textContentElement); // Primero el texto
+            
             const actionsContainer = document.createElement('div');
             actionsContainer.classList.add('message-actions');
 
@@ -259,10 +266,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 actionsContainer.appendChild(playAudioButton);
             }
-
-            messageElement.appendChild(actionsContainer);
+            
+            messageContentElement.appendChild(actionsContainer); // Luego las acciones
+        } else {
+            // Si es un mensaje de usuario, solo añade el texto
+            messageContentElement.appendChild(textContentElement);
         }
 
+        messageElement.appendChild(messageContentElement); // Añade el globo de contenido al mensaje
         messagesContainer.appendChild(messageElement);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
