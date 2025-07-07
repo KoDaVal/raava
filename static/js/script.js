@@ -174,8 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // Si quieres que el botón "Iniciar Sesión" (el antiguo toggle-theme) no haga nada:
-    const loginButton = document.getElementById('toggle-theme'); // Ahora apunta al botón de "Iniciar Sesión"
+    // El botón "Iniciar Sesión" (el antiguo toggle-theme)
+    const loginButton = document.getElementById('toggle-theme'); 
     if (loginButton) {
         loginButton.addEventListener('click', (e) => {
             e.preventDefault(); // Previene cualquier acción por defecto
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         messageElement.classList.add('message');
         messageElement.classList.add(sender);
 
-        // Crear el contenedor de contenido del mensaje (el "globo")
+        // Crear el contenedor de contenido del mensaje (el "globo" para usuario, o solo texto para bot)
         const messageContentElement = document.createElement('div');
         messageContentElement.classList.add('message-content');
 
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Siempre añadir el texto al messageContentElement
         messageContentElement.appendChild(textContentElement);
         
-        // Añadir el messageContentElement (el globo) al messageElement
+        // Añadir el messageContentElement (el globo o el texto puro) al messageElement
         messageElement.appendChild(messageContentElement);
         
         // **AQUÍ ESTÁ LA MODIFICACIÓN CLAVE EN SCRIPT.JS PARA QUE LOS BOTONES ESTÉN FUERA DEL GLOBO**
