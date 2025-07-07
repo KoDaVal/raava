@@ -159,31 +159,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     uploadedInfoFileContent = e.target.result;
                     startMindButton.classList.add('info-ready');
                     addMessage('bot', `Archivo de instrucción "${file.name}" cargado. Presiona "Iniciar mente" para activar esta instrucción.`);
-                    
-                    // COMENTADO: Estas líneas ya no son necesarias aquí, ya que el archivo de información
-                    // no debe aparecer como un archivo adjunto en la barra de chat principal.
-                    // selectedFile = file;
-                    // fileNameSpan.textContent = selectedFile.name;
-                    // fileDisplay.style.display = 'flex';
                 };
                 reader.onerror = () => {
                     addMessage('bot', 'Error al leer el archivo de instrucción. Inténtalo de nuevo.');
                     uploadedInfoFileContent = "";
                     startMindButton.classList.remove('info-ready');
-                    // COMENTADO: Limpiar también si hay error, pero solo la lógica de información.
-                    // selectedFile = null;
-                    // fileNameSpan.textContent = '';
-                    // fileDisplay.style.display = 'none';
                 };
                 reader.readAsText(file);
             } else {
                 addMessage('bot', 'Por favor, sube un archivo de texto (.txt) para la instrucción.');
                 uploadedInfoFileContent = "";
                 startMindButton.classList.remove('info-ready');
-                // COMENTADO: Limpiar si no es un archivo de texto válido.
-                // selectedFile = null;
-                // fileNameSpan.textContent = '';
-                // fileDisplay.style.display = 'none';
             }
             event.target.value = ''; // Limpia el input del archivo
         });
