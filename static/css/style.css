@@ -84,7 +84,8 @@ body {
   padding-left: 8px;
 }
 
-#toggle-theme {
+/* Nuevo estilo para el botón 'Iniciar Sesion' en la barra lateral */
+#login-button-placeholder {
   margin-top: auto; /* Empuja el botón al final de la barra lateral */
   font-size: 12px;
   cursor: pointer;
@@ -94,7 +95,7 @@ body {
   border-top: 1px solid var(--border-color);
 }
 
-#toggle-theme:hover {
+#login-button-placeholder:hover {
   color: var(--text-color);
 }
 
@@ -105,6 +106,72 @@ body {
   flex-direction: column;
   justify-content: space-between;
   padding: 20px;
+}
+
+/* Nuevos estilos para el encabezado del chat y el menú de ajustes */
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 15px; /* Espacio debajo del encabezado */
+  border-bottom: 1px solid var(--border-color); /* Separador opcional */
+  margin-bottom: 15px;
+}
+
+.header-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.settings-menu {
+  position: relative;
+}
+
+#settings-icon {
+  font-size: 20px;
+  color: var(--link-color);
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 5px;
+  transition: all 0.25s ease-in-out;
+}
+
+#settings-icon:hover {
+  background-color: var(--hover-color);
+  color: var(--text-color);
+}
+
+.settings-dropdown {
+  display: none; /* Oculto por defecto */
+  position: absolute;
+  background-color: var(--sidebar-bg); /* Fondo del menú desplegable */
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  right: 0; /* Alinear a la derecha */
+  top: 30px; /* Posicionar debajo del icono */
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.settings-dropdown.show {
+  display: block; /* Mostrar cuando se añade la clase 'show' por JS */
+}
+
+#new-toggle-theme { /* Nuevo ID para el botón de cambio de tema */
+  padding: 8px 12px;
+  text-decoration: none;
+  display: block;
+  color: var(--text-color);
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+#new-toggle-theme:hover {
+  background-color: var(--hover-color);
 }
 
 .messages {
