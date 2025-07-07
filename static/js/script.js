@@ -1,8 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Cambiar la referencia a 'toggle-theme-chat'
-    const settingsButton = document.getElementById('settings-button'); // Nuevo botón de ajustes
-    const settingsDropdown = document.getElementById('settings-dropdown'); // Nuevo menú desplegable
-    const toggleLightModeOption = document.getElementById('toggle-light-mode'); // Nueva opción de modo claro/oscuro
+    const toggleTheme = document.getElementById('toggle-theme');
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const messagesContainer = document.querySelector('.messages');
@@ -108,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // COMENTADO: Estas líneas ya no son necesarias aquí, ya que el archivo de información
                     // no debe aparecer como un archivo adjunto en la barra de chat principal.
                     // selectedFile = file;
-                    // fileNameSpan.textContent = file.name;
+                    // fileNameSpan.textContent = selectedFile.name;
                     // fileDisplay.style.display = 'flex';
                 };
                 reader.onerror = () => {
@@ -150,38 +147,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // --- FIN LÓGICA ---
 
-    // --- Funcionalidad del botón de Ajustes y menú desplegable ---
-    if (settingsButton && settingsDropdown && toggleLightModeOption) {
-        settingsButton.addEventListener('click', (event) => {
-            settingsDropdown.classList.toggle('active');
-            event.stopPropagation(); // Evita que el clic se propague al documento y cierre el menú
-        });
-
-        toggleLightModeOption.addEventListener('click', () => {
+    // --- Funcionalidad existente del chat ---
+    // Lógica del modo oscuro y claro
+    if (toggleTheme) {
+        toggleTheme.addEventListener('click', () => {
             document.body.classList.toggle('light-mode');
-            // Cambiar el texto de la opción según el modo actual
-            toggleLightModeOption.textContent = document.body.classList.contains('light-mode')
-                ? 'Modo Oscuro' : 'Modo Claro';
-            settingsDropdown.classList.remove('active'); // Cierra el menú después de seleccionar
-        });
-
-        // Cierra el menú si se hace clic fuera de él
-        document.addEventListener('click', (event) => {
-            if (!settingsDropdown.contains(event.target) && !settingsButton.contains(event.target)) {
-                settingsDropdown.classList.remove('active');
-            }
-        });
-    }
-
-
-    // El botón "Iniciar Sesión" (el antiguo toggle-theme)
-    const loginButton = document.getElementById('toggle-theme'); 
-    if (loginButton) {
-        loginButton.addEventListener('click', (e) => {
-            e.preventDefault(); // Previene cualquier acción por defecto
-            console.log('Botón de Iniciar Sesión clickeado (no hace nada).');
-            // Puedes añadir aquí un mensaje en la interfaz si lo deseas, por ejemplo:
-            // addMessage('bot', 'La función de inicio de sesión no está implementada.');
+            toggleTheme.textContent = document.body.classList.contains('light-mode')
+                ? 'Cambiar a Modo Oscuro' : 'Cambiar a Modo Claro';
         });
     }
 
@@ -201,28 +173,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Función para añadir mensajes al contenedor (AHORA CON SOPORTE DE AUDIO Y COPIAR)
-    // Se añade un nuevo parámetro 'isWelcomeMessage'
-    async function addMessage(sender, text, audioBase64 = null, isWelcomeMessage = false) {
+    async function addMessage(sender, text, audioBase64 = null) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message');
         messageElement.classList.add(sender);
 
-        if (isWelcomeMessage) {
-            messageElement.classList.add('welcome-message'); // Añade la clase especial
-        }
-
-        // Crear el contenedor de contenido del mensaje (el "globo" o solo texto)
+        // Crear el contenedor de contenido del mensaje (el "globo")
         const messageContentElement = document.createElement('div');
         messageContentElement.classList.add('message-content');
 
         const textContentElement = document.createElement('span');
         textContentElement.textContent = text;
         
+        // Siempre añadir el texto al messageContentElement
         messageContentElement.appendChild(textContentElement);
+        
+        // Añadir el messageContentElement (el globo) al messageElement
         messageElement.appendChild(messageContentElement);
         
-        // Solo añadir botones de acción si es un mensaje de bot y NO es el mensaje de bienvenida
-        if (sender === 'bot' && !isWelcomeMessage) {
+        // **AQUÍ ESTÁ LA MODIFICACIÓN CLAVE EN SCRIPT.JS PARA QUE LOS BOTONES ESTÉN FUERA DEL GLOBO**
+        if (sender === 'bot') {
             const actionsContainer = document.createElement('div');
             actionsContainer.classList.add('message-actions');
 
@@ -323,8 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typingIndicatorElement) return;
 
         typingIndicatorElement = document.createElement('div');
-        // El typing-indicator ya se centra por sí mismo y no tiene background
-        typingIndicatorElement.classList.add('message', 'bot', 'typing-indicator'); 
+        typingIndicatorElement.classList.add('message', 'bot', 'typing-indicator');
         for (let i = 0; i < 3; i++) {
             const dot = document.createElement('span');
             typingIndicatorElement.appendChild(dot);
@@ -447,8 +416,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Mensaje de bienvenida inicial (se añade true para 'isWelcomeMessage')
+    // Mensaje de bienvenida inicial
     (async () => {
-         await addMessage('bot', '¡Hola! Soy Raava. ¿En qué puedo ayudarte hoy?', null, true);
+         await addMessage('bot', '¡Hola! Soy Raava. ¿En qué puedo ayudarte hoy?');
     })();
 });
