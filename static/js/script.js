@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Cambiar la referencia a 'toggle-theme-chat'
-    const toggleTheme = document.getElementById('toggle-theme-chat');
+    const settingsButton = document.getElementById('settings-button'); // Nuevo botón de ajustes
+    const settingsDropdown = document.getElementById('settings-dropdown'); // Nuevo menú desplegable
+    const toggleLightModeOption = document.getElementById('toggle-light-mode'); // Nueva opción de modo claro/oscuro
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const messagesContainer = document.querySelector('.messages');
@@ -106,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // COMENTADO: Estas líneas ya no son necesarias aquí, ya que el archivo de información
                     // no debe aparecer como un archivo adjunto en la barra de chat principal.
                     // selectedFile = file;
-                    // fileNameSpan.textContent = selectedFile.name;
+                    // fileNameSpan.textContent = file.name;
                     // fileDisplay.style.display = 'flex';
                 };
                 reader.onerror = () => {
@@ -148,15 +150,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // --- FIN LÓGICA ---
 
-    // --- Funcionalidad existente del chat ---
-    // Lógica del modo oscuro y claro
-    if (toggleTheme) {
-        toggleTheme.addEventListener('click', () => {
+    // --- Funcionalidad del botón de Ajustes y menú desplegable ---
+    if (settingsButton && settingsDropdown && toggleLightModeOption) {
+        settingsButton.addEventListener('click', (event) => {
+            settingsDropdown.classList.toggle('active');
+            event.stopPropagation(); // Evita que el clic se propague al documento y cierre el menú
+        });
+
+        toggleLightModeOption.addEventListener('click', () => {
             document.body.classList.toggle('light-mode');
-            toggleTheme.textContent = document.body.classList.contains('light-mode')
-                ? 'Modo Oscuro' : 'Modo Claro'; // Esto hará que el texto del botón en el chat cambie
+            // Cambiar el texto de la opción según el modo actual
+            toggleLightModeOption.textContent = document.body.classList.contains('light-mode')
+                ? 'Modo Oscuro' : 'Modo Claro';
+            settingsDropdown.classList.remove('active'); // Cierra el menú después de seleccionar
+        });
+
+        // Cierra el menú si se hace clic fuera de él
+        document.addEventListener('click', (event) => {
+            if (!settingsDropdown.contains(event.target) && !settingsButton.contains(event.target)) {
+                settingsDropdown.classList.remove('active');
+            }
         });
     }
+
 
     // Si quieres que el botón "Iniciar Sesión" (el antiguo toggle-theme) no haga nada:
     const loginButton = document.getElementById('toggle-theme'); // Ahora apunta al botón de "Iniciar Sesión"
