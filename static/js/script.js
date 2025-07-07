@@ -201,26 +201,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Función para añadir mensajes al contenedor (AHORA CON SOPORTE DE AUDIO Y COPIAR)
-    async function addMessage(sender, text, audioBase64 = null) {
+    // Se añade un nuevo parámetro 'isWelcomeMessage'
+    async function addMessage(sender, text, audioBase64 = null, isWelcomeMessage = false) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message');
         messageElement.classList.add(sender);
 
-        // Crear el contenedor de contenido del mensaje (el "globo" para usuario, o solo texto para bot)
+        if (isWelcomeMessage) {
+            messageElement.classList.add('welcome-message'); // Añade la clase especial
+        }
+
+        // Crear el contenedor de contenido del mensaje (el "globo" o solo texto)
         const messageContentElement = document.createElement('div');
         messageContentElement.classList.add('message-content');
 
         const textContentElement = document.createElement('span');
         textContentElement.textContent = text;
         
-        // Siempre añadir el texto al messageContentElement
         messageContentElement.appendChild(textContentElement);
-        
-        // Añadir el messageContentElement (el globo o el texto puro) al messageElement
         messageElement.appendChild(messageContentElement);
         
-        // **AQUÍ ESTÁ LA MODIFICACIÓN CLAVE EN SCRIPT.JS PARA QUE LOS BOTONES ESTÉN FUERA DEL GLOBO**
-        if (sender === 'bot') {
+        // Solo añadir botones de acción si es un mensaje de bot y NO es el mensaje de bienvenida
+        if (sender === 'bot' && !isWelcomeMessage) {
             const actionsContainer = document.createElement('div');
             actionsContainer.classList.add('message-actions');
 
@@ -321,7 +323,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typingIndicatorElement) return;
 
         typingIndicatorElement = document.createElement('div');
-        typingIndicatorElement.classList.add('message', 'bot', 'typing-indicator');
+        // El typing-indicator ya se centra por sí mismo y no tiene background
+        typingIndicatorElement.classList.add('message', 'bot', 'typing-indicator'); 
         for (let i = 0; i < 3; i++) {
             const dot = document.createElement('span');
             typingIndicatorElement.appendChild(dot);
@@ -444,8 +447,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Mensaje de bienvenida inicial
+    // Mensaje de bienvenida inicial (se añade true para 'isWelcomeMessage')
     (async () => {
-         await addMessage('bot', '¡Hola! Soy Raava. ¿En qué puedo ayudarte hoy?');
+         await addMessage('bot', '¡Hola! Soy Raava. ¿En qué puedo ayudarte hoy?', null, true);
     })();
 });
