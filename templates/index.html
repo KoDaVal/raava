@@ -18,16 +18,27 @@
     <a href="#">Nuevo chat</a>
     <a href="#">Comunidad</a>
     <a href="#">Premium</a>
-    <div id="toggle-theme">Cambiar a Modo Claro</div>
+    <div id="login-button-placeholder">Iniciar Sesion</div>
   </div>
 
   <div id="status-message" style="margin-top: 10px; text-align: center; color: #888; font-size: 0.9em;"></div>
   <div class="chat-area">
+    <div class="chat-header">
+      <div class="header-title">Chat</div>
+      <div class="settings-menu">
+        <i class="fas fa-cog" id="settings-icon"></i>
+        <div class="settings-dropdown" id="settings-dropdown">
+          <div id="new-toggle-theme">Cambiar a Modo Claro</div>
+        </div>
+      </div>
+    </div>
     <div class="messages"></div>
     <div class="input-bar">
-      <label for="file-upload" class="file-button" title="Adjuntar archivo">+</label>
-      <input type="file" id="file-upload" hidden>
-      <div id="file-display" style="display: none;" class="file-info">
+      <label for="file-upload" class="file-button" title="Adjuntar archivo">
+        <i class="fas fa-paperclip"></i>
+        <input type="file" id="file-upload" accept=".txt,image/*" hidden>
+      </label>
+      <div id="file-display" class="file-info" style="display: none;">
         <span id="file-name"></span>
         <button id="clear-file" class="clear-file" title="Limpiar archivo adjunto">x</button>
       </div>
@@ -57,12 +68,17 @@
     <input type="file" id="voice-file-input" accept="audio/*" hidden>
     <input type="file" id="image-file-input" accept="image/*" hidden>
     <input type="file" id="info-file-input" accept=".txt" hidden>
-    <img src="/static/person.jpg" alt="Mi foto de avatar" class="avatar" id="avatar-image">
-    <span class="name">Kobe Bryant</span>
-    <span class="quote">"If you're afraid to fail, then you're probably going to fail."</span>
-    <button class="start-button" id="start-mind-button">Iniciar mente</button>
+    
+    <textarea id="fixed-prompt-input" placeholder="Instrucción inamovible (opcional)" readonly></textarea>
+    <button id="start-mind-btn" class="start-button">Iniciar mente</button>
+
+    <img src="/static/raava_avatar.png" alt="Avatar" class="avatar" id="avatar-image">
+    <div class="name">Raava AI</div>
+    <div class="quote">
+      "La inteligencia artificial es el nuevo campo de batalla para la humanidad."
+    </div>
   </div>
-  
+
   <script src="/static/js/script.js"></script>
 </body>
 </html>
