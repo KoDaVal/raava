@@ -16,7 +16,7 @@
   --button-text-color: #cccccc;
   --avatar-name-color: #f0f0f0;
   --quote-color: #aaaaaa;
-  --header-bg: #0a0a0a; /* Nuevo */
+  --header-bg: #0a0a0a; /* Ahora color del header del chat central */
   --settings-modal-bg: rgba(0, 0, 0, 0.7); /* Nuevo */
   --settings-content-bg: #1e1e1e; /* Nuevo */
   --settings-border-color: #333; /* Nuevo */
@@ -44,7 +44,7 @@ body.light-mode {
   --button-text-color: #555;
   --avatar-name-color: #333;
   --quote-color: #555;
-  --header-bg: #ffffff; /* Nuevo */
+  --header-bg: #ffffff; /* Ahora color del header del chat central */
   --settings-modal-bg: rgba(0, 0, 0, 0.5); /* Nuevo */
   --settings-content-bg: #f2f2f2; /* Nuevo */
   --settings-border-color: #d1d1d1; /* Nuevo */
@@ -69,13 +69,65 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   height: 100vh;
-  display: flex;
-  flex-direction: column; /* Cambiado para permitir el encabezado */
+  display: flex; /* Cambiado para que el main-container ocupe toda la altura */
   transition: background 0.3s, color 0.3s;
   overflow: hidden; /* Evita el scroll del body principal */
 }
 
-/* --- NUEVOS ESTILOS PARA EL ENCABEZADO SUPERIOR --- */
+/* Contenedor principal para la barra lateral, chat y info-panel */
+.main-container {
+  display: flex;
+  flex: 1; /* Ocupa el espacio restante después del header si hubiera uno fuera */
+  overflow: hidden; /* Asegura que el scroll se maneje internamente */
+  width: 100%; /* Asegura que ocupe el 100% del ancho del body */
+}
+
+.sidebar {
+  background-color: var(--sidebar-bg);
+  width: 220px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-color);
+  flex-shrink: 0; /* Evita que la sidebar se encoja */
+}
+
+/* Estilo para el logo de Raava en la sidebar */
+.sidebar-raava-logo {
+  width: 50px; /* Tamaño más pequeño */
+  height: auto;
+  margin-bottom: 30px;
+  align-self: center; /* Centra el logo en la sidebar */
+}
+
+.sidebar a,
+#premium-button {
+  color: var(--link-color);
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 18px;
+  display: block;
+  padding: 6px 0;
+  border-radius: 4px;
+  transition: all 0.25s ease-in-out;
+  cursor: pointer;
+}
+
+.sidebar a:hover,
+#premium-button:hover {
+  background-color: var(--hover-color);
+  color: var(--text-color);
+  padding-left: 8px;
+}
+
+/* --- NUEVOS ESTILOS PARA EL CONTENEDOR CENTRAL (HEADER + CHAT) --- */
+.chat-main-section {
+    flex: 1; /* Para que ocupe el espacio restante horizontalmente */
+    display: flex;
+    flex-direction: column; /* Apila el header y el chat-area verticalmente */
+    background-color: var(--chat-bg); /* Fondo para toda la sección central */
+}
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -83,15 +135,25 @@ body {
   padding: 10px 20px;
   background-color: var(--header-bg);
   border-bottom: 1px solid var(--border-color);
-  height: 60px; /* Altura fija para el encabezado */
-  flex-shrink: 0; /* Asegura que el encabezado no se encoja */
+  height: 60px;
+  flex-shrink: 0;
 }
 
 .header-left {
   font-size: 18px;
   font-weight: 600;
   color: var(--text-color);
+  display: flex; /* Para alinear el texto si se añade un logo aquí */
+  align-items: center;
+  gap: 10px;
 }
+
+/* Si se añade un logo en el header, este sería su estilo */
+.header-raava-logo {
+  width: 30px; /* Tamaño del logo en el header */
+  height: auto;
+}
+
 
 .header-right {
   position: relative;
@@ -144,9 +206,10 @@ body {
   background-color: var(--hover-color);
 }
 
-/* --- FIN ESTILOS ENCABEZADO --- */
+/* --- FIN ESTILOS CONTENEDOR CENTRAL --- */
 
-/* --- NUEVOS ESTILOS PARA LA VENTANA DE AJUSTES --- */
+
+/* --- NUEVOS ESTILOS PARA LA VENTANA DE AJUSTES (MODAL) --- */
 .settings-modal {
   position: fixed;
   top: 0;
@@ -186,7 +249,7 @@ body {
   align-items: center;
   padding: 15px 20px;
   border-bottom: 1px solid var(--settings-border-color);
-  background-color: var(--panel-bg); /* O un color similar al encabezado de la app */
+  background-color: var(--panel-bg);
 }
 
 .settings-header h3 {
@@ -219,7 +282,7 @@ body {
   width: 180px;
   padding: 20px 0;
   border-right: 1px solid var(--settings-border-color);
-  background-color: var(--sidebar-bg); /* O un color similar a la barra lateral de la app */
+  background-color: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -356,58 +419,8 @@ input:checked + .slider:before {
 /* --- FIN ESTILOS VENTANA DE AJUSTES --- */
 
 
-/* Contenedor principal para la barra lateral, chat y info-panel */
-.main-container {
-  display: flex;
-  flex: 1; /* Ocupa el espacio restante después del header */
-  overflow: hidden; /* Asegura que el scroll se maneje internamente */
-}
-
-.sidebar {
-  background-color: var(--sidebar-bg);
-  width: 220px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid var(--border-color);
-  flex-shrink: 0; /* Evita que la sidebar se encoja */
-}
-
-/* Nuevo estilo para el logo de Raava */
-.raava-logo {
-  width: 120px; /* Ajusta el tamaño según necesites */
-  height: auto;
-  margin-bottom: 30px;
-  align-self: center; /* Centra el logo en la sidebar */
-}
-
-/* Eliminado: .sidebar h2 */
-
-.sidebar a,
-#premium-button { /* Añadido #premium-button aquí */
-  color: var(--link-color);
-  text-decoration: none;
-  font-size: 14px;
-  margin-bottom: 18px;
-  display: block;
-  padding: 6px 0;
-  border-radius: 4px;
-  transition: all 0.25s ease-in-out;
-  cursor: pointer; /* Añadido para el botón premium */
-}
-
-.sidebar a:hover,
-#premium-button:hover { /* Añadido #premium-button aquí */
-  background-color: var(--hover-color);
-  color: var(--text-color);
-  padding-left: 8px;
-}
-
-/* Eliminado: #toggle-theme */
-
 .chat-area {
-  flex: 1;
-  background-color: var(--chat-bg);
+  flex: 1; /* Ocupa el espacio restante verticalmente dentro de chat-main-section */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -490,13 +503,11 @@ input:checked + .slider:before {
 .message.user .message-content {
   background-color: var(--message-user-bg);
   color: var(--text-color);
-  /* align-self is handled by .message.user for the whole message block */
 }
 
 /* Bot message bubble specific styling */
 .message.bot .message-content {
   color: var(--text-color);
-  /* align-self is handled by .message.bot for the whole message block */
 }
 
 
@@ -575,7 +586,7 @@ input:checked + .slider:before {
   padding: 4px 8px;
   align-items: flex-end;
   box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-  flex-shrink: 0; /* Asegura que la barra de entrada no se encoja */
+  flex-shrink: 0;
 }
 
 .file-button {
