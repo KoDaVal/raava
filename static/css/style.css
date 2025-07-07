@@ -16,6 +16,8 @@
   --button-text-color: #cccccc;
   --avatar-name-color: #f0f0f0;
   --quote-color: #aaaaaa;
+  --dropdown-bg: #1e1e1e;
+  --dropdown-item-hover: #292929;
 }
 
 body.light-mode {
@@ -33,6 +35,8 @@ body.light-mode {
   --button-text-color: #555;
   --avatar-name-color: #333;
   --quote-color: #555;
+  --dropdown-bg: #ffffff;
+  --dropdown-item-hover: #f0f0f0;
 }
 
 * {
@@ -106,28 +110,57 @@ body {
   flex-direction: column;
   justify-content: space-between;
   padding: 20px;
-  position: relative; /* Asegúrate de que esta línea esté presente */
+  position: relative;
 }
 
-/* Nuevo estilo para el botón de Modo Claro en el área de chat */
-.toggle-theme-chat {
+/* Nuevo estilo para el botón de Ajustes (rueda) */
+.settings-button {
   position: absolute;
   top: 20px;
   right: 20px;
-  background-color: var(--button-bg);
+  background: none; /* Fondo transparente */
+  border: none; /* Sin borde */
   color: var(--button-text-color);
-  border: 1px solid var(--border-color);
-  padding: 8px 12px;
-  border-radius: 8px;
+  font-size: 20px; /* Tamaño del icono */
   cursor: pointer;
-  font-size: 13px;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  z-index: 10;
+  transition: color 0.2s ease;
+  z-index: 11; /* Para que esté por encima del dropdown si es necesario */
 }
 
-.toggle-theme-chat:hover {
-  background-color: var(--hover-color);
+.settings-button:hover {
   color: var(--text-color);
+}
+
+/* Estilos para el menú desplegable de ajustes */
+.settings-dropdown {
+  position: absolute;
+  top: 50px; /* Debajo del botón de ajustes */
+  right: 20px;
+  background-color: var(--dropdown-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  min-width: 150px;
+  z-index: 10;
+  display: none; /* Oculto por defecto */
+  flex-direction: column;
+  overflow: hidden; /* Para que los bordes redondeados se apliquen a los items */
+}
+
+.settings-dropdown.active {
+  display: flex; /* Mostrar cuando esté activo */
+}
+
+.dropdown-item {
+  padding: 10px 15px;
+  color: var(--text-color);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: var(--dropdown-item-hover);
 }
 
 
@@ -135,7 +168,7 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 15px; /* Interlineado aumentado para los mensajes */
   overflow-y: auto;
   padding-right: 6px;
 }
