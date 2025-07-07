@@ -18,28 +18,17 @@
     <a href="#">Nuevo chat</a>
     <a href="#">Comunidad</a>
     <a href="#">Premium</a>
-    <div id="toggle-theme">Iniciar Sesion</div>
+    <div id="toggle-theme" class="login-button">Iniciar Sesión</div>
   </div>
 
   <div id="status-message" style="margin-top: 10px; text-align: center; color: #888; font-size: 0.9em;"></div>
   <div class="chat-area">
-    <div class="chat-header">
-      <h3>Chat</h3>
-      <i id="settings-icon" class="fas fa-cog"></i>
-      <div class="settings-dropdown">
-        <div id="new-toggle-theme">Cambiar a Modo Claro</div>
-      </div>
-    </div>
+    <button id="toggle-theme-chat" class="toggle-theme-chat">Modo Claro</button>
     <div class="messages"></div>
     <div class="input-bar">
-      <label for="file-upload" class="attach-button" title="Adjuntar archivo">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-          <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V10.5a.5.5 0 0 1-1 0V2.707L4.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
-        </svg>
-      </label>
+      <label for="file-upload" class="file-button" title="Adjuntar archivo">+</label>
       <input type="file" id="file-upload" hidden>
-      <div id="file-display" class="file-display">
+      <div id="file-display" style="display: none;" class="file-info">
         <span id="file-name"></span>
         <button id="clear-file" class="clear-file" title="Limpiar archivo adjunto">x</button>
       </div>
@@ -69,14 +58,12 @@
     <input type="file" id="voice-file-input" accept="audio/*" hidden>
     <input type="file" id="image-file-input" accept="image/*" hidden>
     <input type="file" id="info-file-input" accept=".txt" hidden>
-
-    <button id="start-mind-button" class="start-button" style="display: none;">Iniciar mente</button>
-    <div class="avatar-preview-container">
-      <img id="avatar-image" src="/static/raava_logo.png" alt="Avatar Preview" class="avatar-preview">
-      <h5 id="avatar-name">Raava AI</h5>
-    </div>
+    <img src="/static/person.jpg" alt="Mi foto de avatar" class="avatar" id="avatar-image">
+    <span class="name">Kobe Bryant</span>
+    <span class="quote">"If you're afraid to fail, then you're probably going to fail."</span>
+    <button class="start-button" id="start-mind-button">Iniciar mente</button>
   </div>
-
+  
   <script src="/static/js/script.js"></script>
 </body>
 </html>
