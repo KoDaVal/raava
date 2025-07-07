@@ -8,20 +8,14 @@
   --chat-bg: #121212;
   --text-color: #e0e0e0;
   --link-color: #bbbbbb;
-  --message-bg: #1e1e1e; /* Color de fondo para burbujas de mensaje de bot */
-  --message-user-bg: #2d2d2d; /* Color de fondo para burbujas de mensaje de usuario */
+  --message-bg: #1e1e1e;
+  --message-user-bg: #2d2d2d;
   --button-bg: #1e1e1e;
   --border-color: #1e1e1e;
   --hover-color: #292929;
   --button-text-color: #cccccc;
   --avatar-name-color: #f0f0f0;
   --quote-color: #aaaaaa;
-  --dropdown-bg: #1e1e1e;
-  --dropdown-item-hover: #292929;
-  /* --chat-header-bg: #0a0a0a; Ya no se usa, el header toma el color de sidebar-bg */
-  --scrollbar-track-bg: #222; /* Fondo de la pista del scrollbar */
-  --scrollbar-thumb-bg: #555; /* Color del "pulgar" del scrollbar */
-  --scrollbar-thumb-hover: #777; /* Color del "pulgar" al pasar el ratón */
 }
 
 body.light-mode {
@@ -31,20 +25,14 @@ body.light-mode {
   --chat-bg: #ffffff;
   --text-color: #111;
   --link-color: #333;
-  --message-bg: #dddddd; /* Color de fondo para burbujas de mensaje de bot */
-  --message-user-bg: #c1c1c1; /* Color de fondo para burbujas de mensaje de usuario */
+  --message-bg: #dddddd;
+  --message-user-bg: #c1c1c1;
   --button-bg: #dddddd;
   --border-color: #d1d1d1;
   --hover-color: #c1c1c1;
   --button-text-color: #555;
   --avatar-name-color: #333;
   --quote-color: #555;
-  --dropdown-bg: #ffffff;
-  --dropdown-item-hover: #f0f0f0;
-  /* --chat-header-bg: #f5f5f5; Ya no se usa */
-  --scrollbar-track-bg: #f0f0f0;
-  --scrollbar-thumb-bg: #aaa;
-  --scrollbar-thumb-hover: #888;
 }
 
 * {
@@ -96,24 +84,18 @@ body {
   padding-left: 8px;
 }
 
-/* Estilo para el botón "Iniciar Sesión" en la barra lateral */
-.login-button {
+#toggle-theme {
   margin-top: auto; /* Empuja el botón al final de la barra lateral */
-  font-size: 14px; /* Vuelvo al tamaño de los otros botones */
-  font-weight: 400; /* Vuelvo al peso de los otros botones */
+  font-size: 12px;
   cursor: pointer;
   color: var(--link-color);
-  padding: 6px 0; /* Vuelvo al padding de los otros botones */
-  text-align: left; /* Alineo a la izquierda como los otros botones */
+  padding: 10px 0;
+  text-align: center;
   border-top: 1px solid var(--border-color);
-  transition: all 0.2s ease;
-  padding-left: 0px; /* Asegura que no tenga padding extra a la izquierda */
 }
 
-.login-button:hover {
+#toggle-theme:hover {
   color: var(--text-color);
-  background-color: var(--hover-color);
-  padding-left: 8px; /* Mantengo el padding-left en hover */
 }
 
 .chat-area {
@@ -122,110 +104,22 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  position: relative; /* Para posicionar el header */
+  padding: 20px;
 }
-
-/* Nuevo estilo para el encabezado del chat */
-.chat-header {
-  width: 100%;
-  background-color: var(--sidebar-bg); /* Mismo color que el sidebar */
-  padding: 15px 20px;
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  justify-content: space-between; /* Espacio entre logo y botón de ajustes */
-  align-items: center;
-  position: sticky; /* Lo hace pegajoso en la parte superior */
-  top: 0;
-  z-index: 10;
-}
-
-.header-logo {
-    height: 30px; /* Ajusta el tamaño del logo */
-    width: auto;
-}
-
-/* Posicionamiento del botón de Ajustes dentro del header */
-.settings-button {
-  background: none; /* Fondo transparente */
-  border: none; /* Sin borde */
-  color: var(--button-text-color);
-  font-size: 22px; /* Tamaño del icono */
-  cursor: pointer;
-  transition: color 0.2s ease;
-  /* margin-left: auto; Ya no es necesario con justify-content: space-between */
-}
-
-.settings-button:hover {
-  color: var(--text-color);
-}
-
-/* Estilos para el menú desplegable de ajustes */
-.settings-dropdown {
-  position: absolute;
-  top: 60px; /* Debajo del botón de ajustes y el header */
-  right: 20px;
-  background-color: var(--dropdown-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  min-width: 150px;
-  z-index: 11; /* Para que esté por encima de otros elementos */
-  display: none; /* Oculto por defecto */
-  flex-direction: column;
-  overflow: hidden; /* Para que los bordes redondeados se apliquen a los items */
-}
-
-.settings-dropdown.active {
-  display: flex; /* Mostrar cuando esté activo */
-}
-
-.dropdown-item {
-  padding: 10px 15px;
-  color: var(--text-color);
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.dropdown-item:hover {
-  background-color: var(--dropdown-item-hover);
-}
-
 
 .messages {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 15px; /* Interlineado entre mensajes */
+  gap: 10px;
   overflow-y: auto;
-  padding: 20px; /* Padding para el área de mensajes */
-  padding-right: 15px; /* Ajuste para el scrollbar */
+  padding-right: 6px;
 }
-
-/* Estilo del scrollbar */
-.messages::-webkit-scrollbar {
-  width: 8px; /* Ancho del scrollbar */
-}
-
-.messages::-webkit-scrollbar-track {
-  background: var(--scrollbar-track-bg); /* Fondo de la pista */
-  border-radius: 10px;
-}
-
-.messages::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb-bg); /* Color del "pulgar" */
-  border-radius: 10px;
-}
-
-.messages::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover); /* Color del "pulgar" al pasar el ratón */
-}
-
 
 /* Base style for message containers */
 .message {
   width: fit-content;
-  max-width: 70%; /* Vuelvo a un max-width más pequeño para burbujas */
+  max-width: 70%;
   font-size: 14px;
   word-wrap: break-word;
   line-height: 1.6;
@@ -239,13 +133,12 @@ body {
     transform: translateY(0);
 }
 
-/* Styling for bot messages (back to bubble, left-aligned) */
+/* Styling for bot messages (includes flex for stacking content and actions) */
 .message.bot {
-  display: flex; /* Mantengo flex para apilar contenido y acciones */
-  flex-direction: column;
-  align-items: flex-start; /* VUELVE A LA IZQUIERDA para burbujas */
-  gap: 5px; /* Espacio entre texto y acciones */
-  align-self: flex-start; /* VUELVE A LA IZQUIERDA para el bloque completo del mensaje del bot */
+  display: flex; /* Make the bot message container a flex container */
+  flex-direction: column; /* Stack message content and actions vertically */
+  align-items: flex-start; /* Align content and actions to the left within the bot message */
+  gap: 5px; /* Space between message content and actions */
 }
 
 /* Styling for user messages (aligns to the right) */
@@ -255,32 +148,23 @@ body {
 
 /* The message bubble content */
 .message-content {
-  background-color: var(--message-bg); /* Fondo de la burbuja del bot */
+  background-color: var(--message-bg);
   padding: 12px 16px; 
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  text-align: left; /* Alinea el texto a la izquierda dentro del globo */
 }
 
 /* User message bubble specific styling */
 .message.user .message-content {
   background-color: var(--message-user-bg);
   color: var(--text-color);
+  /* align-self is handled by .message.user for the whole message block */
 }
 
-/* --- NUEVOS ESTILOS PARA EL MENSAJE DE BIENVENIDA (CENTRO, SIN GLOBO) --- */
-.message.welcome-message {
-  align-self: center; /* Centra el bloque completo del mensaje de bienvenida */
-  max-width: 85%; /* Puede ser más ancho ya que no es un globo normal */
-}
-
-.message.welcome-message .message-content {
-  background-color: transparent; /* Fondo transparente */
-  padding: 0; /* Sin padding de globo */
-  border-radius: 0; /* Sin bordes redondeados */
-  box-shadow: none; /* Sin sombra */
+/* Bot message bubble specific styling */
+.message.bot .message-content {
   color: var(--text-color);
-  text-align: center; /* CENTRA el texto dentro del message-content del bienvenida */
+  /* align-self is handled by .message.bot for the whole message block */
 }
 
 
@@ -288,17 +172,17 @@ body {
 .message-actions {
   display: flex; /* Muestra los botones en fila */
   gap: 8px; /* Espacio entre los botones */
-  margin-top: 5px; /* Un poco de espacio debajo del texto */
-  /* align-self: flex-start; Esto ya lo controla el padre .message.bot */
+  margin-top: 0px; 
+  padding-left: 5px; /* Ajuste para alinear con el texto del globo */
 }
 
 .message-action-btn {
   background: none;
   border: none;
   color: var(--text-color); /* Color del icono */
-  font-size: 0.9em; /* Tamaño del icono ligeramente más grande */
+  font-size: 0.8em; /* Tamaño del icono */
   cursor: pointer;
-  padding: 4px;
+  padding: 3px;
   border-radius: 4px;
   transition: background-color 0.2s ease-in-out;
   display: flex;
@@ -347,12 +231,13 @@ body {
 .message-action-btn.playing i.fas.fa-volume-up {
     color: lightgreen; /* O el color que prefieras para indicar reproducción */
 }
+/* FIN DE MODIFICACIÓN DE ESTILOS DE BOTONES */
 
 
 .input-bar {
   display: flex;
   flex-wrap: wrap;
-  margin: 20px; /* Margen para separarlo del borde del chat-area */
+  margin-top: 20px;
   background-color: var(--button-bg);
   border-radius: 10px;
   padding: 4px 8px;
@@ -538,15 +423,16 @@ body {
 .typing-indicator {
   display: flex; /* Make it a flex container */
   flex-direction: row !important; /* Force horizontal alignment of dots */
-  align-self: center; /* Explicitly align the indicator itself to the center */
+  align-self: flex-start; /* Explicitly align the indicator itself to the left */
   align-items: center; /* Vertically center the dots within the indicator */
   justify-content: center; /* Horizontally center the dots within the indicator */
   
-  background-color: transparent; /* Sin fondo de globo */
+  background-color: var(--message-bg);
   padding: 10px 15px;
   border-radius: 10px;
   width: fit-content;
   max-width: 70%; /* Keep max-width for consistency */
+  margin-right: auto; /* Ensure it stays left-aligned if parent doesn't handle flex-start */
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
 }
