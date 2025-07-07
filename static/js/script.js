@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const toggleTheme = document.getElementById('toggle-theme');
+    // const toggleTheme = document.getElementById('toggle-theme'); // OLD: Esta línea ya no se usa para el toggle de tema principal
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const messagesContainer = document.querySelector('.messages');
@@ -24,370 +24,359 @@ document.addEventListener('DOMContentLoaded', () => {
     let uploadedInfoFileContent = ""; // Contenido del archivo de info subido (temporal)
     let activePersistentInstruction = ""; // La instrucción activa para Gemini
 
-    // Botón de "Iniciar mente"
-    const startMindButton = document.getElementById('start-mind-button');
+    // --- Nuevos elementos para el toggle de tema en el menú de ajustes ---
+    const settingsIcon = document.getElementById('settings-icon');
+    const settingsDropdown = document.getElementById('settings-dropdown');
+    const newToggleTheme = document.getElementById('new-toggle-theme'); // NUEVO!
 
-    // --- NUEVAS variables para Eleven Labs ---
-    let clonedVoiceId = null; // Almacena el ID de la voz clonada por Eleven Labs
+    // Función para establecer el tema (modo claro/oscuro)
+    const setTheme = (isLight) => {
+        document.body.classList.toggle('light-mode', isLight);
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        // Actualiza el texto del botón de modo claro/oscuro en el nuevo menú
+        if (newToggleTheme) { // Asegurarse de que el elemento exista
+             newToggleTheme.textContent = isLight ? 'Cambiar a Modo Oscuro' : 'Cambiar a Modo Claro';
+        }
+    };
 
-    // Asigna el evento de clic a los botones del panel de información para abrir el selector de archivos
-    // Se añade una verificación para asegurar que los elementos existan antes de añadir listeners.
-    if (uploadVoiceBtn) uploadVoiceBtn.addEventListener('click', () => { voiceFileInput.click(); });
-    if (uploadImageBtn) uploadImageBtn.addEventListener('click', () => { imageFileInput.click(); });
-    if (uploadInfoBtn) uploadInfoBtn.addEventListener('click', () => { infoFileInput.click(); });
+    // Cargar el tema guardado al cargar la página
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        setTheme(true);
+    } else {
+        setTheme(false); // Por defecto, modo oscuro
+    }
 
-    // --- NUEVO: Manejo de la subida de archivo de voz para clonación ---
-    if (voiceFileInput) {
-        voiceFileInput.addEventListener('change', async (event) => {
-            if (event.target.files.length > 0) {
-                const voiceFile = event.target.files[0];
-                addMessage('bot', `Clonando voz de "${voiceFile.name}"... Esto puede tardar un momento.`);
-                try {
-                    const formData = new FormData();
-                    formData.append('audio_file', voiceFile);
-
-                    const response = await fetch('https://raava.onrender.com/clone_voice', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. ${errorData.error || 'Error desconocido.'}`);
-                    }
-                    const data = await response.json();
-                    clonedVoiceId = data.voice_id; // Almacena el ID de la voz clonada
-                    addMessage('bot', `¡Voz clonada exitosamente! Ahora hablaré con tu voz.`);
-                } catch (error) {
-                    console.error('Error al clonar la voz:', error);
-                    addMessage('bot', `Lo siento, hubo un error al clonar la voz. ${error.message}`);
-                }
-            }
-            event.target.value = ''; // Limpiar el input para permitir volver a subir el mismo archivo
+    // Event listener para el nuevo botón de cambio de tema en el menú de ajustes
+    if (newToggleTheme) { // Asegurarse de que el elemento exista antes de añadir el listener
+        newToggleTheme.addEventListener('click', () => {
+            const isLight = document.body.classList.contains('light-mode');
+            setTheme(!isLight);
         });
     }
 
-    // Evento para reemplazar la imagen del avatar Y ADJUNTARLA AL CHAT
-    if (imageFileInput && avatarImage) {
-        imageFileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                // 1. Cambia el avatar
-                const fileURL = URL.createObjectURL(file);
-                avatarImage.src = fileURL;
-                addMessage('bot', `Se ha actualizado tu avatar con la imagen: ${file.name}.`);
-
-                // 2. También prepara la imagen para ser adjuntada al siguiente mensaje de chat
-                selectedFile = file;
-                fileNameSpan.textContent = selectedFile.name;
-                fileDisplay.style.display = 'flex';
-            } else {
-                addMessage('bot', 'Por favor, sube un archivo de imagen válido para el avatar.');
-                selectedFile = null; // Limpia si el archivo no es válido
-                fileNameSpan.textContent = '';
-                fileDisplay.style.display = 'none';
-            }
-            event.target.value = ''; // Limpia el input para permitir volver a subir el mismo archivo
+    // Event listener para el icono de ajustes para mostrar/ocultar el menú desplegable
+    if (settingsIcon && settingsDropdown) {
+        settingsIcon.addEventListener('click', (event) => {
+            settingsDropdown.classList.toggle('show');
+            event.stopPropagation(); // Evitar que el clic en el icono cierre el menú inmediatamente
         });
-    }
 
-    // --- CORRECCIÓN: Manejo del archivo de información (ya no adjunta al chat principal) ---
-    if (infoFileInput && startMindButton) {
-        infoFileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file && file.type === 'text/plain') {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    uploadedInfoFileContent = e.target.result;
-                    startMindButton.classList.add('info-ready');
-                    addMessage('bot', `Archivo de instrucción "${file.name}" cargado. Presiona "Iniciar mente" para activar esta instrucción.`);
-                    
-                    // COMENTADO: Estas líneas ya no son necesarias aquí, ya que el archivo de información
-                    // no debe aparecer como un archivo adjunto en la barra de chat principal.
-                    // selectedFile = file;
-                    // fileNameSpan.textContent = selectedFile.name;
-                    // fileDisplay.style.display = 'flex';
-                };
-                reader.onerror = () => {
-                    addMessage('bot', 'Error al leer el archivo de instrucción. Inténtalo de nuevo.');
-                    uploadedInfoFileContent = "";
-                    startMindButton.classList.remove('info-ready');
-                    // COMENTADO: Limpiar también si hay error, pero solo la lógica de información.
-                    // selectedFile = null;
-                    // fileNameSpan.textContent = '';
-                    // fileDisplay.style.display = 'none';
-                };
-                reader.readAsText(file);
-            } else {
-                addMessage('bot', 'Por favor, sube un archivo de texto (.txt) para la instrucción.');
-                uploadedInfoFileContent = "";
-                startMindButton.classList.remove('info-ready');
-                // COMENTADO: Limpiar si no es un archivo de texto válido.
-                // selectedFile = null;
-                // fileNameSpan.textContent = '';
-                // fileDisplay.style.display = 'none';
-            }
-            event.target.value = ''; // Limpia el input del archivo
-        });
-    }
-    
-    // --- Lógica del botón "Iniciar mente" ---
-    if (startMindButton && infoFileInput) {
-        startMindButton.addEventListener('click', () => {
-            if (uploadedInfoFileContent) {
-                activePersistentInstruction = uploadedInfoFileContent;
-                uploadedInfoFileContent = ""; // Limpia el contenido temporal
-                startMindButton.classList.remove('info-ready'); // Desactiva la animación
-                addMessage('bot', '¡Mente iniciada! La IA ahora actuará bajo tu instrucción.');
-                infoFileInput.value = ''; // Limpia el input del archivo
-            } else {
-                addMessage('bot', 'Por favor, carga un archivo de información antes de iniciar la mente de la IA.');
-            }
-        });
-    }
-    // --- FIN LÓGICA ---
-
-    // --- Funcionalidad existente del chat ---
-    // Lógica del modo oscuro y claro
-    if (toggleTheme) {
-        toggleTheme.addEventListener('click', () => {
-            document.body.classList.toggle('light-mode');
-            toggleTheme.textContent = document.body.classList.contains('light-mode')
-                ? 'Cambiar a Modo Oscuro' : 'Cambiar a Modo Claro';
-        });
-    }
-
-    // Función para ajustar la altura del textarea dinámicamente
-    function adjustTextareaHeight() {
-        userInput.style.height = 'auto';
-        userInput.style.height = userInput.scrollHeight + 'px';
-    }
-    if (userInput) {
-        userInput.addEventListener('input', adjustTextareaHeight);
-        userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
+        // Cerrar el menú desplegable si se hace clic fuera de él
+        document.addEventListener('click', (event) => {
+            if (!settingsDropdown.contains(event.target) && event.target !== settingsIcon) {
+                settingsDropdown.classList.remove('show');
             }
         });
     }
 
-    // Función para añadir mensajes al contenedor (AHORA CON SOPORTE DE AUDIO Y COPIAR)
+    // --- Lógica del chatbot existente (sin cambios significativos aquí) ---
+
+    // Función para añadir mensajes al chat
     async function addMessage(sender, text, audioBase64 = null) {
         const messageElement = document.createElement('div');
-        messageElement.classList.add('message');
-        messageElement.classList.add(sender);
+        messageElement.classList.add('message', sender);
 
-        // Crear el contenedor de contenido del mensaje (el "globo")
-        const messageContentElement = document.createElement('div');
-        messageContentElement.classList.add('message-content');
+        const messageContent = document.createElement('div');
+        messageContent.classList.add('message-content');
+        messageContent.innerHTML = text; // Usar innerHTML para permitir HTML básico como enlaces
 
-        const textContentElement = document.createElement('span');
-        textContentElement.textContent = text;
-        
-        // Siempre añadir el texto al messageContentElement
-        messageContentElement.appendChild(textContentElement);
-        
-        // Añadir el messageContentElement (el globo) al messageElement
-        messageElement.appendChild(messageContentElement);
-        
-        // **AQUÍ ESTÁ LA MODIFICACIÓN CLAVE EN SCRIPT.JS PARA QUE LOS BOTONES ESTÉN FUERA DEL GLOBO**
+        messageElement.appendChild(messageContent);
+
+        // Añadir botones de acción solo para mensajes del bot
         if (sender === 'bot') {
             const actionsContainer = document.createElement('div');
             actionsContainer.classList.add('message-actions');
 
-            // Botón Copiar Mensaje
+            // Botón de Copiar
             const copyButton = document.createElement('button');
-            copyButton.classList.add('message-action-btn', 'copy-btn');
-            copyButton.innerHTML = '<i class="far fa-copy"></i>'; // Icono de copiar de FontAwesome
+            copyButton.classList.add('message-action-btn');
+            copyButton.innerHTML = '<i class="fas fa-copy"></i>';
             copyButton.title = 'Copiar mensaje';
-            copyButton.addEventListener('click', async () => {
-                try {
-                    await navigator.clipboard.writeText(text);
-                    copyButton.classList.add('copied'); // Añade clase para animación de "Copiado!"
-                    setTimeout(() => copyButton.classList.remove('copied'), 2000); // Quita la clase después de 2 segundos
-                } catch (err) {
+            copyButton.addEventListener('click', () => {
+                navigator.clipboard.writeText(text).then(() => {
+                    copyButton.classList.add('copied');
+                    setTimeout(() => copyButton.classList.remove('copied'), 2000);
+                }).catch(err => {
                     console.error('Error al copiar el texto: ', err);
-                }
+                });
             });
             actionsContainer.appendChild(copyButton);
 
-            // Botón Reproducir Audio
-            if (audioBase64) { // Solo añadir el botón si hay audio disponible
-                const playAudioButton = document.createElement('button');
-                playAudioButton.classList.add('message-action-btn', 'play-audio-btn');
-                playAudioButton.innerHTML = '<i class="fas fa-volume-up"></i>'; // Icono de volumen de FontAwesome
-                playAudioButton.title = 'Reproducir audio';
-                
-                let currentAudioInstance = null; // Variable para almacenar la instancia de Audio y controlar su estado
+            // Botón de Reproducir Audio (solo si hay audio)
+            if (audioBase64) {
+                const playButton = document.createElement('button');
+                playButton.classList.add('message-action-btn');
+                playButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+                playButton.title = 'Reproducir audio';
 
-                playAudioButton.addEventListener('click', async () => {
-                    if (!audioBase64) {
-                        console.warn('No hay audio disponible para este mensaje.');
-                        return;
-                    }
+                const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`);
+                audio.preload = 'none'; // No precargar hasta que se necesite
 
-                    // Si ya hay un audio reproduciéndose, páusalo y reinícialo
-                    if (currentAudioInstance && !currentAudioInstance.paused) {
-                        currentAudioInstance.pause();
-                        currentAudioInstance.currentTime = 0; // Reinicia el audio
-                        playAudioButton.classList.remove('playing');
-                    }
+                let isLoading = false;
 
-                    try {
-                        playAudioButton.classList.add('loading'); // Muestra indicador de carga (spinner)
-                        playAudioButton.classList.remove('playing'); // Asegura que no tenga la clase 'playing'
-
-                        currentAudioInstance = new Audio();
-                        currentAudioInstance.src = `data:audio/mpeg;base64,${audioBase64}`;
-                            
-                        // Evento para cuando el audio empieza a reproducirse
-                        currentAudioInstance.onplay = () => {
-                            playAudioButton.classList.remove('loading');
-                            playAudioButton.classList.add('playing');
-                        };
-
-                        // Evento para cuando el audio termina
-                        currentAudioInstance.onended = () => {
-                            playAudioButton.classList.remove('playing');
-                        };
-
-                        // Evento para errores de carga o reproducción
-                        currentAudioInstance.onerror = (e) => {
-                            console.error('Error al cargar o reproducir el audio:', e);
-                            playAudioButton.classList.remove('loading', 'playing');
-                            // Puedes mostrar un error visual al usuario aquí
-                        };
-
-                        await currentAudioInstance.play();
-                        console.log('Audio iniciado.');
-
-                    } catch (error) {
-                        console.error('Error al reproducir el audio:', error);
-                        playAudioButton.classList.remove('loading', 'playing');
+                playButton.addEventListener('click', async () => {
+                    if (audio.paused) {
+                        if (!isLoading) {
+                            isLoading = true;
+                            playButton.classList.add('loading'); // Añadir animación de carga
+                            try {
+                                await audio.load(); // Intenta cargar el audio si no está cargado
+                                await audio.play();
+                                playButton.classList.remove('loading');
+                                playButton.classList.add('playing');
+                            } catch (e) {
+                                console.error("Error al cargar o reproducir el audio:", e);
+                                playButton.classList.remove('loading');
+                                alert("No se pudo reproducir el audio. Intenta de nuevo más tarde.");
+                            } finally {
+                                isLoading = false;
+                            }
+                        }
+                    } else {
+                        audio.pause();
+                        playButton.classList.remove('playing');
                     }
                 });
-                actionsContainer.appendChild(playAudioButton);
+
+                audio.addEventListener('ended', () => {
+                    playButton.classList.remove('playing');
+                });
+                audio.addEventListener('pause', () => {
+                    playButton.classList.remove('playing');
+                });
+                // Si el audio falla al cargarse por primera vez (ej. red lenta)
+                audio.addEventListener('error', () => {
+                    console.error("Error al cargar el audio.");
+                    playButton.classList.remove('loading');
+                    // Opcional: mostrar un mensaje al usuario
+                });
+
+                actionsContainer.appendChild(playButton);
             }
-            
-            // Añadir el contenedor de acciones al messageElement (FUERA DEL GLOBO)
             messageElement.appendChild(actionsContainer);
         }
 
         messagesContainer.appendChild(messageElement);
+        // Forzar reflow para que la animación CSS funcione
+        messageElement.offsetWidth; 
+        messageElement.classList.add('appeared');
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-        conversationHistory.push({
-            role: sender === 'user' ? 'user' : 'model',
-            parts: [{ text: text }]
-        });
-
-        setTimeout(() => {
-            messageElement.classList.add('appeared');
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }, 50);
-        return Promise.resolve();
     }
 
+    // Funciones para el indicador de "typing..."
     function showTypingIndicator() {
-        if (typingIndicatorElement) return;
-
-        typingIndicatorElement = document.createElement('div');
-        typingIndicatorElement.classList.add('message', 'bot', 'typing-indicator');
-        for (let i = 0; i < 3; i++) {
-            const dot = document.createElement('span');
-            typingIndicatorElement.appendChild(dot);
+        if (!typingIndicatorElement) {
+            typingIndicatorElement = document.createElement('div');
+            typingIndicatorElement.classList.add('message', 'bot', 'typing-indicator');
+            for (let i = 0; i < 3; i++) {
+                typingIndicatorElement.appendChild(document.createElement('span'));
+            }
+            messagesContainer.appendChild(typingIndicatorElement);
+            // Forzar reflow para que la animación CSS funcione
+            typingIndicatorElement.offsetWidth; 
+            typingIndicatorElement.classList.add('appeared');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
-        messagesContainer.appendChild(typingIndicatorElement);
-        void typingIndicatorElement.offsetWidth;
-        typingIndicatorElement.style.opacity = '1';
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
     function hideTypingIndicator() {
-        if (typingIndicatorElement && messagesContainer.contains(typingIndicatorElement)) {
-            typingIndicatorElement.style.opacity = '0';
-            setTimeout(() => {
-                if (typingIndicatorElement && messagesContainer.contains(typingIndicatorElement)) {
-                    messagesContainer.removeChild(typingIndicatorElement);
+        if (typingIndicatorElement) {
+            typingIndicatorElement.classList.remove('appeared');
+            typingIndicatorElement.addEventListener('transitionend', () => {
+                if (typingIndicatorElement && !typingIndicatorElement.classList.contains('appeared')) {
+                    typingIndicatorElement.remove();
                     typingIndicatorElement = null;
                 }
-            }, 300);
+            }, { once: true });
         }
     }
 
-    if (sendButton) sendButton.addEventListener('click', sendMessage);
-
-    // Manejo de adjuntos de archivos (Input general)
-    if (fileInput) {
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files.length > 0) {
-                selectedFile = fileInput.files[0];
-                fileNameSpan.textContent = selectedFile.name;
-                fileDisplay.style.display = 'flex';
-            } else {
-                selectedFile = null;
-                fileDisplay.style.display = 'none';
-            }
-        });
+    // Auto-ajustar la altura del textarea
+    function adjustTextareaHeight() {
+        userInput.style.height = 'auto';
+        userInput.style.height = userInput.scrollHeight + 'px';
     }
 
-    if (clearFileButton) {
-        clearFileButton.addEventListener('click', () => {
-            selectedFile = null;
-            fileInput.value = '';
+    userInput.addEventListener('input', adjustTextareaHeight);
+
+    // Manejo de carga de archivo principal (para input general)
+    fileInput.addEventListener('change', (event) => {
+        selectedFile = event.target.files[0];
+        if (selectedFile) {
+            fileNameSpan.textContent = selectedFile.name;
+            fileDisplay.style.display = 'flex';
+        } else {
+            fileNameSpan.textContent = '';
             fileDisplay.style.display = 'none';
-            adjustTextareaHeight();
-        });
+        }
+        adjustTextareaHeight(); // Ajustar altura si el área de archivo cambia
+    });
+
+    clearFileButton.addEventListener('click', () => {
+        selectedFile = null;
+        fileInput.value = ''; // Limpiar el input para que pueda detectar el mismo archivo si se selecciona de nuevo
+        fileNameSpan.textContent = '';
+        fileDisplay.style.display = 'none';
+        adjustTextareaHeight();
+    });
+
+    // --- Lógica de carga de archivos en el info-panel ---
+    uploadVoiceBtn.addEventListener('click', () => voiceFileInput.click());
+    uploadImageBtn.addEventListener('click', () => imageFileInput.click());
+    uploadInfoBtn.addEventListener('click', () => infoFileInput.click());
+
+    voiceFileInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const formData = new FormData();
+            formData.append('audio_file', file);
+            showStatusMessage(`Clonando voz de "${file.name}"...`, 'loading');
+            try {
+                const response = await fetch('/clone_voice', {
+                    method: 'POST',
+                    body: formData,
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showStatusMessage(`Voz clonada: ${data.voice_name}. ID: ${data.voice_id}`, 'success');
+                    // Aquí se manejaría el voice_id clonado si fuera necesario en el frontend
+                } else {
+                    showStatusMessage(`Error al clonar voz: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error al subir archivo de voz:', error);
+                showStatusMessage('Error de red al clonar voz.', 'error');
+            } finally {
+                voiceFileInput.value = ''; // Limpiar el input
+            }
+        }
+    });
+
+    imageFileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                avatarImage.src = e.target.result; // Cambiar la imagen del avatar
+                showStatusMessage('Imagen de avatar actualizada.', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+        imageFileInput.value = ''; // Limpiar el input
+    });
+
+    const fixedPromptInput = document.getElementById('fixed-prompt-input');
+    const startMindBtn = document.getElementById('start-mind-btn');
+
+    infoFileInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (file && file.type === 'text/plain') {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedInfoFileContent = e.target.result;
+                fixedPromptInput.value = `Información cargada: ${file.name} (${file.size} bytes)`;
+                startMindBtn.classList.add('info-ready'); // Activa el estilo visual
+                showStatusMessage(`Archivo de información "${file.name}" cargado.`, 'success');
+            };
+            reader.readAsText(file);
+        } else {
+            fixedPromptInput.value = '';
+            uploadedInfoFileContent = '';
+            startMindBtn.classList.remove('info-ready');
+            showStatusMessage('Por favor, selecciona un archivo de texto (.txt).', 'error');
+        }
+        infoFileInput.value = ''; // Limpiar el input
+    });
+
+    startMindBtn.addEventListener('click', () => {
+        if (uploadedInfoFileContent) {
+            activePersistentInstruction = uploadedInfoFileContent;
+            fixedPromptInput.value = "Mente Iniciada con la información cargada.";
+            startMindBtn.classList.remove('info-ready'); // Desactiva el estilo al iniciar
+            showStatusMessage('Mente iniciada con la información proporcionada.', 'success');
+        } else {
+            showStatusMessage('Por favor, carga un archivo de información primero.', 'error');
+        }
+    });
+
+    function showStatusMessage(message, type = 'info') {
+        const statusMessageDiv = document.getElementById('status-message');
+        statusMessageDiv.textContent = message;
+        statusMessageDiv.className = ''; // Limpiar clases anteriores
+        statusMessageDiv.classList.add(type); // Añadir clase para estilo (info, success, error, loading)
+        statusMessageDiv.style.display = 'block'; // Asegurarse de que esté visible
+
+        // Ocultar automáticamente después de unos segundos, a menos que sea 'loading'
+        if (type !== 'loading') {
+            setTimeout(() => {
+                statusMessageDiv.style.display = 'none';
+            }, 5000); // Mensaje visible por 5 segundos
+        }
     }
+    
+    // Función para ocultar el mensaje de estado (usado por el indicador de typing)
+    function hideStatusMessage() {
+        const statusMessageDiv = document.getElementById('status-message');
+        if (statusMessageDiv.classList.contains('loading')) {
+            statusMessageDiv.style.display = 'none';
+        }
+    }
+
+
+    // Lógica para enviar mensajes al backend
+    sendButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // Prevenir salto de línea
+            sendMessage();
+        }
+    });
 
     async function sendMessage() {
-        const message = userInput.value.trim();
-        // El selectedFile ahora puede venir del input principal o de los inputs de la barra lateral
-        // Ya no necesitas 'actualFile' de fileInput.files, ya que `selectedFile` se maneja centralmente.
-
-        if (!message && !selectedFile) { // Revisa si el mensaje es vacío Y no hay archivo seleccionado
-            console.warn("Intento de envío vacío: no hay mensaje ni archivo adjunto.");
+        const userMessage = userInput.value.trim();
+        if (userMessage === '' && !selectedFile) {
             return;
         }
-        
-        let displayMessage = message;
-        if (selectedFile) {
-            displayMessage += (message ? ' ' : '') + `📎 Archivo adjunto: ${selectedFile.name}`;
-        }
-        await addMessage('user', displayMessage);
-        
-        userInput.value = '';
-        adjustTextareaHeight();
+
+        let currentMessageContent = userMessage;
 
         showTypingIndicator();
+        await addMessage('user', userMessage);
+        userInput.value = ''; // Limpiar el input
+        adjustTextareaHeight(); // Ajustar la altura después de limpiar
 
+        let requestBody = {
+            message: userMessage,
+            history: conversationHistory,
+            persistent_instruction: activePersistentInstruction
+        };
+
+        if (selectedFile) {
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                requestBody.image_data = reader.result.split(',')[1]; // Base64 sin el prefijo
+                requestBody.image_mime_type = selectedFile.type;
+                await sendRequestToBackend(requestBody);
+            };
+            reader.readAsDataURL(selectedFile);
+        } else {
+            await sendRequestToBackend(requestBody);
+        }
+    }
+
+    async function sendRequestToBackend(requestBody) {
         try {
-            const formData = new FormData();
-            formData.append('message', message);
-            formData.append('history', JSON.stringify(conversationHistory.slice(0, -1)));
-            
-            // --- AÑADIDO: Añade la instrucción persistente si está activa ---
-            if (activePersistentInstruction) {
-                formData.append('persistent_instruction', activePersistentInstruction);
-            }
-
-            // --- AÑADIDO: Si hay un voiceId clonado, envíalo también ---
-            if (clonedVoiceId) {
-                formData.append('cloned_voice_id', clonedVoiceId);
-            }
-
-            if (selectedFile) {
-                formData.append('file', selectedFile);
-            }
-
-            const response = await fetch('https://raava.onrender.com/chat', {
+            const response = await fetch('http://127.0.0.1:5000/chat', { // Asegúrate de que esta URL sea la correcta para tu backend
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
+                const errorText = await response.text(); // Leer el cuerpo del error
                 throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. ${errorText}`);
             }
             const data = await response.json();
