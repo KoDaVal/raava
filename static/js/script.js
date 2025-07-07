@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // const toggleTheme = document.getElementById('toggle-theme'); // OLD: Esta línea ya no se usa para el toggle de tema principal
+    const toggleTheme = document.getElementById('toggle-theme'); // Old theme toggle in sidebar
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const messagesContainer = document.querySelector('.messages');
@@ -24,175 +24,168 @@ document.addEventListener('DOMContentLoaded', () => {
     let uploadedInfoFileContent = ""; // Contenido del archivo de info subido (temporal)
     let activePersistentInstruction = ""; // La instrucción activa para Gemini
 
-    // --- Nuevos elementos para el toggle de tema en el menú de ajustes ---
+    // Botón de "Iniciar mente"
+    const startMindButton = document.getElementById('start-mind-button');
+
+    // --- NUEVAS variables para Eleven Labs ---
+    let clonedVoiceId = null; // Almacena el ID de la voz clonada por Eleven Labs
+
+    // --- NUEVOS elementos para el nuevo control de tema y ajustes ---
     const settingsIcon = document.getElementById('settings-icon');
-    const settingsDropdown = document.getElementById('settings-dropdown');
-    const newToggleTheme = document.getElementById('new-toggle-theme'); // NUEVO!
+    const settingsDropdown = document.querySelector('.settings-dropdown');
+    const newToggleTheme = document.getElementById('new-toggle-theme');
 
-    // Función para establecer el tema (modo claro/oscuro)
-    const setTheme = (isLight) => {
-        document.body.classList.toggle('light-mode', isLight);
-        localStorage.setItem('theme', isLight ? 'light' : 'dark');
-        // Actualiza el texto del botón de modo claro/oscuro en el nuevo menú
-        if (newToggleTheme) { // Asegurarse de que el elemento exista
-             newToggleTheme.textContent = isLight ? 'Cambiar a Modo Oscuro' : 'Cambiar a Modo Claro';
-        }
-    };
+    // Asigna el evento de clic a los botones del panel de información para abrir el selector de archivos
+    // Se añade una verificación para asegurar que los elementos existan antes de añadir listeners.
+    if (uploadVoiceBtn) uploadVoiceBtn.addEventListener('click', () => { voiceFileInput.click(); });
+    if (uploadImageBtn) uploadImageBtn.addEventListener('click', () => { imageFileInput.click(); });
+    if (uploadInfoBtn) uploadInfoBtn.addEventListener('click', () => { infoFileInput.click(); });
 
-    // Cargar el tema guardado al cargar la página
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
-        setTheme(true);
-    } else {
-        setTheme(false); // Por defecto, modo oscuro
-    }
+    // --- NUEVO: Manejo de la subida de archivo de voz para clonación ---
+    if (voiceFileInput) {
+        voiceFileInput.addEventListener('change', async (event) => {
+            if (event.target.files.length > 0) {
+                const voiceFile = event.target.files[0];
+                addMessage('bot', `Clonando voz de "${voiceFile.name}"... Esto puede tardar un momento.`);
+                try {
+                    const formData = new FormData();
+                    formData.append('audio_file', voiceFile);
 
-    // Event listener para el nuevo botón de cambio de tema en el menú de ajustes
-    if (newToggleTheme) { // Asegurarse de que el elemento exista antes de añadir el listener
-        newToggleTheme.addEventListener('click', () => {
-            const isLight = document.body.classList.contains('light-mode');
-            setTheme(!isLight);
+                    const response = await fetch('https://raava.onrender.com/clone_voice', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. ${errorData.error || 'Error desconocido.'}`);
+                    }
+
+                    const data = await response.json();
+                    clonedVoiceId = data.voice_id; // Almacena el ID de la voz clonada
+                    addMessage('bot', `¡Voz clonada exitosamente! Ahora hablaré con tu voz. ID: ${clonedVoiceId}`);
+                } catch (error) {
+                    console.error('Error al clonar la voz:', error);
+                    addMessage('bot', `Lo siento, no pude clonar la voz. Error: ${error.message}.`);
+                }
+            }
         });
     }
 
-    // Event listener para el icono de ajustes para mostrar/ocultar el menú desplegable
-    if (settingsIcon && settingsDropdown) {
+    // --- NUEVO: Manejo de la subida de archivo de imagen para avatar ---
+    if (imageFileInput) {
+        imageFileInput.addEventListener('change', (event) => {
+            if (event.target.files.length > 0) {
+                const imageFile = event.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    avatarImage.src = e.target.result; // Muestra la imagen seleccionada como avatar
+                };
+                reader.readAsDataURL(imageFile);
+            }
+            imageFileInput.value = ''; // Limpiar el input después de la selección
+        });
+    }
+
+    // --- NUEVO: Manejo de la subida de archivo de información (.txt) ---
+    if (infoFileInput) {
+        infoFileInput.addEventListener('change', async (event) => {
+            if (event.target.files.length > 0) {
+                const infoFile = event.target.files[0];
+                if (infoFile.type !== 'text/plain') {
+                    addMessage('bot', 'Por favor, sube un archivo de texto (.txt) para la información.');
+                    infoFileInput.value = '';
+                    return;
+                }
+
+                addMessage('bot', `Cargando información desde "${infoFile.name}"...`);
+                try {
+                    const fileContent = await infoFile.text();
+                    uploadedInfoFileContent = fileContent;
+                    addMessage('bot', `¡Información cargada exitosamente desde "${infoFile.name}"! Ahora puedes iniciar la mente para aplicar esta información.`);
+                    startMindButton.style.display = 'block'; // Muestra el botón "Iniciar mente"
+                    startMindButton.classList.add('info-ready'); // Añade la clase para cambiar estilo
+                } catch (error) {
+                    console.error('Error al leer el archivo de información:', error);
+                    addMessage('bot', `Lo siento, no pude leer el archivo de información. Error: ${error.message}.`);
+                }
+            } else {
+                startMindButton.style.display = 'none'; // Oculta el botón si no hay archivo
+                startMindButton.classList.remove('info-ready');
+            }
+            infoFileInput.value = ''; // Limpiar el input después de la selección
+        });
+    }
+
+    // --- NUEVO: Lógica para el botón "Iniciar mente" ---
+    if (startMindButton) {
+        startMindButton.addEventListener('click', async () => {
+            if (uploadedInfoFileContent) {
+                activePersistentInstruction = uploadedInfoFileContent;
+                addMessage('bot', '¡Mente iniciada! Ahora utilizaré la información cargada en todas nuestras conversaciones.');
+                startMindButton.style.display = 'none'; // Oculta el botón después de iniciar la mente
+                startMindButton.classList.remove('info-ready');
+                uploadedInfoFileContent = ""; // Limpiar el contenido temporal
+            } else {
+                addMessage('bot', 'Por favor, primero sube un archivo de información.');
+            }
+        });
+    }
+
+    // --- Lógica del tema (ahora para el nuevo botón) ---
+    function setTheme(theme) {
+        document.body.classList.toggle('light-mode', theme === 'light');
+        newToggleTheme.textContent = theme === 'light' ? 'Cambiar a Modo Oscuro' : 'Cambiar a Modo Claro';
+    }
+
+    // Toggle theme with the new button
+    if (newToggleTheme) {
+        newToggleTheme.addEventListener('click', () => {
+            const currentTheme = document.body.classList.contains('light-mode') ? 'light' : 'dark';
+            setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        });
+    }
+
+    // Initial theme setup (for the new button)
+    setTheme('dark'); // Default to dark mode on load
+
+    // --- Lógica para mostrar/ocultar el menú de ajustes ---
+    if (settingsIcon) {
         settingsIcon.addEventListener('click', (event) => {
             settingsDropdown.classList.toggle('show');
-            event.stopPropagation(); // Evitar que el clic en el icono cierre el menú inmediatamente
-        });
-
-        // Cerrar el menú desplegable si se hace clic fuera de él
-        document.addEventListener('click', (event) => {
-            if (!settingsDropdown.contains(event.target) && event.target !== settingsIcon) {
-                settingsDropdown.classList.remove('show');
-            }
+            event.stopPropagation(); // Evita que el clic se propague al documento
         });
     }
 
-    // --- Lógica del chatbot existente (sin cambios significativos aquí) ---
+    // Ocultar el dropdown si se hace clic fuera de él
+    document.addEventListener('click', (event) => {
+        if (settingsDropdown && !settingsDropdown.contains(event.target) && event.target !== settingsIcon) {
+            settingsDropdown.classList.remove('show');
+        }
+    });
 
-    // Función para añadir mensajes al chat
-    async function addMessage(sender, text, audioBase64 = null) {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message', sender);
-
-        const messageContent = document.createElement('div');
-        messageContent.classList.add('message-content');
-        messageContent.innerHTML = text; // Usar innerHTML para permitir HTML básico como enlaces
-
-        messageElement.appendChild(messageContent);
-
-        // Añadir botones de acción solo para mensajes del bot
-        if (sender === 'bot') {
-            const actionsContainer = document.createElement('div');
-            actionsContainer.classList.add('message-actions');
-
-            // Botón de Copiar
-            const copyButton = document.createElement('button');
-            copyButton.classList.add('message-action-btn');
-            copyButton.innerHTML = '<i class="fas fa-copy"></i>';
-            copyButton.title = 'Copiar mensaje';
-            copyButton.addEventListener('click', () => {
-                navigator.clipboard.writeText(text).then(() => {
-                    copyButton.classList.add('copied');
-                    setTimeout(() => copyButton.classList.remove('copied'), 2000);
-                }).catch(err => {
-                    console.error('Error al copiar el texto: ', err);
-                });
-            });
-            actionsContainer.appendChild(copyButton);
-
-            // Botón de Reproducir Audio (solo si hay audio)
-            if (audioBase64) {
-                const playButton = document.createElement('button');
-                playButton.classList.add('message-action-btn');
-                playButton.innerHTML = '<i class="fas fa-volume-up"></i>';
-                playButton.title = 'Reproducir audio';
-
-                const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`);
-                audio.preload = 'none'; // No precargar hasta que se necesite
-
-                let isLoading = false;
-
-                playButton.addEventListener('click', async () => {
-                    if (audio.paused) {
-                        if (!isLoading) {
-                            isLoading = true;
-                            playButton.classList.add('loading'); // Añadir animación de carga
-                            try {
-                                await audio.load(); // Intenta cargar el audio si no está cargado
-                                await audio.play();
-                                playButton.classList.remove('loading');
-                                playButton.classList.add('playing');
-                            } catch (e) {
-                                console.error("Error al cargar o reproducir el audio:", e);
-                                playButton.classList.remove('loading');
-                                alert("No se pudo reproducir el audio. Intenta de nuevo más tarde.");
-                            } finally {
-                                isLoading = false;
-                            }
-                        }
-                    } else {
-                        audio.pause();
-                        playButton.classList.remove('playing');
-                    }
-                });
-
-                audio.addEventListener('ended', () => {
-                    playButton.classList.remove('playing');
-                });
-                audio.addEventListener('pause', () => {
-                    playButton.classList.remove('playing');
-                });
-                // Si el audio falla al cargarse por primera vez (ej. red lenta)
-                audio.addEventListener('error', () => {
-                    console.error("Error al cargar el audio.");
-                    playButton.classList.remove('loading');
-                    // Opcional: mostrar un mensaje al usuario
-                });
-
-                actionsContainer.appendChild(playButton);
+    // --- Manejo del adjunto de archivos (general) ---
+    if (fileInput) {
+        fileInput.addEventListener('change', (event) => {
+            if (event.target.files.length > 0) {
+                selectedFile = event.target.files[0];
+                fileNameSpan.textContent = selectedFile.name;
+                fileDisplay.style.display = 'flex';
+                adjustTextareaHeight();
             }
-            messageElement.appendChild(actionsContainer);
-        }
-
-        messagesContainer.appendChild(messageElement);
-        // Forzar reflow para que la animación CSS funcione
-        messageElement.offsetWidth; 
-        messageElement.classList.add('appeared');
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        });
     }
 
-    // Funciones para el indicador de "typing..."
-    function showTypingIndicator() {
-        if (!typingIndicatorElement) {
-            typingIndicatorElement = document.createElement('div');
-            typingIndicatorElement.classList.add('message', 'bot', 'typing-indicator');
-            for (let i = 0; i < 3; i++) {
-                typingIndicatorElement.appendChild(document.createElement('span'));
-            }
-            messagesContainer.appendChild(typingIndicatorElement);
-            // Forzar reflow para que la animación CSS funcione
-            typingIndicatorElement.offsetWidth; 
-            typingIndicatorElement.classList.add('appeared');
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
+    if (clearFileButton) {
+        clearFileButton.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            fileDisplay.style.display = 'none';
+            adjustTextareaHeight();
+        });
     }
 
-    function hideTypingIndicator() {
-        if (typingIndicatorElement) {
-            typingIndicatorElement.classList.remove('appeared');
-            typingIndicatorElement.addEventListener('transitionend', () => {
-                if (typingIndicatorElement && !typingIndicatorElement.classList.contains('appeared')) {
-                    typingIndicatorElement.remove();
-                    typingIndicatorElement = null;
-                }
-            }, { once: true });
-        }
-    }
-
-    // Auto-ajustar la altura del textarea
+    // Ajustar altura del textarea
     function adjustTextareaHeight() {
         userInput.style.height = 'auto';
         userInput.style.height = userInput.scrollHeight + 'px';
@@ -200,190 +193,223 @@ document.addEventListener('DOMContentLoaded', () => {
 
     userInput.addEventListener('input', adjustTextareaHeight);
 
-    // Manejo de carga de archivo principal (para input general)
-    fileInput.addEventListener('change', (event) => {
-        selectedFile = event.target.files[0];
-        if (selectedFile) {
-            fileNameSpan.textContent = selectedFile.name;
-            fileDisplay.style.display = 'flex';
-        } else {
-            fileNameSpan.textContent = '';
-            fileDisplay.style.display = 'none';
+    // Función para mostrar el indicador de "escribiendo"
+    function showTypingIndicator() {
+        if (!typingIndicatorElement) {
+            typingIndicatorElement = document.createElement('div');
+            typingIndicatorElement.classList.add('message', 'bot', 'typing-indicator');
+            typingIndicatorElement.innerHTML = '<span></span><span></span><span></span>';
+            messagesContainer.appendChild(typingIndicatorElement);
         }
-        adjustTextareaHeight(); // Ajustar altura si el área de archivo cambia
-    });
+        typingIndicatorElement.style.opacity = '1';
+        messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to bottom
+    }
 
-    clearFileButton.addEventListener('click', () => {
-        selectedFile = null;
-        fileInput.value = ''; // Limpiar el input para que pueda detectar el mismo archivo si se selecciona de nuevo
-        fileNameSpan.textContent = '';
-        fileDisplay.style.display = 'none';
-        adjustTextareaHeight();
-    });
+    // Función para ocultar el indicador de "escribiendo"
+    function hideTypingIndicator() {
+        if (typingIndicatorElement) {
+            typingIndicatorElement.style.opacity = '0';
+            // Opcional: remover el elemento después de la transición si ya no se usa
+            // setTimeout(() => {
+            //     if (typingIndicatorElement && typingIndicatorElement.parentNode) {
+            //         typingIndicatorElement.parentNode.removeChild(typingIndicatorElement);
+            //         typingIndicatorElement = null;
+            //     }
+            // }, 300);
+        }
+    }
 
-    // --- Lógica de carga de archivos en el info-panel ---
-    uploadVoiceBtn.addEventListener('click', () => voiceFileInput.click());
-    uploadImageBtn.addEventListener('click', () => imageFileInput.click());
-    uploadInfoBtn.addEventListener('click', () => infoFileInput.click());
+    // Función para añadir mensajes al chat
+    async function addMessage(sender, text, audioBase64 = null) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', sender);
 
-    voiceFileInput.addEventListener('change', async (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const formData = new FormData();
-            formData.append('audio_file', file);
-            showStatusMessage(`Clonando voz de "${file.name}"...`, 'loading');
-            try {
-                const response = await fetch('/clone_voice', {
-                    method: 'POST',
-                    body: formData,
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showStatusMessage(`Voz clonada: ${data.voice_name}. ID: ${data.voice_id}`, 'success');
-                    // Aquí se manejaría el voice_id clonado si fuera necesario en el frontend
-                } else {
-                    showStatusMessage(`Error al clonar voz: ${data.error}`, 'error');
-                }
-            } catch (error) {
-                console.error('Error al subir archivo de voz:', error);
-                showStatusMessage('Error de red al clonar voz.', 'error');
-            } finally {
-                voiceFileInput.value = ''; // Limpiar el input
+        const avatarElement = document.createElement('div');
+        avatarElement.classList.add('message-avatar');
+        avatarElement.textContent = sender === 'user' ? 'Tú' : 'AI';
+
+        const contentElement = document.createElement('div');
+        contentElement.classList.add('message-content');
+
+        const senderNameElement = document.createElement('span');
+        senderNameElement.classList.add('message-sender');
+        senderNameElement.textContent = sender === 'user' ? 'Tú' : 'Raava AI';
+        contentElement.appendChild(senderNameElement);
+
+        const textNode = document.createElement('p');
+        textNode.innerHTML = marked.parse(text); // Procesa Markdown
+        contentElement.appendChild(textNode);
+
+        if (audioBase64) {
+            const audioElement = document.createElement('audio');
+            audioElement.controls = true;
+            audioElement.src = `data:audio/mpeg;base64,${audioBase64}`;
+            contentElement.appendChild(audioElement);
+            // Reproducir automáticamente solo si es un mensaje del bot y no el mensaje inicial
+            if (sender === 'bot' && text !== '¡Hola! Soy Raava. ¿En qué puedo ayudarte hoy?') {
+                 audioElement.play().catch(e => console.error("Error al intentar reproducir audio:", e));
             }
         }
-    });
 
-    imageFileInput.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                avatarImage.src = e.target.result; // Cambiar la imagen del avatar
-                showStatusMessage('Imagen de avatar actualizada.', 'success');
-            };
-            reader.readAsDataURL(file);
+        // Acciones del mensaje (copiar, regenerar)
+        const messageActions = document.createElement('div');
+        messageActions.classList.add('message-actions');
+
+        const copyButton = document.createElement('button');
+        copyButton.classList.add('message-action-btn', 'copy-btn');
+        copyButton.innerHTML = '<i class="far fa-copy"></i>'; // Icono de copiar
+        copyButton.title = 'Copiar';
+        copyButton.onclick = () => copyToClipboard(text, copyButton);
+        messageActions.appendChild(copyButton);
+
+        // Solo añadir botón de regenerar si es un mensaje del bot
+        if (sender === 'bot') {
+            const regenerateButton = document.createElement('button');
+            regenerateButton.classList.add('message-action-btn', 'regenerate-btn');
+            regenerateButton.innerHTML = '<i class="fas fa-redo-alt"></i>'; // Icono de regenerar
+            regenerateButton.title = 'Regenerar Respuesta';
+            regenerateButton.onclick = () => regenerateResponse(conversationHistory[conversationHistory.length - 2]?.parts[0].text); // Pasa el último mensaje del usuario
+            messageActions.appendChild(regenerateButton);
         }
-        imageFileInput.value = ''; // Limpiar el input
-    });
+        contentElement.appendChild(messageActions);
 
-    const fixedPromptInput = document.getElementById('fixed-prompt-input');
-    const startMindBtn = document.getElementById('start-mind-btn');
 
-    infoFileInput.addEventListener('change', async (event) => {
-        const file = event.target.files[0];
-        if (file && file.type === 'text/plain') {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                uploadedInfoFileContent = e.target.result;
-                fixedPromptInput.value = `Información cargada: ${file.name} (${file.size} bytes)`;
-                startMindBtn.classList.add('info-ready'); // Activa el estilo visual
-                showStatusMessage(`Archivo de información "${file.name}" cargado.`, 'success');
-            };
-            reader.readAsText(file);
-        } else {
-            fixedPromptInput.value = '';
-            uploadedInfoFileContent = '';
-            startMindBtn.classList.remove('info-ready');
-            showStatusMessage('Por favor, selecciona un archivo de texto (.txt).', 'error');
-        }
-        infoFileInput.value = ''; // Limpiar el input
-    });
+        messageElement.appendChild(avatarElement);
+        messageElement.appendChild(contentElement);
+        messagesContainer.appendChild(messageElement);
 
-    startMindBtn.addEventListener('click', () => {
-        if (uploadedInfoFileContent) {
-            activePersistentInstruction = uploadedInfoFileContent;
-            fixedPromptInput.value = "Mente Iniciada con la información cargada.";
-            startMindBtn.classList.remove('info-ready'); // Desactiva el estilo al iniciar
-            showStatusMessage('Mente iniciada con la información proporcionada.', 'success');
-        } else {
-            showStatusMessage('Por favor, carga un archivo de información primero.', 'error');
-        }
-    });
+        messagesContainer.scrollTop = messagesContainer.scrollHeight; // Auto-scroll al final
+    }
 
-    function showStatusMessage(message, type = 'info') {
-        const statusMessageDiv = document.getElementById('status-message');
-        statusMessageDiv.textContent = message;
-        statusMessageDiv.className = ''; // Limpiar clases anteriores
-        statusMessageDiv.classList.add(type); // Añadir clase para estilo (info, success, error, loading)
-        statusMessageDiv.style.display = 'block'; // Asegurarse de que esté visible
-
-        // Ocultar automáticamente después de unos segundos, a menos que sea 'loading'
-        if (type !== 'loading') {
+    // Función para copiar al portapapeles
+    function copyToClipboard(text, buttonElement) {
+        navigator.clipboard.writeText(text).then(() => {
+            buttonElement.classList.add('copied');
             setTimeout(() => {
-                statusMessageDiv.style.display = 'none';
-            }, 5000); // Mensaje visible por 5 segundos
-        }
+                buttonElement.classList.remove('copied');
+            }, 2000); // 2 segundos
+        }).catch(err => {
+            console.error('Error al copiar: ', err);
+        });
     }
-    
-    // Función para ocultar el mensaje de estado (usado por el indicador de typing)
-    function hideStatusMessage() {
-        const statusMessageDiv = document.getElementById('status-message');
-        if (statusMessageDiv.classList.contains('loading')) {
-            statusMessageDiv.style.display = 'none';
+
+    // Función para regenerar respuesta
+    async function regenerateResponse(lastUserMessage) {
+        if (!lastUserMessage) {
+            addMessage('bot', 'No hay un mensaje anterior del usuario para regenerar la respuesta.');
+            return;
+        }
+        addMessage('bot', 'Regenerando respuesta...');
+        showTypingIndicator();
+        try {
+            // Eliminar la última respuesta del bot para que la nueva la reemplace
+            // Encuentra el último mensaje del bot y lo elimina
+            const lastBotMessageElement = messagesContainer.querySelector('.message.bot:last-of-type');
+            if (lastBotMessageElement) {
+                messagesContainer.removeChild(lastBotMessageElement);
+            }
+
+            // Encuentra el penúltimo mensaje en el historial (debería ser el del usuario)
+            // y lo envía de nuevo al backend
+            if (conversationHistory.length >= 2) {
+                conversationHistory.pop(); // Elimina la respuesta anterior del bot del historial
+                const userMessageForRegeneration = conversationHistory[conversationHistory.length - 1]; // Obtiene el último mensaje del usuario del historial
+                await sendMessageToBackend(userMessageForRegeneration.parts[0].text, userMessageForRegeneration.file);
+            }
+        } catch (error) {
+            console.error('Error al regenerar la respuesta:', error);
+            hideTypingIndicator();
+            addMessage('bot', 'Lo siento, no pude regenerar la respuesta.');
         }
     }
 
 
-    // Lógica para enviar mensajes al backend
+    // Función para enviar mensaje al backend
     sendButton.addEventListener('click', sendMessage);
     userInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault(); // Prevenir salto de línea
+            event.preventDefault(); // Previene el salto de línea por defecto
             sendMessage();
         }
     });
 
     async function sendMessage() {
-        const userMessage = userInput.value.trim();
-        if (userMessage === '' && !selectedFile) {
+        const messageText = userInput.value.trim();
+        if (!messageText && !selectedFile) {
             return;
         }
 
-        let currentMessageContent = userMessage;
+        // Deshabilitar input y botón para evitar envíos múltiples
+        userInput.disabled = true;
+        sendButton.disabled = true;
+        fileInput.disabled = true;
+        clearFileButton.disabled = true;
 
-        showTypingIndicator();
-        await addMessage('user', userMessage);
-        userInput.value = ''; // Limpiar el input
-        adjustTextareaHeight(); // Ajustar la altura después de limpiar
-
-        let requestBody = {
-            message: userMessage,
-            history: conversationHistory,
-            persistent_instruction: activePersistentInstruction
-        };
-
+        let userMessageContent = { text: messageText };
         if (selectedFile) {
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-                requestBody.image_data = reader.result.split(',')[1]; // Base64 sin el prefijo
-                requestBody.image_mime_type = selectedFile.type;
-                await sendRequestToBackend(requestBody);
-            };
-            reader.readAsDataURL(selectedFile);
-        } else {
-            await sendRequestToBackend(requestBody);
+            userMessageContent.file = selectedFile;
         }
+
+        await addMessage('user', messageText); // Muestra el mensaje del usuario
+
+        userInput.value = '';
+        adjustTextareaHeight();
+        showTypingIndicator();
+
+        await sendMessageToBackend(messageText, selectedFile);
+
+        // Habilitar input y botón
+        userInput.disabled = false;
+        sendButton.disabled = false;
+        fileInput.disabled = false;
+        clearFileButton.disabled = false;
+        userInput.focus();
     }
 
-    async function sendRequestToBackend(requestBody) {
+    async function sendMessageToBackend(messageText, file = null) {
         try {
-            const response = await fetch('http://127.0.0.1:5000/chat', { // Asegúrate de que esta URL sea la correcta para tu backend
+            const formData = new FormData();
+            formData.append('message', messageText);
+            if (file) {
+                formData.append('file', file);
+            }
+            if (clonedVoiceId) {
+                formData.append('cloned_voice_id', clonedVoiceId);
+            }
+            if (activePersistentInstruction) {
+                formData.append('persistent_instruction', activePersistentInstruction);
+            }
+
+            // Añadir historial de conversación
+            formData.append('conversation_history', JSON.stringify(conversationHistory));
+
+
+            const response = await fetch('https://raava.onrender.com/chat', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestBody)
+                body: formData
             });
 
             if (!response.ok) {
-                const errorText = await response.text(); // Leer el cuerpo del error
+                const errorText = await response.text();
                 throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. ${errorText}`);
             }
+
             const data = await response.json();
             hideTypingIndicator();
             // Pasa el audio (data.audio) a addMessage si existe
             await addMessage('bot', data.response, data.audio);
-            
+
+            // Actualizar historial de conversación
+            conversationHistory.push({
+                role: 'user',
+                parts: [{ text: messageText }],
+                file: file ? { name: file.name, type: file.type } : undefined // Guarda metadatos del archivo si existe
+            });
+            conversationHistory.push({
+                role: 'model',
+                parts: [{ text: data.response }]
+            });
+
             // Limpiar selectedFile y fileInput después de enviar el mensaje
             selectedFile = null;
             fileInput.value = ''; // Asegura que el input principal también se limpie
@@ -396,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error al comunicarse con el backend:', error);
             hideTypingIndicator();
             await addMessage('bot', 'Lo siento, hubo un error al conectar con el chatbot. Por favor, revisa la consola del navegador y asegúrate de que el backend esté corriendo.');
-            
+
             conversationHistory.pop(); // Elimina el último mensaje del usuario si falló
             selectedFile = null;
             fileInput.value = '';
