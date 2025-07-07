@@ -23,7 +23,10 @@
 
   <div id="status-message" style="margin-top: 10px; text-align: center; color: #888; font-size: 0.9em;"></div>
   <div class="chat-area">
-    <button id="toggle-theme-chat" class="toggle-theme-chat">Modo Claro</button>
+    <button id="settings-button" class="settings-button" title="Ajustes">
+      <i class="fas fa-cog"></i> </button>
+    <div id="settings-dropdown" class="settings-dropdown">
+      <div class="dropdown-item" id="toggle-light-mode">Modo Oscuro</div> </div>
     <div class="messages"></div>
     <div class="input-bar">
       <label for="file-upload" class="file-button" title="Adjuntar archivo">+</label>
