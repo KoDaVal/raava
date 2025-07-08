@@ -849,3 +849,49 @@ input:checked + .slider:before {
     box-shadow: 0 0 25px rgba(138, 43, 226, 1);
   }
 }
+/* ... (tu CSS existente) ... */
+
+/* Para la barra lateral colapsada */
+.sidebar.collapsed {
+    width: 60px; /* Ancho reducido cuando está colapsada */
+    align-items: center; /* Centrar los iconos */
+    padding: 20px 0; /* Ajustar padding */
+}
+
+.sidebar.collapsed a,
+.sidebar.collapsed #premium-button {
+    text-align: center;
+    padding: 6px 0;
+    font-size: 0; /* Ocultar el texto */
+    overflow: hidden; /* Asegurarse de que el texto no se vea */
+    white-space: nowrap;
+    width: 100%; /* Asegurar que ocupe todo el ancho disponible para el hover */
+}
+
+.sidebar.collapsed a i,
+.sidebar.collapsed #premium-button i {
+    font-size: 20px; /* Mostrar solo el icono */
+    display: block; /* Asegurar que el icono esté visible */
+    margin: 0 auto; /* Centrar el icono */
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center; /* Centrar el logo cuando está colapsado */
+    margin-bottom: 30px; /* Mantener espacio */
+}
+
+.sidebar.collapsed .sidebar-raava-logo {
+    width: 40px; /* Un poco más pequeño cuando está colapsado */
+}
+
+.sidebar.collapsed .hide-sidebar-btn {
+    display: none; /* Ocultar el botón de esconder cuando la sidebar está colapsada,
+                    ya que el icono cambiará a "mostrar" y se pondrá en el lugar del logo si lo deseas.
+                    O puedes mantenerlo y ajustar su posición. Por ahora lo ocultamos para simplificar. */
+}
+
+/* Opcional: ajustar el main-container cuando la sidebar está colapsada */
+.main-container.sidebar-collapsed {
+    /* Si tenías un grid o algo que dependa del ancho de la sidebar, aquí lo ajustarías */
+    /* Por ejemplo, si tienes el chat-main-section en flex, esto no es tan crítico */
+}
