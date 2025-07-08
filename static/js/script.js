@@ -27,6 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeSettingsBtn = document.getElementById('close-settings-btn');
     const themeSelect = document.getElementById('theme-select'); // Nuevo selector de tema en ajustes
 
+    // --- NUEVO: Elementos para la barra lateral y su toggle ---
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+
     // --- NUEVAS variables para la instrucción inamovible ---
     let uploadedInfoFileContent = ""; // Contenido del archivo de info subido (temporal)
     let activePersistentInstruction = ""; // La instrucción activa para Gemini
@@ -87,6 +91,13 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 document.body.classList.remove('light-mode');
             }
+        });
+    }
+
+    // --- NUEVO: Manejo del clic en el botón de toggle de la barra lateral ---
+    if (sidebarToggleBtn && sidebar) {
+        sidebarToggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
         });
     }
 
