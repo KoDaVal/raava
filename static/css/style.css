@@ -691,6 +691,9 @@ input:checked + .slider:before {
   padding: 20px;
   border-left: 1px solid var(--border-color);
   flex-shrink: 0; /* Evita que el panel se encoja */
+  display: flex; /* Añadido para mejor control de layout */
+  flex-direction: column; /* Apila los elementos verticalmente */
+  align-items: center; /* Centra los elementos horizontalmente */
 }
 
 .info-panel h4 {
@@ -698,6 +701,7 @@ input:checked + .slider:before {
   font-weight: 600;
   margin-bottom: 16px;
   color: var(--text-color);
+  align-self: flex-start; /* Alinea el título a la izquierda */
 }
 
 .menu-option {
@@ -709,19 +713,30 @@ input:checked + .slider:before {
   margin-bottom: 12px;
   cursor: pointer;
   transition: color 0.2s ease-in-out;
+  width: 100%; /* Ocupa todo el ancho disponible */
+  padding: 8px 12px; /* Añadido padding para mejorar el área de clic y visual */
+  border-radius: 8px; /* Bordes más suaves */
+  background-color: var(--button-bg); /* Fondo para cada opción */
 }
 
 .menu-option:hover {
   color: var(--text-color);
+  background-color: var(--hover-color); /* Cambia el fondo al pasar el ratón */
 }
 
 .menu-option i {
-  width: 16px;
-  height: 16px;
-  background-color: #333333;
+  width: 24px; /* Aumentado el tamaño del área del ícono */
+  height: 24px; /* Aumentado el tamaño del área del ícono */
+  background-color: #333333; /* Color de fondo del cuadrado del ícono */
   border-radius: 4px;
   flex-shrink: 0;
+  display: flex; /* Para centrar el ícono */
+  justify-content: center; /* Centrar horizontalmente */
+  align-items: center; /* Centrar verticalmente */
+  color: var(--button-text-color); /* Color del ícono */
+  font-size: 14px; /* Tamaño del ícono */
 }
+
 
 #fixed-prompt-input {
   width: 100%;
@@ -742,24 +757,28 @@ input:checked + .slider:before {
 }
 
 .avatar {
-  width: 100%;
-  border-radius: 8px;
-  margin: 16px 0;
+  width: 100px; /* Tamaño más pequeño para el avatar */
+  height: 100px; /* Asegura que sea cuadrado */
+  border-radius: 50%; /* Circular */
+  margin: 16px 0 8px; /* Ajuste de márgenes */
   object-fit: cover;
   box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  border: 3px solid var(--border-color); /* Borde alrededor del avatar */
 }
 
 .name {
   font-size: 14px;
   font-weight: 600;
   color: var(--avatar-name-color);
+  margin-bottom: 4px; /* Espacio entre nombre y cita */
 }
 
 .quote {
   font-size: 12px;
-  margin-top: 8px;
   line-height: 1.5;
   color: var(--quote-color);
+  text-align: center; /* Centra la cita */
+  margin-bottom: 20px; /* Espacio debajo de la cita */
 }
 
 .start-button {
