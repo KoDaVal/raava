@@ -25,21 +25,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingsOption = document.getElementById('settings-option');
     const settingsModal = document.getElementById('settings-modal');
     const closeSettingsBtn = document.getElementById('close-settings-btn');
-    const themeSelect = document.getElementById('theme-select'); // Selector de tema en ajustes
+    const themeSelect = document.getElementById('theme-select'); // Nuevo selector de tema en ajustes
 
-    // --- Elementos para la barra lateral izquierda y su toggle ---
-    const sidebar = document.getElementById('sidebar');
-    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
-
-    // --- Variables para la instrucción inamovible (asociada al archivo de info) ---
+    // --- NUEVAS variables para la instrucción inamovible ---
     let uploadedInfoFileContent = ""; // Contenido del archivo de info subido (temporal)
     let activePersistentInstruction = ""; // La instrucción activa para Gemini
 
     // Botón de "Iniciar mente"
     const startMindButton = document.getElementById('start-mind-button');
 
-    // --- Variables para Eleven Labs ---
+    // --- NUEVAS variables para Eleven Labs ---
     let clonedVoiceId = null; // Almacena el ID de la voz clonada por Eleven Labs
+
+    // --- NUEVOS ELEMENTOS PARA LA BARRA LATERAL IZQUIERDA ---
+    const sidebar = document.querySelector('.sidebar');
+    const hideSidebarBtn = document.getElementById('hide-sidebar-btn');
+    const mainContainer = document.querySelector('.main-container');
+    // FIN NUEVOS ELEMENTOS
 
     // Asigna el evento de clic a los botones del panel de información para abrir el selector de archivos
     // Se añade una verificación para asegurar que los elementos existan antes de añadir listeners.
@@ -47,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (uploadImageBtn) uploadImageBtn.addEventListener('click', () => { imageFileInput.click(); });
     if (uploadInfoBtn) uploadInfoBtn.addEventListener('click', () => { infoFileInput.click(); });
 
-    // --- Manejo del clic en la foto de perfil del encabezado para mostrar/ocultar menú ---
+    // --- NUEVO: Manejo del clic en la foto de perfil del encabezado para mostrar/ocultar menú ---
     if (headerProfilePic) {
         headerProfilePic.addEventListener('click', (event) => {
             settingsMenu.classList.toggle('active');
@@ -62,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Manejo del clic en "Ajustes" para abrir el modal de ajustes ---
+    // --- NUEVO: Manejo del clic en "Ajustes" para abrir el modal de ajustes ---
     if (settingsOption) {
         settingsOption.addEventListener('click', () => {
             settingsModal.classList.add('active');
@@ -76,14 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Cerrar el modal de ajustes ---
+    // --- NUEVO: Cerrar el modal de ajustes ---
     if (closeSettingsBtn) {
         closeSettingsBtn.addEventListener('click', () => {
             settingsModal.classList.remove('active');
         });
     }
 
-    // --- Cambiar tema desde el selector dentro del modal de ajustes ---
+    // --- NUEVO: Cambiar tema desde el selector dentro del modal de ajustes ---
     if (themeSelect) {
         themeSelect.addEventListener('change', (event) => {
             if (event.target.value === 'light') {
@@ -94,14 +96,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Manejo del clic en el botón de toggle de la barra lateral izquierda ---
-    if (sidebarToggleBtn && sidebar) {
-        sidebarToggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
+    // --- Lógica NUEVA para esconder/mostrar la barra lateral ---
+    if (hideSidebarBtn) { // Asegúrate de que el botón exista antes de añadir el listener
+        hideSidebarBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            mainContainer.classList.toggle('sidebar-collapsed');
+
+            // Cambiar el icono del botón
+            const icon = hideSidebarBtn.querySelector('i');
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-chevron-right'); // Icono de flecha hacia la derecha
+            } else {
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-bars'); // Icono de barras
+            }
         });
     }
+    // FIN LÓGICA NUEVA
 
-    // --- Manejo de la subida de archivo de voz para clonación ---
+    // --- NUEVO: Manejo de la subida de archivo de voz para clonación ---
     if (voiceFileInput) {
         voiceFileInput.addEventListener('change', async (event) => {
             if (event.target.files.length > 0) {
@@ -160,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Manejo del archivo de información (ya no adjunta al chat principal)
+    // --- CORRECCIÓN: Manejo del archivo de información (ya no adjunta al chat principal) ---
     if (infoFileInput && startMindButton) {
         infoFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
@@ -186,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Lógica del botón "Iniciar mente"
+    // --- Lógica del botón "Iniciar mente" ---
     if (startMindButton && infoFileInput) {
         startMindButton.addEventListener('click', () => {
             if (uploadedInfoFileContent) {
@@ -412,12 +426,12 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('message', message);
             formData.append('history', JSON.stringify(conversationHistory.slice(0, -1)));
             
-            // AÑADIDO: Añade la instrucción persistente si está activa
+            // --- AÑADIDO: Añade la instrucción persistente si está activa ---
             if (activePersistentInstruction) {
                 formData.append('persistent_instruction', activePersistentInstruction);
             }
 
-            // AÑADIDO: Si hay un voiceId clonado, envíalo también
+            // --- AÑADIDO: Si hay un voiceId clonado, envíalo también ---
             if (clonedVoiceId) {
                 formData.append('cloned_voice_id', clonedVoiceId);
             }
