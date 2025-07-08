@@ -25,20 +25,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingsOption = document.getElementById('settings-option');
     const settingsModal = document.getElementById('settings-modal');
     const closeSettingsBtn = document.getElementById('close-settings-btn');
-    const themeSelect = document.getElementById('theme-select'); // Nuevo selector de tema en ajustes
+    const themeSelect = document.getElementById('theme-select'); // Selector de tema en ajustes
 
-    // --- NUEVO: Elementos para la barra lateral y su toggle ---
+    // --- Elementos para la barra lateral izquierda y su toggle ---
     const sidebar = document.getElementById('sidebar');
     const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
 
-    // --- NUEVAS variables para la instrucción inamovible ---
+    // --- Variables para la instrucción inamovible (asociada al archivo de info) ---
     let uploadedInfoFileContent = ""; // Contenido del archivo de info subido (temporal)
     let activePersistentInstruction = ""; // La instrucción activa para Gemini
 
     // Botón de "Iniciar mente"
     const startMindButton = document.getElementById('start-mind-button');
 
-    // --- NUEVAS variables para Eleven Labs ---
+    // --- Variables para Eleven Labs ---
     let clonedVoiceId = null; // Almacena el ID de la voz clonada por Eleven Labs
 
     // Asigna el evento de clic a los botones del panel de información para abrir el selector de archivos
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (uploadImageBtn) uploadImageBtn.addEventListener('click', () => { imageFileInput.click(); });
     if (uploadInfoBtn) uploadInfoBtn.addEventListener('click', () => { infoFileInput.click(); });
 
-    // --- NUEVO: Manejo del clic en la foto de perfil del encabezado para mostrar/ocultar menú ---
+    // --- Manejo del clic en la foto de perfil del encabezado para mostrar/ocultar menú ---
     if (headerProfilePic) {
         headerProfilePic.addEventListener('click', (event) => {
             settingsMenu.classList.toggle('active');
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- NUEVO: Manejo del clic en "Ajustes" para abrir el modal de ajustes ---
+    // --- Manejo del clic en "Ajustes" para abrir el modal de ajustes ---
     if (settingsOption) {
         settingsOption.addEventListener('click', () => {
             settingsModal.classList.add('active');
@@ -76,14 +76,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- NUEVO: Cerrar el modal de ajustes ---
+    // --- Cerrar el modal de ajustes ---
     if (closeSettingsBtn) {
         closeSettingsBtn.addEventListener('click', () => {
             settingsModal.classList.remove('active');
         });
     }
 
-    // --- NUEVO: Cambiar tema desde el selector dentro del modal de ajustes ---
+    // --- Cambiar tema desde el selector dentro del modal de ajustes ---
     if (themeSelect) {
         themeSelect.addEventListener('change', (event) => {
             if (event.target.value === 'light') {
@@ -94,14 +94,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- NUEVO: Manejo del clic en el botón de toggle de la barra lateral ---
+    // --- Manejo del clic en el botón de toggle de la barra lateral izquierda ---
     if (sidebarToggleBtn && sidebar) {
         sidebarToggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('active');
         });
     }
 
-    // --- NUEVO: Manejo de la subida de archivo de voz para clonación ---
+    // --- Manejo de la subida de archivo de voz para clonación ---
     if (voiceFileInput) {
         voiceFileInput.addEventListener('change', async (event) => {
             if (event.target.files.length > 0) {
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- CORRECCIÓN: Manejo del archivo de información (ya no adjunta al chat principal) ---
+    // Manejo del archivo de información (ya no adjunta al chat principal)
     if (infoFileInput && startMindButton) {
         infoFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // --- Lógica del botón "Iniciar mente" ---
+    // Lógica del botón "Iniciar mente"
     if (startMindButton && infoFileInput) {
         startMindButton.addEventListener('click', () => {
             if (uploadedInfoFileContent) {
@@ -412,12 +412,12 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('message', message);
             formData.append('history', JSON.stringify(conversationHistory.slice(0, -1)));
             
-            // --- AÑADIDO: Añade la instrucción persistente si está activa ---
+            // AÑADIDO: Añade la instrucción persistente si está activa
             if (activePersistentInstruction) {
                 formData.append('persistent_instruction', activePersistentInstruction);
             }
 
-            // --- AÑADIDO: Si hay un voiceId clonado, envíalo también ---
+            // AÑADIDO: Si hay un voiceId clonado, envíalo también
             if (clonedVoiceId) {
                 formData.append('cloned_voice_id', clonedVoiceId);
             }
