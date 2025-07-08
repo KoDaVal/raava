@@ -66,8 +66,12 @@
   </div>
 
   <div class="main-container">
-    <div class="sidebar" id="sidebar">
-      <img src="/static/raava_logo.png" alt="Raava AI Logo" class="sidebar-raava-logo">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <img src="/static/raava_logo.png" alt="Raava AI Logo" class="sidebar-raava-logo">
+        <button class="hide-sidebar-btn" id="hide-sidebar-btn">
+            <i class="fas fa-bars"></i> </button>
+      </div>
       <a href="#">Inicio</a>
       <a href="#">Buscar chat</a>
       <a href="#">Nuevo chat</a>
@@ -76,11 +80,7 @@
     </div>
 
     <div class="chat-main-section">
-        <div class="header">
-            <div class="header-left">
-                <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" title="Toggle Sidebar">
-                    <i class="fas fa-bars"></i>
-                </button>
+        <div class="header" id="chat-header"> <div class="header-left">
                 Raavax AI
             </div>
             <div class="header-right">
@@ -116,13 +116,16 @@
     <div class="info-panel">
       <h4>Upload data</h4>
       <div class="menu-option" id="upload-voice-btn">
-        <i class="fas fa-microphone"></i> <span>Archivo de voz</span>
+        <i></i>
+        <span>Archivo de voz</span>
       </div>
       <div class="menu-option" id="upload-image-btn">
-        <i class="fas fa-image"></i> <span>Imagen</span>
+        <i></i>
+        <span>Imagen</span>
       </div>
       <div class="menu-option" id="upload-info-btn">
-        <i class="fas fa-file-alt"></i> <span>Información</span>
+        <i></i>
+        <span>Información</span>
       </div>
       <input type="file" id="voice-file-input" accept="audio/*" hidden>
       <input type="file" id="image-file-input" accept="image/*" hidden>
@@ -133,7 +136,7 @@
       <button class="start-button" id="start-mind-button">Iniciar mente</button>
     </div>
   </div>
-  
+
   <script src="/static/js/script.js"></script>
 </body>
 </html>
