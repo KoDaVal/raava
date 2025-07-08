@@ -16,7 +16,7 @@
   --button-text-color: #cccccc;
   --avatar-name-color: #f0f0f0;
   --quote-color: #aaaaaa;
-  --header-bg: var(--chat-bg); /* Cambiado para coincidir con el fondo del chat */
+  --header-bg: #0a0a0a; /* Ahora color del header del chat central */
   --settings-modal-bg: rgba(0, 0, 0, 0.7); /* Nuevo */
   --settings-content-bg: #1e1e1e; /* Nuevo */
   --settings-border-color: #333; /* Nuevo */
@@ -44,7 +44,7 @@ body.light-mode {
   --button-text-color: #555;
   --avatar-name-color: #333;
   --quote-color: #555;
-  --header-bg: var(--chat-bg); /* Cambiado para coincidir con el fondo del chat */
+  --header-bg: #ffffff; /* Ahora color del header del chat central */
   --settings-modal-bg: rgba(0, 0, 0, 0.5); /* Nuevo */
   --settings-content-bg: #f2f2f2; /* Nuevo */
   --settings-border-color: #d1d1d1; /* Nuevo */
@@ -85,21 +85,47 @@ body {
 .sidebar {
   background-color: var(--sidebar-bg);
   width: 220px;
-  padding: 20px;
+  padding: 20px; /* Mantener el padding general */
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border-color);
   flex-shrink: 0; /* Evita que la sidebar se encoja */
-  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out; /* Animación de la barra lateral */
 }
 
-/* Estilo para el logo de Raava en la sidebar */
+/* NUEVO: Contenedor para el logo y el botón de esconder en la sidebar */
+.sidebar-header {
+    display: flex;
+    justify-content: space-between; /* Alinea el logo a la izquierda y el botón a la derecha */
+    align-items: center;
+    margin-bottom: 30px; /* Espacio debajo del encabezado de la sidebar */
+    padding: 0; /* Eliminar padding si se agregó antes */
+}
+
+/* Estilo para el logo de Raava en la sidebar (ahora dentro de .sidebar-header) */
 .sidebar-raava-logo {
   width: 50px; /* Tamaño más pequeño */
   height: auto;
-  margin-bottom: 30px;
-  align-self: center; /* Centra el logo en la sidebar */
+  /* margin-bottom: 30px; Ya no es necesario si está en sidebar-header */
+  /* align-self: center; Ya no es necesario si está en sidebar-header con justify-content */
 }
+
+/* NUEVO: Estilo para el botón de esconder la sidebar */
+.hide-sidebar-btn {
+    background: none;
+    border: none;
+    color: var(--link-color); /* Color del icono */
+    font-size: 20px; /* Tamaño del icono */
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.hide-sidebar-btn:hover {
+    background-color: var(--hover-color);
+    color: var(--text-color);
+}
+
 
 .sidebar a,
 #premium-button {
@@ -134,7 +160,8 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  background-color: var(--header-bg);
+  /* MODIFICADO: Color del header del chat central igual al del chat-bg */
+  background-color: var(--chat-bg); /* Cambiado de var(--header-bg) */
   border-bottom: 1px solid var(--border-color);
   height: 60px;
   flex-shrink: 0;
@@ -154,22 +181,6 @@ body {
   width: 30px; /* Tamaño del logo en el header */
   height: auto;
 }
-
-/* --- NUEVO ESTILO PARA EL BOTÓN DE TOGGLE DE LA BARRA LATERAL --- */
-.sidebar-toggle-btn {
-    background: none;
-    border: none;
-    color: var(--text-color);
-    font-size: 20px;
-    cursor: pointer;
-    margin-right: 10px;
-    display: none; /* Oculto por defecto, visible en pantallas pequeñas */
-}
-
-.sidebar-toggle-btn:hover {
-    color: var(--link-color);
-}
-/* --- FIN NUEVO ESTILO --- */
 
 
 .header-right {
@@ -511,7 +522,7 @@ input:checked + .slider:before {
 /* The message bubble content */
 .message-content {
   background-color: var(--message-bg);
-  padding: 12px 16px; 
+  padding: 12px 16px;
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
@@ -532,7 +543,7 @@ input:checked + .slider:before {
 .message-actions {
   display: flex; /* Muestra los botones en fila */
   gap: 8px; /* Espacio entre los botones */
-  margin-top: 0px; 
+  margin-top: 0px;
   padding-left: 5px; /* Ajuste para alinear con el texto del globo */
 }
 
@@ -691,9 +702,6 @@ input:checked + .slider:before {
   padding: 20px;
   border-left: 1px solid var(--border-color);
   flex-shrink: 0; /* Evita que el panel se encoja */
-  display: flex; /* Añadido para mejor control de layout */
-  flex-direction: column; /* Apila los elementos verticalmente */
-  align-items: center; /* Centra los elementos horizontalmente */
 }
 
 .info-panel h4 {
@@ -701,7 +709,6 @@ input:checked + .slider:before {
   font-weight: 600;
   margin-bottom: 16px;
   color: var(--text-color);
-  align-self: flex-start; /* Alinea el título a la izquierda */
 }
 
 .menu-option {
@@ -713,30 +720,19 @@ input:checked + .slider:before {
   margin-bottom: 12px;
   cursor: pointer;
   transition: color 0.2s ease-in-out;
-  width: 100%; /* Ocupa todo el ancho disponible */
-  padding: 8px 12px; /* Añadido padding para mejorar el área de clic y visual */
-  border-radius: 8px; /* Bordes más suaves */
-  background-color: var(--button-bg); /* Fondo para cada opción */
 }
 
 .menu-option:hover {
   color: var(--text-color);
-  background-color: var(--hover-color); /* Cambia el fondo al pasar el ratón */
 }
 
 .menu-option i {
-  width: 24px; /* Aumentado el tamaño del área del ícono */
-  height: 24px; /* Aumentado el tamaño del área del ícono */
-  background-color: #333333; /* Color de fondo del cuadrado del ícono */
+  width: 16px;
+  height: 16px;
+  background-color: #333333;
   border-radius: 4px;
   flex-shrink: 0;
-  display: flex; /* Para centrar el ícono */
-  justify-content: center; /* Centrar horizontalmente */
-  align-items: center; /* Centrar verticalmente */
-  color: var(--button-text-color); /* Color del ícono */
-  font-size: 14px; /* Tamaño del ícono */
 }
-
 
 #fixed-prompt-input {
   width: 100%;
@@ -757,28 +753,24 @@ input:checked + .slider:before {
 }
 
 .avatar {
-  width: 100px; /* Tamaño más pequeño para el avatar */
-  height: 100px; /* Asegura que sea cuadrado */
-  border-radius: 50%; /* Circular */
-  margin: 16px 0 8px; /* Ajuste de márgenes */
+  width: 100%;
+  border-radius: 8px;
+  margin: 16px 0;
   object-fit: cover;
   box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-  border: 3px solid var(--border-color); /* Borde alrededor del avatar */
 }
 
 .name {
   font-size: 14px;
   font-weight: 600;
   color: var(--avatar-name-color);
-  margin-bottom: 4px; /* Espacio entre nombre y cita */
 }
 
 .quote {
   font-size: 12px;
+  margin-top: 8px;
   line-height: 1.5;
   color: var(--quote-color);
-  text-align: center; /* Centra la cita */
-  margin-bottom: 20px; /* Espacio debajo de la cita */
 }
 
 .start-button {
@@ -807,7 +799,7 @@ input:checked + .slider:before {
   align-self: flex-start; /* Explicitly align the indicator itself to the left */
   align-items: center; /* Vertically center the dots within the indicator */
   justify-content: center; /* Horizontally center the dots within the indicator */
-  
+
   background-color: var(--message-bg);
   padding: 10px 15px;
   border-radius: 10px;
@@ -857,30 +849,3 @@ input:checked + .slider:before {
     box-shadow: 0 0 25px rgba(138, 43, 226, 1);
   }
 }
-
-/* --- ESTILOS RESPONSIVOS PARA BARRA LATERAL --- */
-@media (max-width: 768px) {
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        height: 100vh;
-        z-index: 999;
-        transform: translateX(-100%); /* Oculta la barra lateral por defecto */
-        box-shadow: 2px 0 5px rgba(0,0,0,0.3);
-    }
-
-    .sidebar.active {
-        transform: translateX(0); /* Muestra la barra lateral */
-    }
-
-    .sidebar-toggle-btn {
-        display: block; /* Muestra el botón de toggle en pantallas pequeñas */
-    }
-
-    /* Oculta el panel de información en pantallas pequeñas por defecto */
-    .info-panel {
-        display: none;
-    }
-}
-/* --- FIN ESTILOS RESPONSIVOS --- */
