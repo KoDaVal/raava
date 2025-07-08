@@ -66,16 +66,21 @@
   </div>
 
   <div class="main-container">
-    <div class="sidebar">
-      <img src="/static/raava_logo.png" alt="Raava AI Logo" class="sidebar-raava-logo"> <a href="#">Inicio</a>
+    <div class="sidebar" id="sidebar">
+      <img src="/static/raava_logo.png" alt="Raava AI Logo" class="sidebar-raava-logo">
+      <a href="#">Inicio</a>
       <a href="#">Buscar chat</a>
       <a href="#">Nuevo chat</a>
       <a href="#">Comunidad</a>
       <div id="premium-button">Premium</div>
     </div>
 
-    <div class="chat-main-section"> <div class="header">
+    <div class="chat-main-section">
+        <div class="header">
             <div class="header-left">
+                <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" title="Toggle Sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
                 Raavax AI
             </div>
             <div class="header-right">
