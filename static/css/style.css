@@ -16,7 +16,7 @@
   --button-text-color: #cccccc;
   --avatar-name-color: #f0f0f0;
   --quote-color: #aaaaaa;
-  --header-bg: #0a0a0a; /* Ahora color del header del chat central */
+  --header-bg: var(--chat-bg); /* Cambiado para coincidir con el fondo del chat */
   --settings-modal-bg: rgba(0, 0, 0, 0.7); /* Nuevo */
   --settings-content-bg: #1e1e1e; /* Nuevo */
   --settings-border-color: #333; /* Nuevo */
@@ -44,7 +44,7 @@ body.light-mode {
   --button-text-color: #555;
   --avatar-name-color: #333;
   --quote-color: #555;
-  --header-bg: #ffffff; /* Ahora color del header del chat central */
+  --header-bg: var(--chat-bg); /* Cambiado para coincidir con el fondo del chat */
   --settings-modal-bg: rgba(0, 0, 0, 0.5); /* Nuevo */
   --settings-content-bg: #f2f2f2; /* Nuevo */
   --settings-border-color: #d1d1d1; /* Nuevo */
@@ -90,6 +90,7 @@ body {
   flex-direction: column;
   border-right: 1px solid var(--border-color);
   flex-shrink: 0; /* Evita que la sidebar se encoja */
+  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out; /* Animación de la barra lateral */
 }
 
 /* Estilo para el logo de Raava en la sidebar */
@@ -153,6 +154,22 @@ body {
   width: 30px; /* Tamaño del logo en el header */
   height: auto;
 }
+
+/* --- NUEVO ESTILO PARA EL BOTÓN DE TOGGLE DE LA BARRA LATERAL --- */
+.sidebar-toggle-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 20px;
+    cursor: pointer;
+    margin-right: 10px;
+    display: none; /* Oculto por defecto, visible en pantallas pequeñas */
+}
+
+.sidebar-toggle-btn:hover {
+    color: var(--link-color);
+}
+/* --- FIN NUEVO ESTILO --- */
 
 
 .header-right {
@@ -821,3 +838,30 @@ input:checked + .slider:before {
     box-shadow: 0 0 25px rgba(138, 43, 226, 1);
   }
 }
+
+/* --- ESTILOS RESPONSIVOS PARA BARRA LATERAL --- */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 999;
+        transform: translateX(-100%); /* Oculta la barra lateral por defecto */
+        box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+    }
+
+    .sidebar.active {
+        transform: translateX(0); /* Muestra la barra lateral */
+    }
+
+    .sidebar-toggle-btn {
+        display: block; /* Muestra el botón de toggle en pantallas pequeñas */
+    }
+
+    /* Oculta el panel de información en pantallas pequeñas por defecto */
+    .info-panel {
+        display: none;
+    }
+}
+/* --- FIN ESTILOS RESPONSIVOS --- */
