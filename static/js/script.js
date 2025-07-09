@@ -159,6 +159,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     headerProfilePic.src = fileURL;
                 }
                 addMessage('bot', `Se ha actualizado tu avatar con la imagen: ${file.name}.`);
+
+                // 2. También prepara la imagen para ser adjuntada al siguiente mensaje de chat
+                selectedFile = file;
+                fileNameSpan.textContent = selectedFile.name;
+                fileDisplay.style.display = 'flex';
             } else {
                 addMessage('bot', 'Por favor, sube un archivo de imagen válido para el avatar.');
                 selectedFile = null; // Limpia si el archivo no es válido
@@ -294,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         currentAudioInstance = new Audio();
                         currentAudioInstance.src = `data:audio/mpeg;base64,${audioBase64}`;
-                        
+                            
                         // Evento para cuando el audio empieza a reproducirse
                         currentAudioInstance.onplay = () => {
                             playAudioButton.classList.remove('loading');
