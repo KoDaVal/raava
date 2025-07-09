@@ -159,17 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     headerProfilePic.src = fileURL;
                 }
                 addMessage('bot', `Se ha actualizado tu avatar con la imagen: ${file.name}.`);
-
-                // Evento para reemplazar la imagen del avatar Y ADJUNTARLA AL CHAT
-    if (imageFileInput && avatarImage) {
-        imageFileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                // 1. Cambia el avatar
-                const fileURL = URL.createObjectURL(file);
-                avatarImage.src = fileURL;
-               
-                addMessage('bot', `Se ha actualizado tu avatar con la imagen: ${file.name}.`);
             } else {
                 addMessage('bot', 'Por favor, sube un archivo de imagen válido para el avatar.');
                 selectedFile = null; // Limpia si el archivo no es válido
@@ -179,8 +168,8 @@ document.addEventListener('DOMContentLoaded', () => {
             event.target.value = ''; // Limpia el input para permitir volver a subir el mismo archivo
         });
     }
-            
-                // --- CORRECCIÓN: Manejo del archivo de información (ya no adjunta al chat principal) ---
+
+    // --- CORRECCIÓN: Manejo del archivo de información (ya no adjunta al chat principal) ---
     if (infoFileInput && startMindButton) {
         infoFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
@@ -305,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         currentAudioInstance = new Audio();
                         currentAudioInstance.src = `data:audio/mpeg;base64,${audioBase64}`;
-                            
+                        
                         // Evento para cuando el audio empieza a reproducirse
                         currentAudioInstance.onplay = () => {
                             playAudioButton.classList.remove('loading');
