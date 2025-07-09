@@ -16,7 +16,7 @@
   --button-text-color: #cccccc;
   --avatar-name-color: #f0f0f0;
   --quote-color: #aaaaaa;
-  --header-bg: #0a0a0a; /* Ahora color del header del chat central */
+   --header-bg: var(--chat-bg); /* ¡CAMBIO AQUÍ! Ahora el header usa el mismo color que el chat-bg */
   --settings-modal-bg: rgba(0, 0, 0, 0.7); /* Nuevo */
   --settings-content-bg: #1e1e1e; /* Nuevo */
   --settings-border-color: #333; /* Nuevo */
