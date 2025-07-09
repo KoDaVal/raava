@@ -170,11 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 avatarImage.src = fileURL;
                
                 addMessage('bot', `Se ha actualizado tu avatar con la imagen: ${file.name}.`);
-
-                // 2. También prepara la imagen para ser adjuntada al siguiente mensaje de chat
-                selectedFile = file; // <--- ELIMINA ESTA LÍNEA
-                fileNameSpan.textContent = selectedFile.name; // <--- ELIMINA ESTA LÍNEA
-                fileDisplay.style.display = 'flex'; // <--- ELIMINA ESTA LÍNEA
             } else {
                 addMessage('bot', 'Por favor, sube un archivo de imagen válido para el avatar.');
                 selectedFile = null; // Limpia si el archivo no es válido
