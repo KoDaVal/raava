@@ -154,10 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 1. Cambia el avatar
                 const fileURL = URL.createObjectURL(file);
                 avatarImage.src = fileURL;
-                // También actualiza la imagen del perfil en el encabezado
-                if (headerProfilePic) {
-                    headerProfilePic.src = fileURL;
-                }
+              
                 addMessage('bot', `Se ha actualizado tu avatar con la imagen: ${file.name}.`);
 
                 
