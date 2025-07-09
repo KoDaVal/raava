@@ -16,7 +16,7 @@
   --button-text-color: #cccccc;
   --avatar-name-color: #f0f0f0;
   --quote-color: #aaaaaa;
-  --header-bg: #0a0a0a; /* Ahora color del header del chat central */
+   --header-bg: var(--chat-bg); 
   --settings-modal-bg: rgba(0, 0, 0, 0.7); /* Nuevo */
   --settings-content-bg: #1e1e1e; /* Nuevo */
   --settings-border-color: #333; /* Nuevo */
@@ -90,15 +90,41 @@ body {
   flex-direction: column;
   border-right: 1px solid var(--border-color);
   flex-shrink: 0; /* Evita que la sidebar se encoja */
+  transition: width 0.3s ease; /* Transición para el ancho */
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px; /* Espacio debajo del encabezado de la barra lateral */
+  padding-right: 10px; /* Ajuste para dar espacio al botón */
 }
 
 /* Estilo para el logo de Raava en la sidebar */
 .sidebar-raava-logo {
   width: 50px; /* Tamaño más pequeño */
   height: auto;
-  margin-bottom: 30px;
   align-self: center; /* Centra el logo en la sidebar */
+  transition: width 0.3s ease;
 }
+
+.hide-sidebar-btn {
+  background: none;
+  border: none;
+  color: var(--link-color); /* Color que se adapte al tema */
+  font-size: 20px;
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.hide-sidebar-btn:hover {
+  color: var(--text-color);
+  background-color: var(--hover-color);
+}
+
 
 .sidebar a,
 #premium-button {
@@ -119,6 +145,56 @@ body {
   color: var(--text-color);
   padding-left: 8px;
 }
+
+/* --- ESTILOS PARA LA BARRA LATERAL COLAPSADA --- */
+.sidebar.collapsed {
+    width: 60px; /* Ancho reducido cuando está colapsada */
+    align-items: center; /* Centrar los iconos */
+    padding: 20px 0; /* Ajustar padding */
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center; /* Centrar el logo cuando está colapsado */
+    margin-bottom: 30px; /* Mantener espacio */
+    padding-right: 0; /* Eliminar padding cuando está colapsada */
+}
+
+.sidebar.collapsed .sidebar-raava-logo {
+    width: 40px; /* Un poco más pequeño cuando está colapsado */
+}
+
+.sidebar.collapsed .hide-sidebar-btn {
+    /* El botón sigue siendo visible, pero el icono cambia para indicar "expandir" */
+    /* No lo ocultamos, simplemente ajustamos su posición si es necesario */
+    font-size: 20px; /* Asegura que el icono sea visible */
+}
+
+/* Ocultar texto y mostrar solo iconos cuando la sidebar está colapsada */
+.sidebar.collapsed a,
+.sidebar.collapsed #premium-button {
+    text-align: center;
+    padding: 6px 0;
+    font-size: 0; /* Ocultar el texto */
+    overflow: hidden; /* Asegurarse de que el texto no se vea */
+    white-space: nowrap;
+    width: 100%; /* Asegurar que ocupe todo el ancho disponible para el hover */
+}
+
+.sidebar.collapsed a i,
+.sidebar.collapsed #premium-button i {
+    font-size: 20px; /* Mostrar solo el icono */
+    display: block; /* Asegurar que el icono esté visible */
+    margin: 0 auto; /* Centrar el icono */
+}
+
+/* Ajustar el contenedor principal cuando la sidebar está colapsada */
+.main-container.sidebar-collapsed {
+    /* Si tu layout usa flex-grow o similar, el chat-main-section se expandirá. */
+    /* No se necesita CSS aquí a menos que tengas un layout muy específico que dependa del ancho de la sidebar. */
+}
+
+/* --- FIN ESTILOS BARRA LATERAL COLAPSADA --- */
+
 
 /* --- NUEVOS ESTILOS PARA EL CONTENEDOR CENTRAL (HEADER + CHAT) --- */
 .chat-main-section {
