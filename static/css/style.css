@@ -434,30 +434,31 @@ input:checked + .slider:before {
   gap: 10px;
   overflow-y: auto;
   padding-right: 6px;
-  /* --- ESTILOS DE LA BARRA DE DESPLAZAMIENTO PERSONALIZADA --- */
+  /* --- ESTILOS DE LA BARRA DE DESPLAZAMIENTO --- */
   /* Para Webkit (Chrome, Safari) */
   scrollbar-width: thin; /* "auto" o "thin" */
   scrollbar-color: var(--link-color) var(--hover-color); /* thumb track */
 }
 
 .messages::-webkit-scrollbar {
-  width: 5px; /* Ajusta el ancho para que sea más delgado */
+  width: 8px;
 }
 
 .messages::-webkit-scrollbar-track {
-  background-color: var(--hover-color); /* Color del "canal" del scroll */
-  border-radius: 5px; /* Redondeo del canal del scroll */
+  background: var(--hover-color);
+  border-radius: 10px;
 }
 
 .messages::-webkit-scrollbar-thumb {
-  background-color: var(--link-color); /* Color del "pulgar" del scroll */
-  border-radius: 5px; /* Redondeo del pulgar */
+  background-color: var(--link-color);
+  border-radius: 10px;
+  border: 2px solid var(--hover-color);
 }
 
 .messages::-webkit-scrollbar-thumb:hover {
-  background-color: var(--text-color); /* Color al pasar el ratón */
+  background-color: var(--text-color);
 }
-/* --- FIN ESTILOS DE LA BARRA DE DESPLAZAMIENTO PERSONALIZADA --- */
+/* --- FIN ESTILOS DE LA BARRA DE DESPLAZAMIENTO --- */
 
 
 /* Base style for message containers */
