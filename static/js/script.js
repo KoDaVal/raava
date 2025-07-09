@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
@@ -37,6 +36,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- NUEVAS variables para Eleven Labs ---
     let clonedVoiceId = null; // Almacena el ID de la voz clonada por Eleven Labs
+
+    // --- NUEVOS ELEMENTOS PARA LA BARRA LATERAL IZQUIERDA ---
+    const sidebar = document.querySelector('.sidebar');
+    const hideSidebarBtn = document.getElementById('hide-sidebar-btn');
+    const mainContainer = document.querySelector('.main-container');
+    // FIN NUEVOS ELEMENTOS
 
     // Asigna el evento de clic a los botones del panel de información para abrir el selector de archivos
     // Se añade una verificación para asegurar que los elementos existan antes de añadir listeners.
@@ -91,6 +96,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Lógica NUEVA para esconder/mostrar la barra lateral ---
+    if (hideSidebarBtn) { // Asegúrate de que el botón exista antes de añadir el listener
+        hideSidebarBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            mainContainer.classList.toggle('sidebar-collapsed');
+
+            // Cambiar el icono del botón
+            const icon = hideSidebarBtn.querySelector('i');
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-chevron-right'); // Icono de flecha hacia la derecha
+            } else {
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-bars'); // Icono de barras
+            }
+        });
+    }
+    // FIN LÓGICA NUEVA
+
     // --- NUEVO: Manejo de la subida de archivo de voz para clonación ---
     if (voiceFileInput) {
         voiceFileInput.addEventListener('change', async (event) => {
@@ -122,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Evento para reemplazar la imagen del avatar (AHORA SOLO ACTUALIZA EL AVATAR)
+    // Evento para reemplazar la imagen del avatar Y ADJUNTARLA AL CHAT
     if (imageFileInput && avatarImage) {
         imageFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
@@ -136,15 +160,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 addMessage('bot', `Se ha actualizado tu avatar con la imagen: ${file.name}.`);
 
-                // 2. ELIMINADAS LAS LÍNEAS QUE ADJUNTABAN AL CHAT
-                // selectedFile = file;
-                // fileNameSpan.textContent = selectedFile.name;
-                // fileDisplay.style.display = 'flex';
+                // 2. También prepara la imagen para ser adjuntada al siguiente mensaje de chat
+                selectedFile = file;
+                fileNameSpan.textContent = selectedFile.name;
+                fileDisplay.style.display = 'flex';
             } else {
                 addMessage('bot', 'Por favor, sube un archivo de imagen válido para el avatar.');
-                // selectedFile = null; // No es necesario limpiar selectedFile aquí ya que no lo asignamos
-                // fileNameSpan.textContent = '';
-                // fileDisplay.style.display = 'none';
+                selectedFile = null; // Limpia si el archivo no es válido
+                fileNameSpan.textContent = '';
+                fileDisplay.style.display = 'none';
             }
             event.target.value = ''; // Limpia el input para permitir volver a subir el mismo archivo
         });
@@ -310,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         messagesContainer.appendChild(messageElement);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight; // Mantiene el scroll abajo
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
         conversationHistory.push({
             role: sender === 'user' ? 'user' : 'model',
@@ -319,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(() => {
             messageElement.classList.add('appeared');
-            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Mantiene el scroll abajo después de la animación
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }, 50);
         return Promise.resolve();
     }
