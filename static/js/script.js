@@ -179,17 +179,8 @@ document.addEventListener('DOMContentLoaded', () => {
             event.target.value = ''; // Limpia el input para permitir volver a subir el mismo archivo
         });
     }
-            } else {
-                addMessage('bot', 'Por favor, sube un archivo de imagen válido para el avatar.');
-                selectedFile = null; // Limpia si el archivo no es válido
-                fileNameSpan.textContent = '';
-                fileDisplay.style.display = 'none';
-            }
-            event.target.value = ''; // Limpia el input para permitir volver a subir el mismo archivo
-        });
-    }
-
-    // --- CORRECCIÓN: Manejo del archivo de información (ya no adjunta al chat principal) ---
+            
+                // --- CORRECCIÓN: Manejo del archivo de información (ya no adjunta al chat principal) ---
     if (infoFileInput && startMindButton) {
         infoFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
