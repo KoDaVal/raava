@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
@@ -122,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Evento para reemplazar la imagen del avatar (AHORA SOLO ACTUALIZA EL AVATAR)
+    // Evento para reemplazar la imagen del avatar Y ADJUNTARLA AL CHAT
     if (imageFileInput && avatarImage) {
         imageFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
@@ -136,15 +135,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 addMessage('bot', `Se ha actualizado tu avatar con la imagen: ${file.name}.`);
 
-                // 2. ELIMINADAS LAS LÍNEAS QUE ADJUNTABAN AL CHAT
-                // selectedFile = file;
-                // fileNameSpan.textContent = selectedFile.name;
-                // fileDisplay.style.display = 'flex';
+                // 2. También prepara la imagen para ser adjuntada al siguiente mensaje de chat
+                selectedFile = file;
+                fileNameSpan.textContent = selectedFile.name;
+                fileDisplay.style.display = 'flex';
             } else {
                 addMessage('bot', 'Por favor, sube un archivo de imagen válido para el avatar.');
-                // selectedFile = null; // No es necesario limpiar selectedFile aquí ya que no lo asignamos
-                // fileNameSpan.textContent = '';
-                // fileDisplay.style.display = 'none';
+                selectedFile = null; // Limpia si el archivo no es válido
+                fileNameSpan.textContent = '';
+                fileDisplay.style.display = 'none';
             }
             event.target.value = ''; // Limpia el input para permitir volver a subir el mismo archivo
         });
@@ -310,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         messagesContainer.appendChild(messageElement);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight; // Mantiene el scroll abajo
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
         conversationHistory.push({
             role: sender === 'user' ? 'user' : 'model',
@@ -319,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(() => {
             messageElement.classList.add('appeared');
-            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Mantiene el scroll abajo después de la animación
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }, 50);
         return Promise.resolve();
     }
