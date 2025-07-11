@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
+    userInput.addEventListener('input', adjustTextareaHeight); // **AGREGAR ESTA LÍNEA**
     const sendButton = document.getElementById('send-button');
     const messagesContainer = document.querySelector('.messages');
     const fileInput = document.getElementById('file-upload'); // Botón de adjuntar general
@@ -9,6 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let typingIndicatorElement = null;
     let selectedFile = null;
     let conversationHistory = [];
+    function adjustTextareaHeight() {
+    userInput.style.height = 'auto'; // Resetea la altura
+    userInput.style.height = (userInput.scrollHeight) + 'px'; // Ajusta la altura al contenido
+}
 
     // --- Elementos y lógica para la barra lateral derecha (info-panel) ---
     const uploadVoiceBtn = document.getElementById('upload-voice-btn');
@@ -230,6 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message');
         messageElement.classList.add(sender);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight; // **AGREGAR ESTA LÍNEA**
 
         // Crear el contenedor de contenido del mensaje (el "globo")
         const messageContentElement = document.createElement('div');
