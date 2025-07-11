@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedFile = null;
     let conversationHistory = [];
 
-    // --- Elementos y lógica para la barra lateral derecha (info-panel) ---
+    // --- Elementos y lógica para la barra lateral derecha gseguro (info-panel) ---
     const uploadVoiceBtn = document.getElementById('upload-voice-btn');
     const uploadImageBtn = document.getElementById('upload-image-btn');
     const uploadInfoBtn = document.getElementById('upload-info-btn');
