@@ -27,81 +27,93 @@
           <div class="settings-nav-item">Account</div>
         </div>
         <div class="settings-pane">
-          <div class="setting-row">
-            <label>Theme</label>
-            <select id="theme-select">
-              <option value="dark">Dark</option>
-              <option value="light">Light</option>
-            </select>
-          </div>
-          <div class="setting-row">
-            <label>Language</label>
-            <select>
-              <option value="auto">Auto-detect</option>
-              </select>
-          </div>
-          <div class="setting-row">
-            <label>Spoken language</label>
-            <select>
-              <option value="auto">Auto-detect</option>
-              </select>
-          </div>
-          <div class="setting-row">
-            <label>Voice</label>
-            <div class="voice-controls">
-              <button><i class="fas fa-play"></i></button>
-              <span>Ember</span>
+          <div class="settings-group">
+            <h4>Theme</h4>
+            <div class="theme-switch">
+              <label class="switch">
+                <input type="checkbox" id="theme-toggle">
+                <span class="slider round"></span>
+              </label>
+              <span>Dark Mode</span>
             </div>
           </div>
-          <div class="setting-row toggle-row">
-            <label>Show follow up suggestions in chats</label>
-            <label class="switch">
-              <input type="checkbox" checked>
-              <span class="slider round"></span>
-            </label>
+          <div class="settings-group">
+            <h4>Language & Voice</h4>
+            <div class="setting-item">
+              <label for="auto-detect-language">Auto-detect Language</label>
+              <input type="checkbox" id="auto-detect-language" checked>
+            </div>
+            <div class="setting-item">
+              <label for="voice-selection">Voice</label>
+              <select id="voice-selection">
+                <option value="Ember">Ember</option>
+                </select>
+            </div>
+          </div>
+          <div class="settings-group">
+            <h4>Follow-up suggestions in chat</h4>
+            <div class="setting-item">
+              <label for="follow-up-suggestions">Show follow-up suggestions</label>
+              <input type="checkbox" id="follow-up-suggestions" checked>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="main-container">
-    <div class="sidebar">
-      <div class="sidebar-header">
-        <img src="/static/raava_logo.png" alt="Raava AI Logo" class="sidebar-raava-logo">
-        <button id="hide-sidebar-btn" class="hide-sidebar-btn"><i class="fas fa-bars"></i></button>
+  <div class="container">
+    <aside class="sidebar">
+      <div class="logo">
+        <img src="/static/raava_logo.png" alt="Raavax AI Logo">
+        <span>Raavax AI</span>
       </div>
-      <a href="https://raavax.framer.website/">Inicio</a>
-      <a href="#">Buscar chat</a>
-      <a href="#">Nuevo chat</a>
-      <a href="#">Comunidad</a>
-     <a href="https://raavax.framer.website/pricing#pricing" id="premium-button">Premium</a>
-    </div>
+      <nav class="main-nav">
+        <ul>
+          <li><a href="#" class="active"><i class="fas fa-home"></i> Inicio</a></li>
+          <li><a href="#"><i class="fas fa-search"></i> Buscar chat</a></li>
+          <li><a href="#"><i class="fas fa-plus"></i> Nuevo chat</a></li>
+        </ul>
+      </nav>
+      <div class="community-premium">
+        <a href="#" class="community-link"><i class="fas fa-users"></i> Comunidad</a>
+        <a href="#" class="premium-link"><i class="fas fa-crown"></i> Premium</a>
+      </div>
+      <div class="settings-option" id="settings-option">
+        <img src="/static/person.jpg" alt="Profile" class="header-profile-pic" id="header-profile-pic">
+        <span>Settings</span>
+        <i class="fas fa-cog"></i>
+      </div>
+    </aside>
 
-    <div class="chat-main-section"> <div class="header">
+    <main class="main-content">
+        <header>
             <div class="header-left">
-                Raavax AI
+                <img src="/static/raava_logo.png" alt="Raavax AI Logo">
+                <h2>Raavax AI</h2>
             </div>
             <div class="header-right">
-                <img src="/static/person.jpg" alt="Foto de perfil" class="profile-pic" id="header-profile-pic">
-                <div class="settings-menu" id="settings-menu">
-                    <div class="settings-menu-item" id="settings-option">Ajustes</div>
-                    <div class="settings-menu-item">Ayuda</div>
-                    <div class="settings-menu-item">Cerrar sesión</div>
+                <div class="header-profile">
+                    <img src="/static/person.jpg" alt="Profile" class="header-profile-pic">
+                    <span>Username</span>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <div id="status-message" style="margin-top: 10px; text-align: center; color: #888; font-size: 0.9em;"></div>
-        <div class="chat-area">
-            <div class="messages"></div>
-            <div class="input-bar">
-                <label for="file-upload" class="file-button" title="Adjuntar archivo">+</label>
-                <input type="file" id="file-upload" hidden>
-                <div id="file-display" style="display: none;" class="file-info">
-                    <span id="file-name"></span>
-                    <button id="clear-file" class="clear-file" title="Limpiar archivo adjunto">x</button>
+        <div class="chat-container">
+            <div class="messages">
                 </div>
+            <div class="input-area">
+                <div class="file-upload-preview" id="file-display">
+                    <span id="file-name"></span>
+                    <button id="clear-file">x</button>
+                </div>
+                <input type="file" id="file-upload" accept="image/*, audio/*, text/*" hidden>
+                <button id="attach-button" class="attach-button" title="Adjuntar archivo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 .55.45 1 1 1s1-.45 1-1V5c0-.83-.67-1.5-1.5-1.5S9 4.17 9 5v11.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V6h-1.5z"/>
+                    </svg>
+                </button>
                 <textarea id="user-input" placeholder="Enviar un mensaje..." rows="1"></textarea>
                 <button id="send-button" class="send-button" title="Enviar mensaje">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
@@ -132,10 +144,19 @@
       <img src="/static/person.jpg" alt="Mi foto de avatar" class="avatar" id="avatar-image">
       <span class="name">Kobe Bryant</span>
       <span class="quote">"If you're afraid to fail, then you're probably going to fail."</span>
-      <button class="start-button" id="start-mind-button">Iniciar mente</button>
+
+      <div class="start-mind-section">
+        <label for="mind-file-input">
+          <button id="start-button" class="start-button" disabled>
+            Iniciar mente
+          </button>
+        </label>
+        <input type="file" id="mind-file-input" accept=".txt" hidden>
+      </div>
+
     </div>
   </div>
-  
+
   <script src="/static/js/script.js"></script>
 </body>
 </html>
