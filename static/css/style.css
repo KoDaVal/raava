@@ -77,17 +77,18 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   height: 100vh;
-  display: flex; /* Cambiado para que el main-container ocupe toda la altura */
+  display: flex; /* ✅ Perfecto */
   transition: background 0.3s, color 0.3s;
-  overflow: hidden; /* Evita el scroll del body principal */
+  overflow: hidden; /* ✅ Esto es CLAVE */
 }
 
 /* Contenedor principal para la barra lateral, chat y info-panel */
 .main-container {
-  display: flex;
-  flex: 1; /* Ocupa el espacio restante después del header si hubiera uno fuera */
-  overflow: hidden; /* Asegura que el scroll se maneje internamente */
-  width: 100%; /* Asegura que ocupe el 100% del ancho del body */
+  display: grid; /* ⚡️ MEJOR PARA LAYOUT COMPLEJO */
+  grid-template-columns: 250px 1fr 300px; /* Sidebar | chat | panel derecho */
+  grid-template-rows: 100vh; /* Todo ocupa altura completa */
+  overflow: hidden; /* Solo mensajes scrollean */
+  width: 100%;
 }
 
 .sidebar {
@@ -206,10 +207,10 @@ body {
 
 /* --- NUEVOS ESTILOS PARA EL CONTENEDOR CENTRAL (HEADER + CHAT) --- */
 .chat-main-section {
-    flex: 1; /* Para que ocupe el espacio restante horizontalmente */
-    display: flex;
-    flex-direction: column; /* Apila el header y el chat-area verticalmente */
-    background-color: var(--chat-bg); /* Fondo para toda la sección central */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden; /* 👌 */
 }
 
 .header {
