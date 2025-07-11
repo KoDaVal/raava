@@ -202,6 +202,7 @@ body {
     display: flex;
     flex-direction: column; /* Apila el header y el chat-area verticalmente */
     background-color: var(--chat-bg); /* Fondo para toda la sección central */
+    position: relative; /* **AGREGAR ESTA LÍNEA** */
 }
 
 .header {
@@ -501,6 +502,8 @@ input:checked + .slider:before {
   flex-direction: column;
   justify-content: space-between;
   padding: 20px;
+   box-sizing: border-box; /* **AGREGAR ESTA LÍNEA** */
+    padding-bottom: 70px; /* **AGREGAR ESTA LÍNEA** Ajusta este valor si tu barra de entrada es más alta o más baja */
 }
 
 .messages {
@@ -514,6 +517,8 @@ input:checked + .slider:before {
   /* Para Webkit (Chrome, Safari) */
   scrollbar-width: thin; /* "auto" o "thin" */
   scrollbar-color: var(--link-color) var(--hover-color); /* thumb track */
+   scroll-behavior: smooth; /* **AGREGAR ESTA LÍNEA** Para un desplazamiento suave */
+    padding-top: 80px; /* **AGREGAR ESTA LÍNEA** Para asegurar que los mensajes no queden bajo el header */
 }
 
 .messages::-webkit-scrollbar {
@@ -656,13 +661,19 @@ input:checked + .slider:before {
 .input-bar {
   display: flex;
   flex-wrap: wrap;
-  margin-top: 20px;
   background-color: var(--button-bg);
   border-radius: 10px;
-  padding: 4px 8px;
+  padding: 10px 20px;
   align-items: flex-end;
   box-shadow: 0 2px 6px rgba(0,0,0,0.4);
   flex-shrink: 0;
+   position: absolute; /* **AGREGAR ESTA LÍNEA** */
+    bottom: 0; /* **AGREGAR ESTA LÍNEA** */
+    left: 0; /* **AGREGAR ESTA LÍNEA** */
+    right: 0; /* **AGREGAR ESTA LÍNEA** */
+    width: 100%; /* **AGREGAR ESTA LÍNEA** */
+    box-sizing: border-box; /* **AGREGAR ESTA LÍNEA** */
+    /* Eliminar si existe: margin-top: 20px; (ya no es necesario al ser posicionado absoluto) */
 }
 
 .file-button {
@@ -689,10 +700,11 @@ input:checked + .slider:before {
   outline: none;
   font-size: 14px;
   resize: none;
-  overflow-y: hidden;
+      overflow-y: auto; /* **MODIFICAR ESTA LÍNEA** Cambiar de hidden a auto */
   min-height: 40px;
   line-height: 1.5;
   margin: 0 8px;
+  max-height: 100px; /* **AGREGAR ESTA LÍNEA** Limita la altura antes de que aparezca el scroll interno */
 }
 
 .send-button {
