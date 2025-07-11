@@ -202,7 +202,6 @@ body {
     display: flex;
     flex-direction: column; /* Apila el header y el chat-area verticalmente */
     background-color: var(--chat-bg); /* Fondo para toda la sección central */
-    position: relative; /* **AGREGAR ESTA LÍNEA** */
 }
 
 .header {
@@ -230,7 +229,6 @@ body {
   width: 30px; /* Tamaño del logo en el header */
   height: auto;
 }
-
 
 .header-right {
   position: relative;
@@ -261,14 +259,12 @@ body {
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   width: 180px;
-  z-index: 100;
+  z-index: 10;
   display: none; /* Oculto por defecto */
-  flex-direction: column;
-  padding: 8px 0;
 }
 
 .settings-menu.active {
-  display: flex;
+  display: block; /* Muestra el menú cuando tiene la clase 'active' */
 }
 
 .settings-menu-item {
@@ -276,586 +272,498 @@ body {
   color: var(--text-color);
   font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
+  transition: background-color 0.2s;
 }
 
 .settings-menu-item:hover {
   background-color: var(--hover-color);
 }
 
-/* --- FIN ESTILOS CONTENEDOR CENTRAL --- */
-
-
-/* --- NUEVOS ESTILOS PARA LA VENTANA DE AJUSTES (MODAL) --- */
+/* NUEVOS ESTILOS PARA EL MODAL DE AJUSTES */
 .settings-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: var(--settings-modal-bg);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--settings-modal-bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .settings-modal.active {
-  opacity: 1;
-  visibility: visible;
+    opacity: 1;
+    visibility: visible;
 }
 
 .settings-content {
-  background-color: var(--settings-content-bg);
-  border-radius: 12px;
-  width: 90%;
-  max-width: 700px;
-  max-height: 80%;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-  overflow: hidden; /* Para las esquinas redondeadas internas */
+    background-color: var(--settings-content-bg);
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh; /* Para que el modal no sea más alto que la ventana */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Asegura que el contenido interno se desplace si es necesario */
 }
 
 .settings-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid var(--settings-border-color);
-  background-color: var(--panel-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--settings-border-color);
 }
 
 .settings-header h3 {
-  font-size: 18px;
-  color: var(--settings-text-color);
+    margin: 0;
+    color: var(--settings-text-color);
+    font-size: 18px;
 }
 
 .close-settings-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: var(--settings-text-color);
-  cursor: pointer;
-  padding: 5px 10px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.close-settings-btn:hover {
-  background-color: var(--hover-color);
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: var(--settings-text-color);
+    cursor: pointer;
+    line-height: 1;
 }
 
 .settings-body {
-  display: flex;
-  flex: 1;
-  overflow: hidden; /* Para contener los scrolls internos */
+    display: flex;
+    flex: 1; /* Ocupa el espacio restante */
+    min-height: 0; /* Permite que el flex-child se encoja */
 }
 
 .settings-nav {
-  width: 180px;
-  padding: 20px 0;
-  border-right: 1px solid var(--settings-border-color);
-  background-color: var(--sidebar-bg);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
+    width: 200px;
+    padding: 15px 0;
+    border-right: 1px solid var(--settings-border-color);
+    flex-shrink: 0; /* No se encoge */
+    overflow-y: auto; /* Scroll para la navegación si es muy larga */
 }
 
 .settings-nav-item {
-  padding: 12px 20px;
-  font-size: 14px;
-  color: var(--settings-text-color);
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
+    padding: 10px 20px;
+    color: var(--settings-text-color);
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 14px;
 }
 
 .settings-nav-item:hover,
 .settings-nav-item.active {
-  background-color: var(--settings-nav-hover);
-  color: var(--text-color);
+    background-color: var(--settings-nav-hover);
 }
 
 .settings-pane {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto; /* Scroll para el contenido del panel */
+    flex: 1; /* Ocupa el espacio restante */
+    padding: 20px;
+    overflow-y: auto; /* Scroll para el panel de contenido si es muy largo */
 }
 
 .setting-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--settings-border-color);
-  font-size: 14px;
-  color: var(--settings-text-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--settings-border-color);
 }
 
 .setting-row:last-child {
-  border-bottom: none;
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
 .setting-row label {
-  flex-shrink: 0;
-  margin-right: 20px;
+    font-size: 14px;
+    color: var(--settings-text-color);
+    font-weight: 600;
 }
 
 .setting-row select,
-.settings-pane input[type="text"] {
-  flex-grow: 1;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid var(--select-border);
-  background-color: var(--select-bg);
-  color: var(--settings-text-color);
-  font-size: 14px;
-  outline: none;
+.setting-row input[type="text"] {
+    background-color: var(--select-bg);
+    color: var(--settings-text-color);
+    border: 1px solid var(--select-border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 14px;
+    appearance: none; /* Elimina estilos por defecto del select */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    width: 150px; /* Ancho fijo para selects */
 }
 
 .voice-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 .voice-controls button {
-  background: none;
-  border: none;
-  color: var(--link-color);
-  font-size: 16px;
-  cursor: pointer;
-  transition: color 0.2s;
+    background-color: var(--button-bg);
+    color: var(--button-text-color);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    font-size: 12px;
 }
 
 .voice-controls button:hover {
-  color: var(--text-color);
+    background-color: var(--hover-color);
+    color: var(--text-color);
+    border-color: var(--text-color);
 }
 
-/* Toggle Switch */
+/* Estilos para el switch (toggle) */
 .switch {
-  position: relative;
-  display: inline-block;
-  width: 40px;
-  height: 22px;
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
 }
 
 .switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 
 .slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--switch-bg);
-  transition: .4s;
-  border-radius: 22px;
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--switch-bg);
+    transition: .4s;
+    border-radius: 20px;
 }
 
 .slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 2px;
-  bottom: 2px;
-  background-color: var(--slider-bg);
-  transition: .4s;
-  border-radius: 50%;
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: var(--slider-bg);
+    transition: .4s;
+    border-radius: 50%;
 }
 
 input:checked + .slider {
-  background-color: var(--switch-checked-bg);
-}
-
-input:focus + .slider {
-  box-shadow: 0 0 1px var(--switch-checked-bg);
+    background-color: var(--switch-checked-bg);
 }
 
 input:checked + .slider:before {
-  transform: translateX(18px);
+    transform: translateX(20px);
 }
+/* FIN NUEVOS ESTILOS MODAL DE AJUSTES */
 
-/* Rounded sliders */
-.slider.round {
-  border-radius: 22px;
-}
-
-.slider.round:before {
-  border-radius: 50%;
-}
-/* --- FIN ESTILOS VENTANA DE AJUSTES --- */
-
-
+/* ESTILOS DE CHAT */
+/* MODIFICADO: Styles for the chat content area */
 .chat-area {
-  flex: 1; /* Ocupa el espacio restante verticalmente dentro de chat-main-section */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 20px;
-   box-sizing: border-box; /* **AGREGAR ESTA LÍNEA** */
-    padding-bottom: 70px; /* **AGREGAR ESTA LÍNEA** Ajusta este valor si tu barra de entrada es más alta o más baja */
+    flex: 1; /* Permite que ocupe todo el espacio vertical disponible */
+    display: flex; /* Habilita Flexbox */
+    flex-direction: column; /* Organiza los elementos hijos en columna */
+    position: relative; /* CRÍTICO: Permite posicionamiento absoluto para sus hijos */
+    overflow: hidden; /* CRÍTICO: Asegura que el contenido interno no desborde y que el scroll se gestione dentro */
 }
 
+/* MODIFICADO: Styles for the messages container */
 .messages {
-  flex: 1;
+    flex-grow: 1; /* CRÍTICO: Ocupa todo el espacio disponible que el área de entrada deja libre */
+    overflow-y: auto; /* CRÍTICO: Habilita el scroll vertical cuando los mensajes exceden el alto */
+    padding: 20px; /* Asegura un padding base. Ajusta si ya tenías otro padding. */
+    padding-bottom: 90px; /* CRÍTICO: Espacio adicional en la parte inferior para que los mensajes no queden ocultos detrás de la barra de entrada fija. Puedes ajustar este valor si tu barra de entrada es más alta o más baja. */
+    display: flex; /* Habilita Flexbox para organizar los mensajes */
+    flex-direction: column; /* Apila los mensajes verticalmente */
+    gap: 10px; /* Espacio entre mensajes */
+}
+
+/* MODIFICADO: Styles for the fixed input area */
+.chat-input-area-container {
+    position: absolute; /* CRÍTICO: Fija este elemento respecto a su padre posicionado (.chat-area) */
+    bottom: 0; /* Lo ancla a la parte inferior */
+    left: 0; /* Lo ancla a la izquierda */
+    right: 0; /* Lo ancla a la derecha, asegurando que ocupe todo el ancho */
+    width: 100%; /* Explicitly set width to 100% */
+    background-color: var(--chat-bg); /* Use chat background for consistency */
+    padding: 15px 20px; /* Consistent padding */
+    border-top: 1px solid var(--border-color); /* Separator line */
+    display: flex;
+    align-items: flex-end; /* Align items to the bottom, useful for textarea growth */
+    gap: 10px; /* Space between textarea and buttons */
+    z-index: 100; /* Ensure it stays on top of messages */
+}
+
+.user-message,
+.bot-message {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow-y: auto;
-  padding-right: 6px;
-  /* --- ESTILOS DE LA BARRA DE DESPLAZAMIENTO --- */
-  /* Para Webkit (Chrome, Safari) */
-  scrollbar-width: thin; /* "auto" o "thin" */
-  scrollbar-color: var(--link-color) var(--hover-color); /* thumb track */
-   scroll-behavior: smooth; /* **AGREGAR ESTA LÍNEA** Para un desplazamiento suave */
-    padding-top: 80px; /* **AGREGAR ESTA LÍNEA** Para asegurar que los mensajes no queden bajo el header */
+  margin-bottom: 10px;
+  align-items: flex-end; /* Alinea los mensajes con el avatar en la parte inferior */
 }
 
-.messages::-webkit-scrollbar {
-  width: 8px;
-}
-
-.messages::-webkit-scrollbar-track {
-  background: var(--hover-color);
-  border-radius: 10px;
-}
-
-.messages::-webkit-scrollbar-thumb {
-  background-color: var(--link-color);
-  border-radius: 10px;
-  border: 2px solid var(--hover-color);
-}
-
-.messages::-webkit-scrollbar-thumb:hover {
-  background-color: var(--text-color);
-}
-/* --- FIN ESTILOS DE LA BARRA DE DESPLAZAMIENTO --- */
-
-
-/* Base style for message containers */
-.message {
-  width: fit-content;
-  max-width: 70%;
-  font-size: 14px;
-  word-wrap: break-word;
-  line-height: 1.6;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-}
-
-.message.appeared {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-/* Styling for bot messages (includes flex for stacking content and actions) */
-.message.bot {
-  display: flex; /* Make the bot message container a flex container */
-  flex-direction: column; /* Stack message content and actions vertically */
-  align-items: flex-start; /* Align content and actions to the left within the bot message */
-  gap: 5px; /* Space between message content and actions */
-}
-
-/* Styling for user messages (aligns to the right) */
-.message.user {
-  align-self: flex-end; /* Pushes the entire user message container to the right */
-}
-
-/* The message bubble content */
 .message-content {
   background-color: var(--message-bg);
-  padding: 12px 16px; 
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  padding: 10px 15px;
+  border-radius: 10px;
+  max-width: 70%;
+  position: relative; /* Para el botón de audio */
+  word-wrap: break-word; /* Asegura que el texto largo se rompa */
 }
 
-/* User message bubble specific styling */
-.message.user .message-content {
+.user-message .message-content {
   background-color: var(--message-user-bg);
+  margin-left: auto; /* Empuja el mensaje del usuario a la derecha */
+}
+
+.bot-message .message-content {
+  margin-right: auto; /* Empuja el mensaje del bot a la izquierda */
+}
+
+.message-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 10px; /* Espacio alrededor del avatar */
+  align-self: flex-end; /* Alinea el avatar a la parte inferior del contenedor del mensaje */
+}
+
+.user-message .message-avatar {
+  order: 2; /* Coloca el avatar del usuario a la derecha del mensaje */
+}
+
+.bot-message .message-avatar {
+  order: 1; /* Coloca el avatar del bot a la izquierda del mensaje */
+}
+
+.message-audio-button {
+    background: none;
+    border: none;
+    color: var(--link-color);
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 16px;
+    padding: 0; /* Elimina padding para ajustar el ícono */
+    position: absolute;
+    bottom: 5px; /* Ajusta la posición vertical */
+    right: 5px; /* Ajusta la posición horizontal */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px; /* Tamaño del botón */
+    height: 24px; /* Tamaño del botón */
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.2); /* Fondo sutil para el botón */
+}
+
+.message-audio-button:hover {
+    color: var(--text-color);
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Estilo para el input de texto */
+#user-input {
+  flex: 1;
+  background-color: var(--message-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 10px 15px;
   color: var(--text-color);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  resize: none; /* Deshabilita el redimensionamiento manual */
+  min-height: 40px; /* Altura mínima */
+  max-height: 200px; /* Altura máxima antes de que aparezca el scroll interno */
+  overflow-y: hidden; /* Oculta el scroll por defecto, manejado por JS */
 }
 
-/* Bot message bubble specific styling */
-.message.bot .message-content {
-  color: var(--text-color);
+#user-input::placeholder {
+  color: var(--link-color);
 }
 
-
-/* Estilos para el contenedor de acciones de los mensajes del bot */
-.message-actions {
-  display: flex; /* Muestra los botones en fila */
-  gap: 8px; /* Espacio entre los botones */
-  margin-top: 0px; 
-  padding-left: 5px; /* Ajuste para alinear con el texto del globo */
-}
-
-.message-action-btn {
-  background: none;
-  border: none;
-  color: var(--text-color); /* Color del icono */
-  font-size: 0.8em; /* Tamaño del icono */
-  cursor: pointer;
-  padding: 3px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease-in-out;
+.send-button, .attach-button {
+  background-color: var(--button-bg);
+  color: var(--button-text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 50%; /* Botón circular */
+  width: 40px; /* Tamaño del botón */
+  height: 40px; /* Tamaño del botón */
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.message-action-btn:hover {
-  background-color: var(--hover-color); /* Color de fondo al pasar el ratón */
-}
-
-/* Estilo para el indicador de copiado */
-.message-action-btn.copied::after {
-  content: "Copiado!";
-  position: absolute;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 3px 6px;
-  border-radius: 4px;
-  font-size: 0.7em;
-  bottom: 25px; /* Encima del botón */
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  animation: fadeOut 2s forwards;
-  pointer-events: none; /* Para que no interfiera con clics */
-}
-
-@keyframes fadeOut {
-  0% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { opacity: 0; display: none; }
-}
-
-/* Estilo para el botón de reproducción cuando el audio está cargando */
-.message-action-btn.loading i.fas.fa-volume-up {
-    animation: spin 1s infinite linear;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Estilo para cuando el audio está reproduciéndose */
-.message-action-btn.playing i.fas.fa-volume-up {
-    color: lightgreen; /* O el color que prefieras para indicar reproducción */
-}
-/* FIN DE MODIFICACIÓN DE ESTILOS DE BOTONES */
-
-
-.input-bar {
-  display: flex;
-  flex-wrap: wrap;
-  background-color: var(--button-bg);
-  border-radius: 10px;
-  padding: 10px 20px;
-  align-items: flex-end;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-  flex-shrink: 0;
-   position: absolute; /* **AGREGAR ESTA LÍNEA** */
-    bottom: 0; /* **AGREGAR ESTA LÍNEA** */
-    left: 0; /* **AGREGAR ESTA LÍNEA** */
-    right: 0; /* **AGREGAR ESTA LÍNEA** */
-    width: 100%; /* **AGREGAR ESTA LÍNEA** */
-    box-sizing: border-box; /* **AGREGAR ESTA LÍNEA** */
-    /* Eliminar si existe: margin-top: 20px; (ya no es necesario al ser posicionado absoluto) */
-}
-
-.file-button {
-  background: transparent;
-  border: none;
-  color: var(--button-text-color);
-  padding: 8px;
-  font-size: 20px;
   cursor: pointer;
-  transition: background-color 0.2s;
-  border-radius: 6px;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  flex-shrink: 0; /* Evita que el botón se encoja */
 }
 
-.file-button:hover {
+.send-button:hover, .attach-button:hover {
   background-color: var(--hover-color);
-}
-
-.input-bar textarea {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  background: transparent;
   color: var(--text-color);
-  outline: none;
-  font-size: 14px;
-  resize: none;
-      overflow-y: auto; /* **MODIFICAR ESTA LÍNEA** Cambiar de hidden a auto */
-  min-height: 40px;
-  line-height: 1.5;
-  margin: 0 8px;
-  max-height: 100px; /* **AGREGAR ESTA LÍNEA** Limita la altura antes de que aparezca el scroll interno */
-}
-
-.send-button {
-  background: transparent;
-  border: none;
-  color: var(--button-text-color);
-  padding: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  border-radius: 6px;
-  transition: background-color 0.2s ease;
-}
-
-.send-button:hover {
-  background-color: var(--hover-color);
+  border-color: var(--text-color);
 }
 
 .send-button svg {
-  fill: currentColor;
+  width: 20px; /* Tamaño del icono de enviar */
+  height: 20px;
 }
 
-.file-info {
+/* Contenedor para mostrar el archivo seleccionado */
+.file-display {
   display: flex;
   align-items: center;
-  background-color: var(--hover-color);
-  padding: 4px 8px;
-  border-radius: 6px;
-  margin-left: 8px;
+  gap: 10px;
+  background-color: var(--message-bg);
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-top: 10px;
+  width: fit-content;
+  max-width: 80%;
+  word-break: break-all; /* Para nombres de archivo largos */
+  display: none; /* Oculto por defecto, visible con JS */
+}
+
+.file-display i {
+  color: var(--link-color);
+}
+
+.file-name {
   color: var(--text-color);
   font-size: 12px;
-  max-width: 150px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .clear-file {
   background: none;
   border: none;
-  color: var(--text-color);
-  font-size: 14px;
-  margin-left: 6px;
+  color: var(--link-color);
+  font-size: 16px;
   cursor: pointer;
+  margin-left: auto; /* Empuja el botón a la derecha */
 }
 
 .clear-file:hover {
-  color: #fff;
+  color: var(--text-color);
 }
 
+
+/* Estilos para el panel de información (derecha) */
 .info-panel {
   background-color: var(--panel-bg);
-  width: 260px;
+  width: 220px;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   border-left: 1px solid var(--border-color);
   flex-shrink: 0; /* Evita que el panel se encoja */
 }
 
 .info-panel h4 {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 16px;
   color: var(--text-color);
+  margin-bottom: 20px;
+  font-size: 14px;
 }
 
 .menu-option {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
-  color: var(--button-text-color);
-  margin-bottom: 12px;
+  color: var(--link-color);
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 15px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s, color 0.2s;
   cursor: pointer;
-  transition: color 0.2s ease-in-out;
-}
-
-.menu-option:hover {
-  color: var(--text-color);
+  width: 100%; /* Para que ocupe todo el ancho disponible */
 }
 
 .menu-option i {
-  width: 16px;
-  height: 16px;
-  background-color: #333333;
-  border-radius: 4px;
-  flex-shrink: 0;
+  font-size: 16px;
 }
 
-#fixed-prompt-input {
-  width: 100%;
-  height: 80px;
-  background-color: var(--button-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 10px;
+.menu-option:hover {
+  background-color: var(--hover-color);
   color: var(--text-color);
-  font-size: 13px;
-  resize: vertical;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-#fixed-prompt-input:focus {
-  border-color: #555;
 }
 
 .avatar {
-  width: 100%;
-  border-radius: 8px;
-  margin: 16px 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  margin-top: 30px;
+  border: 3px solid var(--border-color); /* Borde alrededor del avatar */
+  cursor: pointer; /* Hace que el avatar sea clicable */
+  transition: border-color 0.2s;
+}
+
+.avatar:hover {
+  border-color: var(--link-color);
 }
 
 .name {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--avatar-name-color);
+  margin-top: 10px;
 }
 
 .quote {
   font-size: 12px;
-  margin-top: 8px;
-  line-height: 1.5;
   color: var(--quote-color);
+  text-align: center;
+  margin-top: 5px;
+  font-style: italic;
 }
 
 .start-button {
-  margin-top: 20px;
-  width: 100%;
-  background-color: #333333;
+  background-color: #8a2be2; /* Azul violeta */
   color: white;
-  font-weight: 600;
-  font-size: 13px;
-  padding: 10px;
+  padding: 10px 20px;
   border: none;
-  border-radius: 8px;
+  border-radius: 20px;
+  font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  margin-top: 20px;
+  transition: background-color 0.3s ease;
+  width: 100%;
+  text-align: center;
 }
 
 .start-button:hover {
-  background-color: #444444;
+  background-color: #7a1ed1;
 }
 
-/* Styling for the typing indicator */
+.start-button:disabled {
+    background-color: #6a6a6a;
+    cursor: not-allowed;
+}
+
+/* Estilos para el indicador de escritura */
 .typing-indicator {
-  display: flex; /* Make it a flex container */
-  flex-direction: row !important; /* Force horizontal alignment of dots */
+  display: flex; /* Use flexbox for horizontal alignment of dots */
   align-self: flex-start; /* Explicitly align the indicator itself to the left */
   align-items: center; /* Vertically center the dots within the indicator */
   justify-content: center; /* Horizontally center the dots within the indicator */
@@ -894,18 +802,32 @@ input:checked + .slider:before {
 
 /* Nuevo estilo para el botón "Iniciar mente" cuando el archivo de info esté listo */
 .start-button.info-ready {
-  background-color: #8a2be2; /* Un tono de morado */
-  box-shadow: 0 0 15px rgba(138, 43, 226, 0.7); /* Sombra brillante */
-  animation: pulse-purple 1.5s infinite alternate; /* Animación de pulsación */
+  background-color: #28a745; /* Un verde vibrante */
 }
 
-@keyframes pulse-purple {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 15px rgba(138, 43, 226, 0.7);
-  }
-  100% {
-    transform: scale(1.02);
-    box-shadow: 0 0 25px rgba(138, 43, 226, 1);
-  }
+.start-button.info-ready:hover {
+  background-color: #218838;
+}
+
+
+/* Estilos para la barra de desplazamiento personalizada */
+/* Para navegadores basados en Webkit (Chrome, Safari, Edge, Opera) */
+.messages::-webkit-scrollbar {
+    width: 8px; /* Ancho de la barra de desplazamiento vertical */
+    height: 8px; /* Altura de la barra de desplazamiento horizontal (si aplica) */
+}
+
+.messages::-webkit-scrollbar-track {
+    background: var(--chat-bg); /* Fondo de la pista de la barra de desplazamiento */
+    border-radius: 10px; /* Bordes redondeados para la pista */
+}
+
+.messages::-webkit-scrollbar-thumb {
+    background-color: #8a2be2; /* Color del "pulgar" de la barra de desplazamiento */
+    border-radius: 10px; /* Bordes redondeados para el pulgar */
+    border: 2px solid var(--chat-bg); /* Borde para que parezca más delgado y separado */
+}
+
+.messages::-webkit-scrollbar-thumb:hover {
+    background-color: #7a1ed1; /* Color del "pulgar" al pasar el ratón */
 }
