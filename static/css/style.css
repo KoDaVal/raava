@@ -664,15 +664,18 @@ input:checked + .slider:before {
 
 
 .input-bar {
+  position: sticky;
+  bottom: 0;
   display: flex;
   flex-wrap: wrap;
   margin-top: 20px;
-  background-color: var(--button-bg);
+  background: var(--panel-bg);
   border-radius: 10px;
-  padding: 4px 8px;
+  padding: 1rem 2rem;
   align-items: flex-end;
   box-shadow: 0 2px 6px rgba(0,0,0,0.4);
   flex-shrink: 0;
+  border-top: 1px solid var(--border-color);
 }
 
 .file-button {
