@@ -662,16 +662,13 @@ input:checked + .slider:before {
 
 
 .input-bar {
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: 20px;
-  background-color: var(--button-bg);
-  border-radius: 10px;
-  padding: 4px 8px;
-  align-items: flex-end;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  background: var(--panel-bg);
+  padding: 1rem 2rem;
+  border-top: 1px solid var(--border-color);
 }
+
 
 .file-button {
   background: transparent;
