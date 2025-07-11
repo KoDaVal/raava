@@ -505,43 +505,34 @@ input:checked + .slider:before {
 
 
 .chat-area {
-  flex: 1; /* Ocupa el espacio restante verticalmente dentro de chat-main-section */
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 20px;
+  flex: 1; /* Ocupar todo */
+  overflow: hidden; /* 👌 */
 }
 
+/* */
 .messages {
-  flex: 1;
+  flex: 1; /* 🔑 Expande todo */
+  overflow-y: auto; /* SOLO AQUÍ scroll */
+  padding: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  overflow-y: auto;
-  padding-right: 6px;
-  /* --- ESTILOS DE LA BARRA DE DESPLAZAMIENTO --- */
-  /* Para Webkit (Chrome, Safari) */
-  scrollbar-width: thin; /* "auto" o "thin" */
-  scrollbar-color: var(--link-color) var(--hover-color); /* thumb track */
+  gap: 1rem;
 }
 
+/* Scrollbar bonito */
 .messages::-webkit-scrollbar {
   width: 8px;
 }
 
-.messages::-webkit-scrollbar-track {
-  background: var(--hover-color);
-  border-radius: 10px;
-}
-
 .messages::-webkit-scrollbar-thumb {
-  background-color: var(--link-color);
-  border-radius: 10px;
-  border: 2px solid var(--hover-color);
+  background: #333;
+  border-radius: 4px;
 }
 
-.messages::-webkit-scrollbar-thumb:hover {
-  background-color: var(--text-color);
+.messages:hover::-webkit-scrollbar-thumb {
+  background: #555;
 }
 /* --- FIN ESTILOS DE LA BARRA DE DESPLAZAMIENTO --- */
 
