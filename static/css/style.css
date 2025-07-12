@@ -905,3 +905,36 @@ input:checked + .slider:before {
     box-shadow: 0 0 25px rgba(138, 43, 226, 1);
   }
 }
+/* Mantener el input fijo abajo */
+.input-form {
+  position: sticky;
+  bottom: 0;
+  background-color: #fff;
+  padding: 10px;
+  border-top: 1px solid #ccc;
+  z-index: 10;
+}
+
+/* Hacer que el área de mensajes tenga scroll */
+.chat-box {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(100vh - 80px); /* ajusta según el alto del input */
+  padding: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f0f0f0;
+}
+
+/* Scroll personalizado para WebKit */
+.chat-box::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-box::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
