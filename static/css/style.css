@@ -517,29 +517,29 @@ input:checked + .slider:before {
   flex-direction: column;
   gap: 10px;
   overflow-y: auto;
-  padding-right: 6px;
+  padding-right: 16px; /* Espacio para separar la barra de los mensajes */
 
   scrollbar-width: thin; /* Firefox */
-  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
-/* Webkit Scrollbar */
 .messages::-webkit-scrollbar {
-  width: 6px; /* Muy delgada */
+  width: 5px; /* Aún más delgada */
 }
 
 .messages::-webkit-scrollbar-track {
-  background: transparent; /* Sin fondo visible */
+  background: transparent; /* Sin fondo para que solo se vea el thumb */
 }
 
 .messages::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.2); /* Color clarito y translúcido */
-  border-radius: 10px; /* Redondeado */
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 20px; /* Muy ovalado */
+  margin: 4px; /* Espacio dentro del track */
   transition: background-color 0.3s ease;
 }
 
 .messages::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.4); /* Un poco más visible al hover */
+  background-color: rgba(255, 255, 255, 0.5);
 }
 /* --- FIN ESTILOS DE LA BARRA DE DESPLAZAMIENTO --- */
 
