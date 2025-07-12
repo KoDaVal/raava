@@ -136,15 +136,28 @@ body {
 
 .sidebar a,
 #premium-button {
+  display: flex;         /* Coloca ícono + texto en línea */
+  align-items: center;   /* Centra verticalmente */
+  gap: 10px;             /* Espacio entre ícono y texto */
   color: var(--link-color);
   text-decoration: none;
   font-size: 14px;
   margin-bottom: 18px;
-  display: block;
   padding: 6px 0;
   border-radius: 4px;
   transition: all 0.25s ease-in-out;
   cursor: pointer;
+}
+
+.sidebar a img,
+#premium-button img {
+  width: 20px;   /* Tamaño de ícono */
+  height: 20px;
+}
+
+.sidebar.collapsed a span,
+.sidebar.collapsed #premium-button span {
+  display: none; /* Oculta el texto cuando la sidebar está colapsada */
 }
 
 .sidebar a:hover,
