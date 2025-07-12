@@ -516,36 +516,35 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  overflow-y: auto; /* 🔑 Scroll solo aquí */
-  padding-right: 18px; /* Más separación del scrollbar */
+  overflow-y: auto; /* Scroll solo aquí */
+  padding-right: 18px; /* Espacio para separar del contenido */
 
-  /* --- Barra de desplazamiento moderna tipo pastilla --- */
+  /* --- Barra de desplazamiento moderna tipo pastilla corta --- */
   scrollbar-width: thin; /* Firefox */
-  scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+  scrollbar-color: var(--link-color) transparent;
 }
 
 .messages::-webkit-scrollbar {
-  width: 6px;
+  width: 8px; /* Ancho del track */
 }
 
 .messages::-webkit-scrollbar-track {
-  background: transparent; /* Sin fondo para que flote */
-  border-radius: 10px;
+  background: transparent; /* Track invisible */
 }
 
 .messages::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.4);
-  border-radius: 20px;
-  border: 2px solid transparent;
+  background-color: var(--link-color); /* Usa tu color del tema */
+  border-radius: 20px; /* Ovalada */
   background-clip: padding-box;
-  box-shadow: inset 0 0 0 10px rgba(255, 255, 255, 0.4); /* Hace que se vea más corta */
+  border: 2px solid transparent;
+  box-shadow: inset 0 0 0 30px var(--link-color); /* Ilusión de longitud corta */
+  min-height: 30px; /* 🔑 Longitud mínima del thumb visible */
   transition: background-color 0.2s ease;
 }
 
 .messages::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.6);
+  background-color: var(--text-color);
 }
-
 /* --- FIN ESTILOS DE LA BARRA DE DESPLAZAMIENTO --- */
 
 
