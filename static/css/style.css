@@ -206,10 +206,10 @@ body {
 
 /* --- NUEVOS ESTILOS PARA EL CONTENEDOR CENTRAL (HEADER + CHAT) --- */
 .chat-main-section {
-    flex: 1; /* Para que ocupe el espacio restante horizontalmente */
-    display: flex;
-    flex-direction: column; /* Apila el header y el chat-area verticalmente */
-    background-color: var(--chat-bg); /* Fondo para toda la sección central */
+  flex: 1; /* Para que ocupe el espacio restante horizontalmente */
+  display: flex;
+  flex-direction: column; /* Apila el header y el chat-area verticalmente */
+  background-color: var(--chat-bg); /* Fondo para toda la sección central */
 }
 
 .header {
@@ -507,20 +507,19 @@ input:checked + .slider:before {
   flex: 1; /* Ocupa el espacio restante verticalmente dentro de chat-main-section */
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  overflow: hidden; /* Clave para que solo messages scrollee */
   padding: 20px;
-}
 
 .messages {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  overflow-y: auto;
+  overflow-y: auto; /* 🔑 Scroll solo aquí */
   padding-right: 6px;
+
   /* --- ESTILOS DE LA BARRA DE DESPLAZAMIENTO --- */
-  /* Para Webkit (Chrome, Safari) */
-  scrollbar-width: thin; /* "auto" o "thin" */
+  scrollbar-width: thin; /* Para Firefox */
   scrollbar-color: var(--link-color) var(--hover-color); /* thumb track */
 }
 
@@ -664,13 +663,17 @@ input:checked + .slider:before {
 .input-bar {
   display: flex;
   flex-wrap: wrap;
-  margin-top: 20px;
   background-color: var(--button-bg);
   border-radius: 10px;
   padding: 4px 8px;
   align-items: flex-end;
   box-shadow: 0 2px 6px rgba(0,0,0,0.4);
   flex-shrink: 0;
+
+  position: sticky; /* 🔑 Fijo abajo */
+  bottom: 0;
+  border-top: 1px solid var(--border-color);
+  z-index: 2; /* Asegura que quede encima de los mensajes */
 }
 
 .file-button {
