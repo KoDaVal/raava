@@ -509,6 +509,7 @@ input:checked + .slider:before {
   flex-direction: column;
   overflow: hidden; /* Clave para que solo messages scrollee */
   padding: 20px;
+}
 
 .messages {
   flex: 1;
