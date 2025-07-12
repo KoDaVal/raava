@@ -516,31 +516,33 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  overflow-y: auto; /* 🔑 Scroll solo aquí */
+  overflow-y: auto;
   padding-right: 6px;
 
-  /* --- ESTILOS DE LA BARRA DE DESPLAZAMIENTO --- */
-  scrollbar-width: thin; /* Para Firefox */
-  scrollbar-color: var(--link-color) var(--hover-color); /* thumb track */
+  /* Scrollbar base para Firefox */
+  scrollbar-width: thin;               /* Grosor fino */
+  scrollbar-color: var(--link-color) var(--hover-color); /* Thumb y track */
 }
 
+/* Scrollbar para Webkit (Chrome, Edge, Safari) */
 .messages::-webkit-scrollbar {
-  width: 8px;
+  width: 8px;                          /* Grosor de la barra */
 }
 
 .messages::-webkit-scrollbar-track {
-  background: var(--hover-color);
+  background: var(--hover-color);      /* Color de fondo del track */
   border-radius: 10px;
 }
 
 .messages::-webkit-scrollbar-thumb {
-  background-color: var(--link-color);
-  border-radius: 10px;
-  border: 2px solid var(--hover-color);
+  background-color: var(--link-color); /* Color del thumb (barra deslizante) */
+  border-radius: 10px;                 /* Bordes redondeados */
+  border: 2px solid var(--hover-color);/* Espacio entre thumb y track */
+  transition: background-color 0.3s;   /* Transición suave */
 }
 
 .messages::-webkit-scrollbar-thumb:hover {
-  background-color: var(--text-color);
+  background-color: var(--accent-color); /* Resalta al pasar el mouse */
 }
 /* --- FIN ESTILOS DE LA BARRA DE DESPLAZAMIENTO --- */
 
