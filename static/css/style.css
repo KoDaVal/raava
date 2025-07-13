@@ -97,8 +97,8 @@ body {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border-color);
-  flex-shrink: 0; /* Evita que la sidebar se encoja */
-  transition: width 0.3s ease; /* Transición para el ancho */
+  flex-shrink: 0;
+  transition: width 0.3s ease;
 }
 
 .sidebar-header {
@@ -136,82 +136,80 @@ body {
 
 .sidebar a,
 #premium-button {
-  display: flex;         /* Coloca ícono + texto en línea */
-  align-items: center;   /* Centra verticalmente */
-  gap: 10px;             /* Espacio entre ícono y texto */
+  display: flex;
+  align-items: center;
+  gap: 12px;  /* Espacio entre ícono y texto */
   color: var(--link-color);
   text-decoration: none;
   font-size: 14px;
   margin-bottom: 18px;
-  padding: 6px 0;
-  border-radius: 4px;
+  padding: 8px 12px;  /* Espacio interno más cómodo */
+  border-radius: 6px;
   transition: all 0.25s ease-in-out;
   cursor: pointer;
 }
 
 .sidebar a img,
-#premium-button img {
-  width: 20px;   /* Tamaño de ícono */
-  height: 20px;
+.sidebar a svg,
+#premium-button img,
+#premium-button svg {
+  width: 26px;   /* Icono más grande */
+  height: 26px;
 }
 
 .sidebar.collapsed a span,
 .sidebar.collapsed #premium-button span {
-  display: none; /* Oculta el texto cuando la sidebar está colapsada */
+  display: none; /* Oculta texto colapsado */
 }
 
 .sidebar a:hover,
 #premium-button:hover {
   background-color: var(--hover-color);
   color: var(--text-color);
-  padding-left: 8px;
+  padding-left: 12px;
 }
 
 /* --- ESTILOS PARA LA BARRA LATERAL COLAPSADA --- */
 .sidebar.collapsed {
-    width: 60px; /* Ancho reducido cuando está colapsada */
-    align-items: center; /* Centrar los iconos */
-    padding: 20px 0; /* Ajustar padding */
+  width: 60px;
+  align-items: center;
+  padding: 20px 0;
 }
 
 .sidebar.collapsed .sidebar-header {
-    justify-content: center; /* Centrar el logo cuando está colapsado */
-    margin-bottom: 30px; /* Mantener espacio */
-    padding-right: 0; /* Eliminar padding cuando está colapsada */
+  justify-content: center;
+  margin-bottom: 30px;
+  padding-right: 0;
 }
 
 .sidebar.collapsed .sidebar-raava-logo {
-    width: 40px; /* Un poco más pequeño cuando está colapsado */
+  width: 40px;
 }
 
 .sidebar.collapsed .hide-sidebar-btn {
-    /* El botón sigue siendo visible, pero el icono cambia para indicar "expandir" */
-    /* No lo ocultamos, simplemente ajustamos su posición si es necesario */
-    font-size: 20px; /* Asegura que el icono sea visible */
+  font-size: 20px;
 }
 
-/* Ocultar texto y mostrar solo iconos cuando la sidebar está colapsada */
+/* Ocultar texto y centrar iconos */
 .sidebar.collapsed a,
 .sidebar.collapsed #premium-button {
-    text-align: center;
-    padding: 6px 0;
-    font-size: 0; /* Ocultar el texto */
-    overflow: hidden; /* Asegurarse de que el texto no se vea */
-    white-space: nowrap;
-    width: 100%; /* Asegurar que ocupe todo el ancho disponible para el hover */
+  justify-content: center;  /* Centra el ícono horizontal */
+  font-size: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
 }
 
-.sidebar.collapsed a i,
-.sidebar.collapsed #premium-button i {
-    font-size: 20px; /* Mostrar solo el icono */
-    display: block; /* Asegurar que el icono esté visible */
-    margin: 0 auto; /* Centrar el icono */
+.sidebar.collapsed a img,
+.sidebar.collapsed a svg,
+.sidebar.collapsed #premium-button img,
+.sidebar.collapsed #premium-button svg {
+  display: block;
+  margin: 0 auto;   /* Centra vertical/horizontal */
 }
 
-/* Ajustar el contenedor principal cuando la sidebar está colapsada */
 .main-container.sidebar-collapsed {
-    /* Si tu layout usa flex-grow o similar, el chat-main-section se expandirá. */
-    /* No se necesita CSS aquí a menos que tengas un layout muy específico que dependa del ancho de la sidebar. */
+  /* Expande contenido si lo necesitas */
 }
 
 /* --- FIN ESTILOS BARRA LATERAL COLAPSADA --- */
