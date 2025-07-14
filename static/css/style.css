@@ -151,10 +151,10 @@ body {
 
 .sidebar a img,
 .sidebar a svg,
+#premium-button img,
 #premium-button svg {
-  width: 26px;
+  width: 26px;   /* Icono más grande */
   height: 26px;
-  fill: currentColor;
 }
 
 .sidebar.collapsed a span,
@@ -202,15 +202,10 @@ body {
 
 .sidebar.collapsed a img,
 .sidebar.collapsed a svg,
+.sidebar.collapsed #premium-button img,
 .sidebar.collapsed #premium-button svg {
   display: block;
-  margin: 0 auto;
-  fill: currentColor;
-}
-}
-.sidebar.collapsed a span,
-.sidebar.collapsed #premium-button span {
-  display: none;  /* Solo oculta texto */
+  margin: 0 auto;   /* Centra vertical/horizontal */
 }
 
 .main-container.sidebar-collapsed {
