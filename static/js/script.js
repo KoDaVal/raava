@@ -90,10 +90,69 @@ document.addEventListener('DOMContentLoaded', () => {
         themeSelect.addEventListener('change', (event) => {
             if (event.target.value === 'light') {
                 document.body.classList.add('light-mode');
+                document.body.classList.remove('dark-mode'); // Asegúrate de remover el dark-mode si existe
             } else {
-                document.body.classList.remove('light-mode');
+                document.body.classList.add('dark-mode'); // Añade dark-mode si es tema oscuro
+                document.body.classList.remove('light-mode'); // Asegúrate de remover el light-mode
+            }
+            // Llama a la función para actualizar los iconos después de cambiar el tema
+            applyIconTheme();
+        });
+    }
+
+    // --- NUEVA FUNCIÓN: Aplicar el tema a los iconos PNG ---
+    function applyIconTheme() {
+        // Selecciona todos los elementos de imagen con la clase 'theme-icon'
+        const themeIcons = document.querySelectorAll('.theme-icon');
+        // Determina si el tema actual del body es 'dark-mode'
+        const isDarkMode = document.body.classList.contains('dark-mode');
+
+        themeIcons.forEach(icon => {
+            // Obtén la ruta de la imagen oscura del atributo data-dark-src
+            const darkSrc = icon.getAttribute('data-dark-src');
+            // Obtén la ruta de la imagen clara del atributo data-light-src
+            const lightSrc = icon.getAttribute('data-light-src');
+
+            if (isDarkMode) {
+                // Si estamos en modo oscuro y existe una ruta oscura, úsala
+                if (darkSrc) {
+                    icon.src = darkSrc;
+                }
+            } else {
+                // Si estamos en modo claro y existe una ruta clara, úsala
+                if (lightSrc) {
+                    icon.src = lightSrc;
+                } else {
+                    // Si no hay lightSrc específico, podrías revertir al src original si lo inicializaste como light
+                    // O asegurarte de que el src original en el HTML sea siempre el 'light'
+                    // Para ser explícito, es mejor siempre tener lightSrc definido
+                }
             }
         });
+    }
+
+    // --- NUEVO: Función para determinar el tema inicial y aplicarlo ---
+    function initializeTheme() {
+        // Primero, intenta detectar la preferencia del sistema
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        // Si el usuario ya ha seleccionado un tema en `localStorage`, úsalo
+        const savedTheme = localStorage.getItem('theme');
+
+        if (savedTheme) {
+            // Si hay un tema guardado, úsalo
+            document.body.classList.add(savedTheme + '-mode');
+            themeSelect.value = savedTheme;
+        } else if (prefersDark) {
+            // Si no hay tema guardado, usa la preferencia del sistema
+            document.body.classList.add('dark-mode');
+            themeSelect.value = 'dark';
+        } else {
+            // Por defecto, usa el modo claro
+            document.body.classList.add('light-mode');
+            themeSelect.value = 'light';
+        }
+        // Aplica los iconos una vez que el tema inicial esté establecido
+        applyIconTheme();
     }
 
     // --- Lógica NUEVA para esconder/mostrar la barra lateral ---
@@ -154,10 +213,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 1. Cambia el avatar
                 const fileURL = URL.createObjectURL(file);
                 avatarImage.src = fileURL;
-              
+
                 addMessage('bot', `Se ha actualizado tu avatar con la imagen: ${file.name}.`);
 
-                
             } else {
                 addMessage('bot', 'Por favor, sube un archivo de imagen válido para el avatar.');
                 selectedFile = null; // Limpia si el archivo no es válido
@@ -193,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
             event.target.value = ''; // Limpia el input del archivo
         });
     }
-    
+
     // --- Lógica del botón "Iniciar mente" ---
     if (startMindButton && infoFileInput) {
         startMindButton.addEventListener('click', () => {
@@ -237,13 +295,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const textContentElement = document.createElement('span');
         textContentElement.textContent = text;
-        
+
         // Siempre añadir el texto al messageContentElement
         messageContentElement.appendChild(textContentElement);
-        
+
         // Añadir el messageContentElement (el globo) al messageElement
         messageElement.appendChild(messageContentElement);
-        
+
         // **AQUÍ ESTÁ LA MODIFICACIÓN CLAVE EN SCRIPT.JS PARA QUE LOS BOTONES ESTÉN FUERA DEL GLOBO**
         if (sender === 'bot') {
             const actionsContainer = document.createElement('div');
@@ -271,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 playAudioButton.classList.add('message-action-btn', 'play-audio-btn');
                 playAudioButton.innerHTML = '<i class="fas fa-volume-up"></i>'; // Icono de volumen de FontAwesome
                 playAudioButton.title = 'Reproducir audio';
-                
+
                 let currentAudioInstance = null; // Variable para almacenar la instancia de Audio y controlar su estado
 
                 playAudioButton.addEventListener('click', async () => {
@@ -293,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         currentAudioInstance = new Audio();
                         currentAudioInstance.src = `data:audio/mpeg;base64,${audioBase64}`;
-                            
+
                         // Evento para cuando el audio empieza a reproducirse
                         currentAudioInstance.onplay = () => {
                             playAudioButton.classList.remove('loading');
@@ -322,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 actionsContainer.appendChild(playAudioButton);
             }
-            
+
             // Añadir el contenedor de acciones al messageElement (FUERA DEL GLOBO)
             messageElement.appendChild(actionsContainer);
         }
@@ -403,13 +461,13 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn("Intento de envío vacío: no hay mensaje ni archivo adjunto.");
             return;
         }
-        
+
         let displayMessage = message;
         if (selectedFile) {
             displayMessage += (message ? ' ' : '') + `📎 Archivo adjunto: ${selectedFile.name}`;
         }
         await addMessage('user', displayMessage);
-        
+
         userInput.value = '';
         adjustTextareaHeight();
 
@@ -419,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData();
             formData.append('message', message);
             formData.append('history', JSON.stringify(conversationHistory.slice(0, -1)));
-            
+
             // --- AÑADIDO: Añade la instrucción persistente si está activa ---
             if (activePersistentInstruction) {
                 formData.append('persistent_instruction', activePersistentInstruction);
@@ -447,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
             hideTypingIndicator();
             // Pasa el audio (data.audio) a addMessage si existe
             await addMessage('bot', data.response, data.audio);
-            
+
             // Limpiar selectedFile y fileInput después de enviar el mensaje
             selectedFile = null;
             fileInput.value = ''; // Asegura que el input principal también se limpie
@@ -460,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error al comunicarse con el backend:', error);
             hideTypingIndicator();
             await addMessage('bot', 'Lo siento, hubo un error al conectar con el chatbot. Por favor, revisa la consola del navegador y asegúrate de que el backend esté corriendo.');
-            
+
             conversationHistory.pop(); // Elimina el último mensaje del usuario si falló
             selectedFile = null;
             fileInput.value = '';
@@ -471,6 +529,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Mensaje de bienvenida inicial
     (async () => {
-         await addMessage('bot', '¡Hola! Soy Raava. ¿En qué puedo ayudarte hoy?');
+        await addMessage('bot', '¡Hola! Soy Raavax. ¿En qué puedo ayudarte hoy?');
     })();
+
+    // Llama a initializeTheme para establecer el tema y los iconos al cargar la página
+    initializeTheme();
 });
