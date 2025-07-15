@@ -103,7 +103,8 @@ body {
 
 .sidebar-header {
     display: flex;
-    justify-content: space-between;
+    /* CAMBIO: Al estar colapsado, el logo se centrará, por eso cambiamos el justify-content aquí */
+    justify-content: space-between; /* Mantener para estado expandido */
     align-items: center;
     margin-bottom: 30px;
     padding-right: 10px;
@@ -114,6 +115,8 @@ body {
     height: auto;
     align-self: center;
     transition: width 0.3s ease;
+    /* CAMBIO: Hacer el logo clickeable */
+    cursor: pointer;
 }
 
 .hide-sidebar-btn {
@@ -168,7 +171,7 @@ body {
     padding-left: 12px;
 }
 
-/* --- ESTILOS PARA LA BARRA LATERAL COLAPSADA (sin cambios, ya que no tienen colores directos aquí) --- */
+/* --- ESTILOS PARA LA BARRA LATERAL COLAPSADA (MODIFICACIONES AQUÍ) --- */
 .sidebar.collapsed {
     width: 60px;
     align-items: center;
@@ -176,6 +179,7 @@ body {
 }
 
 .sidebar.collapsed .sidebar-header {
+    /* CAMBIO: Centrar el logo cuando la barra está colapsada */
     justify-content: center;
     margin-bottom: 30px;
     padding-right: 0;
@@ -185,8 +189,10 @@ body {
     width: 40px;
 }
 
+/* CAMBIO: Ocultar el botón de la flecha cuando la barra está colapsada */
 .sidebar.collapsed .hide-sidebar-btn {
-    font-size: 20px;
+    display: none; /* Esto es lo que hace que desaparezca */
+    /* font-size: 20px; <--- Esta línea ya no es necesaria si display: none; */
 }
 
 .sidebar.collapsed a,
@@ -201,7 +207,7 @@ body {
 .sidebar.collapsed a img,
 .sidebar.collapsed a svg,
 .sidebar.collapsed #premium-button img,
-.sidebar.collapsed #premium-button svg {
+#premium-button svg {
     display: block;
     margin: 0 auto;
 }
