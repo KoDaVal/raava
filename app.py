@@ -150,13 +150,14 @@ def chat():
 
     parts_for_gemini.append({'role': 'user', 'parts': current_user_parts})
 
-    try:
-        gemini_response = model.generate_content(parts_for_gemini)
-        response_message = gemini_response.text
+   try:
+    gemini_response = model.generate_content(parts_for_gemini)
+    response_message = gemini_response.text
 
-       # --- AUDIO SE GENERA POR SEPARADO ---
-audio_base64 = None  # Se generará desde el frontend con /generate_audio
-# --- FIN CAMBIO ---
+    # --- AUDIO SE GENERA POR SEPARADO ---
+    audio_base64 = None  # Se generará desde el frontend con /generate_audio
+    # --- FIN CAMBIO ---
+
 
         return jsonify({"response": response_message, "audio": audio_base64})
 
