@@ -154,35 +154,9 @@ def chat():
         gemini_response = model.generate_content(parts_for_gemini)
         response_message = gemini_response.text
 
-        # --- GENERACIÓN DE AUDIO CON ELEVEN LABS ---
-        if eleven_labs_api_key and eleven_labs_api_key != "YOUR_ELEVEN_LABS_API_KEY":
-            # Determina qué ID de voz usar: la clonada si existe, de lo contrario la predeterminada
-            current_voice_id = cloned_voice_id if cloned_voice_id else default_eleven_labs_voice_id
-
-            tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{current_voice_id}/stream"
-            tts_headers = {
-                "xi-api-key": eleven_labs_api_key,
-                "Content-Type": "application/json",
-                "accept": "audio/mpeg" # Asegúrate de aceptar audio/mpeg para streaming
-            }
-            tts_data = {
-                "text": response_message,
-                "model_id": "eleven_multilingual_v2", # Puedes usar "eleven_turbo_v2" o "eleven_multilingual_v2"
-                "voice_settings": {
-                    "stability": 0.5,
-                    "similarity_boost": 0.75
-                }
-            }
-
-            tts_response = requests.post(tts_url, headers=tts_headers, json=tts_data, stream=True)
-            tts_response.raise_for_status() # Lanza una excepción para errores HTTP
-
-            audio_content = b''
-            for chunk in tts_response.iter_content(chunk_size=4096):
-                audio_content += chunk
-            
-            audio_base64 = base64.b64encode(audio_content).decode('utf-8')
-        # --- FIN GENERACIÓN DE AUDIO ---
+       # --- AUDIO SE GENERA POR SEPARADO ---
+audio_base64 = None  # Se generará desde el frontend con /generate_audio
+# --- FIN CAMBIO ---
 
         return jsonify({"response": response_message, "audio": audio_base64})
 
