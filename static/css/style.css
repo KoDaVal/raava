@@ -114,6 +114,12 @@ body {
     height: auto;
     align-self: center;
     transition: width 0.3s ease;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-raava-logo:hover {
+  transform: scale(1.1);
 }
 
 .hide-sidebar-btn {
