@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.querySelector('.sidebar');
     const hideSidebarBtn = document.getElementById('hide-sidebar-btn');
     const mainContainer = document.querySelector('.main-container');
-    const raavaLogoBtn = document.getElementById('raava-logo-btn');
     // FIN NUEVOS ELEMENTOS
 
     // Asigna el evento de clic a los botones del panel de información para abrir el selector de archivos
@@ -157,25 +156,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Lógica NUEVA para esconder/mostrar la barra lateral ---
-   if (hideSidebarBtn && raavaLogoBtn) {
-    // Listener para el botón de la flecha (este botón ahora solo OCULTARÁ/COLAPSARÁ la barra)
-    hideSidebarBtn.addEventListener('click', () => {
-        sidebar.classList.add('collapsed'); // Añade la clase 'collapsed' al sidebar
-        mainContainer.classList.add('sidebar-collapsed'); // Colapsa también el main-container
-        // El 'hide-sidebar-btn' se ocultará automáticamente por CSS cuando 'collapsed' se añada.
-        // Ya no necesitamos cambiar su icono aquí, ya que el CSS lo esconde.
-    });
+    if (hideSidebarBtn) { // Asegúrate de que el botón exista antes de añadir el listener
+        hideSidebarBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            mainContainer.classList.toggle('sidebar-collapsed');
 
-    // Listener para el logo de Raava (este botón ahora EXPANDIRÁ la barra)
-    raavaLogoBtn.addEventListener('click', () => {
-        // Solo expande si la barra está actualmente colapsada
-        if (sidebar.classList.contains('collapsed')) {
-            sidebar.classList.remove('collapsed'); // Remueve la clase 'collapsed' del sidebar
-            mainContainer.classList.remove('sidebar-collapsed'); // Expande el main-container
-            // El 'hide-sidebar-btn' reaparecerá automáticamente por CSS cuando 'collapsed' se remueva.
-        }
-    });
-}
+            // Cambiar el icono del botón
+            const icon = hideSidebarBtn.querySelector('i');
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-chevron-right'); // Icono de flecha hacia la derecha
+            } else {
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-bars'); // Icono de barras
+            }
+        });
+    }
     // FIN LÓGICA NUEVA
 
     // --- NUEVO: Manejo de la subida de archivo de voz para clonación ---
