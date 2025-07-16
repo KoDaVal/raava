@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- NUEVOS ELEMENTOS PARA LA BARRA LATERAL IZQUIERDA ---
     const sidebar = document.querySelector('.sidebar');
     const hideSidebarBtn = document.getElementById('hide-sidebar-btn');
+    const sidebarLogoBtn = document.getElementById('sidebar-toggle-btn');
     const mainContainer = document.querySelector('.main-container');
     // FIN NUEVOS ELEMENTOS
 
@@ -156,22 +157,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Lógica NUEVA para esconder/mostrar la barra lateral ---
-    if (hideSidebarBtn) { // Asegúrate de que el botón exista antes de añadir el listener
-        hideSidebarBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            mainContainer.classList.toggle('sidebar-collapsed');
+   if (hideSidebarBtn) {
+    hideSidebarBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        mainContainer.classList.toggle('sidebar-collapsed');
+    });
+}
 
-            // Cambiar el icono del botón
-            const icon = hideSidebarBtn.querySelector('i');
-            if (sidebar.classList.contains('collapsed')) {
-                icon.classList.remove('fa-bars');
-                icon.classList.add('fa-chevron-right'); // Icono de flecha hacia la derecha
-            } else {
-                icon.classList.remove('fa-chevron-right');
-                icon.classList.add('fa-bars'); // Icono de barras
-            }
-        });
-    }
+if (sidebarLogoBtn) {
+    sidebarLogoBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        mainContainer.classList.toggle('sidebar-collapsed');
+    });
+}
     // FIN LÓGICA NUEVA
 
     // --- NUEVO: Manejo de la subida de archivo de voz para clonación ---
