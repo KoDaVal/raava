@@ -91,19 +91,19 @@ body {
 }
 
 .sidebar {
-    background-color: var(--sidebar-bg);
+    background-color: var(--sidebar-bg); /* Usa la variable para el fondo del sidebar */
     width: 220px;
     padding: 20px;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color); /* Usa la variable para el borde */
     flex-shrink: 0;
-    transition: width 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+    transition: width 0.3s ease, background-color 0.3s ease, border-color 0.3s ease; /* Añadir transiciones para el tema */
 }
 
 .sidebar-header {
     display: flex;
-    justify-content: space-between; /* Mantener para estado expandido */
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
     padding-right: 10px;
@@ -114,13 +114,12 @@ body {
     height: auto;
     align-self: center;
     transition: width 0.3s ease;
-    cursor: pointer; /* Hace el logo clickeable */
 }
 
 .hide-sidebar-btn {
     background: none;
     border: none;
-    color: var(--link-color);
+    color: var(--link-color); /* Color que se adapte al tema */
     font-size: 20px;
     cursor: pointer;
     transition: color 0.2s, background-color 0.2s;
@@ -129,8 +128,8 @@ body {
 }
 
 .hide-sidebar-btn:hover {
-    color: var(--text-color);
-    background-color: var(--hover-color);
+    color: var(--text-color); /* Color del texto/icono al pasar el ratón */
+    background-color: var(--hover-color); /* Fondo al pasar el ratón */
 }
 
 .sidebar a,
@@ -138,7 +137,7 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    color: var(--link-color);
+    color: var(--link-color); /* Color del texto de los enlaces */
     text-decoration: none;
     font-size: 14px;
     margin-bottom: 18px;
@@ -154,6 +153,7 @@ body {
 #premium-button svg {
     width: 26px;
     height: 26px;
+    /* Los iconos PNG cambiarán su SRC vía JavaScript, no necesitan CSS aquí para el color */
 }
 
 .sidebar.collapsed a span,
@@ -163,21 +163,20 @@ body {
 
 .sidebar a:hover,
 #premium-button:hover {
-    background-color: var(--hover-color);
-    color: var(--text-color);
+    background-color: var(--hover-color); /* Fondo al pasar el ratón */
+    color: var(--text-color); /* Color del texto/icono al pasar el ratón */
     padding-left: 12px;
 }
 
-/* --- ESTILOS PARA LA BARRA LATERAL COLAPSADA (MODIFICACIONES CLAVE AQUÍ) --- */
+/* --- ESTILOS PARA LA BARRA LATERAL COLAPSADA (sin cambios, ya que no tienen colores directos aquí) --- */
 .sidebar.collapsed {
     width: 60px;
     align-items: center;
     padding: 20px 0;
 }
 
-/* Al colapsar, el header centraliza el logo y la flecha desaparece */
 .sidebar.collapsed .sidebar-header {
-    justify-content: center; /* CENTRA EL LOGO */
+    justify-content: center;
     margin-bottom: 30px;
     padding-right: 0;
 }
@@ -186,9 +185,8 @@ body {
     width: 40px;
 }
 
-/* OCULTA EL BOTÓN DE LA FLECHA CUANDO LA BARRA ESTÁ COLAPSADA */
 .sidebar.collapsed .hide-sidebar-btn {
-    display: none;
+    font-size: 20px;
 }
 
 .sidebar.collapsed a,
@@ -203,41 +201,9 @@ body {
 .sidebar.collapsed a img,
 .sidebar.collapsed a svg,
 .sidebar.collapsed #premium-button img,
-#premium-button svg {
+.sidebar.collapsed #premium-button svg {
     display: block;
     margin: 0 auto;
-}
-
-/* --- Estilos para el contenedor principal y campos de entrada --- */
-/* Asegúrate de que estas reglas también estén en tu CSS para que toda la interfaz cambie */
-.main-container {
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.user-input-container {
-    background-color: var(--bg-color);
-    border-top: 1px solid var(--border-color);
-    color: var(--text-color);
-}
-
-.user-input {
-    background-color: var(--input-bg);
-    color: var(--text-color);
-    border: 1px solid var(--input-border);
-}
-
-/* --- Estilos de los mensajes --- */
-/* Asegúrate de que estas reglas también estén en tu CSS */
-.message.user .message-content {
-    background-color: var(--user-message-bg);
-    color: white;
-}
-
-.message.bot .message-content {
-    background-color: var(--bot-message-bg);
-    color: var(--bot-message-text);
 }
 /* --- FIN ESTILOS BARRA LATERAL COLAPSADA --- */
 
