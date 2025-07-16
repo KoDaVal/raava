@@ -322,62 +322,75 @@ if (sidebarLogoBtn) {
             actionsContainer.appendChild(copyButton);
 
             // Botón Reproducir Audio
-            if (audioBase64) { // Solo añadir el botón si hay audio disponible
-                const playAudioButton = document.createElement('button');
-                playAudioButton.classList.add('message-action-btn', 'play-audio-btn');
-                playAudioButton.innerHTML = '<i class="fas fa-volume-up"></i>'; // Icono de volumen de FontAwesome
-                playAudioButton.title = 'Reproducir audio';
+            // Botón Reproducir Audio
+const playAudioButton = document.createElement('button');
+playAudioButton.classList.add('message-action-btn', 'play-audio-btn');
+playAudioButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+playAudioButton.title = 'Reproducir audio';
 
-                let currentAudioInstance = null; // Variable para almacenar la instancia de Audio y controlar su estado
+let currentAudioInstance = null;
 
-                playAudioButton.addEventListener('click', async () => {
-                    if (!audioBase64) {
-                        console.warn('No hay audio disponible para este mensaje.');
-                        return;
-                    }
+playAudioButton.addEventListener('click', async () => {
+    // Obtén el texto del mensaje que quieres convertir en audio
+    const messageText = messageElement.innerText || messageElement.textContent;
+    if (!messageText) {
+        console.warn('No hay texto disponible para generar audio.');
+        return;
+    }
 
-                    // Si ya hay un audio reproduciéndose, páusalo y reinícialo
-                    if (currentAudioInstance && !currentAudioInstance.paused) {
-                        currentAudioInstance.pause();
-                        currentAudioInstance.currentTime = 0; // Reinicia el audio
-                        playAudioButton.classList.remove('playing');
-                    }
+    // Si ya hay audio reproduciéndose, deténlo
+    if (currentAudioInstance && !currentAudioInstance.paused) {
+        currentAudioInstance.pause();
+        currentAudioInstance.currentTime = 0;
+        playAudioButton.classList.remove('playing');
+    }
 
-                    try {
-                        playAudioButton.classList.add('loading'); // Muestra indicador de carga (spinner)
-                        playAudioButton.classList.remove('playing'); // Asegura que no tenga la clase 'playing'
+    try {
+        playAudioButton.classList.add('loading');
+        playAudioButton.classList.remove('playing');
 
-                        currentAudioInstance = new Audio();
-                        currentAudioInstance.src = `data:audio/mpeg;base64,${audioBase64}`;
+        // Solicita el audio al backend
+        const response = await fetch('/generate_audio', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({ text: messageText })
+        });
 
-                        // Evento para cuando el audio empieza a reproducirse
-                        currentAudioInstance.onplay = () => {
-                            playAudioButton.classList.remove('loading');
-                            playAudioButton.classList.add('playing');
-                        };
+        const data = await response.json();
+        if (!data.audio) {
+            console.warn('No se recibió audio desde el backend.');
+            playAudioButton.classList.remove('loading');
+            return;
+        }
 
-                        // Evento para cuando el audio termina
-                        currentAudioInstance.onended = () => {
-                            playAudioButton.classList.remove('playing');
-                        };
+        currentAudioInstance = new Audio(`data:audio/mpeg;base64,${data.audio}`);
 
-                        // Evento para errores de carga o reproducción
-                        currentAudioInstance.onerror = (e) => {
-                            console.error('Error al cargar o reproducir el audio:', e);
-                            playAudioButton.classList.remove('loading', 'playing');
-                            // Puedes mostrar un error visual al usuario aquí
-                        };
+        currentAudioInstance.onplay = () => {
+            playAudioButton.classList.remove('loading');
+            playAudioButton.classList.add('playing');
+        };
 
-                        await currentAudioInstance.play();
-                        console.log('Audio iniciado.');
+        currentAudioInstance.onended = () => {
+            playAudioButton.classList.remove('playing');
+        };
 
-                    } catch (error) {
-                        console.error('Error al reproducir el audio:', error);
-                        playAudioButton.classList.remove('loading', 'playing');
-                    }
-                });
-                actionsContainer.appendChild(playAudioButton);
-            }
+        currentAudioInstance.onerror = (e) => {
+            console.error('Error al cargar o reproducir el audio:', e);
+            playAudioButton.classList.remove('loading', 'playing');
+        };
+
+        await currentAudioInstance.play();
+        console.log('Audio iniciado.');
+
+    } catch (error) {
+        console.error('Error al generar o reproducir el audio:', error);
+        playAudioButton.classList.remove('loading', 'playing');
+    }
+});
+
+actionsContainer.appendChild(playAudioButton);
 
             // Añadir el contenedor de acciones al messageElement (FUERA DEL GLOBO)
             messageElement.appendChild(actionsContainer);
