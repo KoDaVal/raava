@@ -936,3 +936,46 @@ input:checked + .slider:before {
     box-shadow: 0 0 25px rgba(138, 43, 226, 1);
   }
 }
+/* Responsive Design */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+    font-size: 0.95rem;
+  }
+
+  .sidebar {
+    display: none; /* ocultar sidebar en móvil si no es crucial */
+  }
+
+  .main-content {
+    width: 100%;
+    margin: 0;
+  }
+
+  .chat-panel {
+    flex-direction: column;
+    padding: 10px;
+  }
+
+  .message {
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+
+  button {
+    width: 100%;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  h1, h2, h3 {
+    font-size: 1.2rem;
+  }
+
+  .avatar, .icon {
+    width: 32px;
+    height: 32px;
+  }
+}
+
