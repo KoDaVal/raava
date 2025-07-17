@@ -164,44 +164,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 }
 
-if (sidebarLogoBtn) {
-    sidebarLogoBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        mainContainer.classList.toggle('sidebar-collapsed');
-    });
-}
-    // FIN LÓGICA NUEVA
 
-    // --- NUEVO: Manejo de la subida de archivo de voz para clonación ---
-    if (voiceFileInput) {
-        voiceFileInput.addEventListener('change', async (event) => {
-            if (event.target.files.length > 0) {
-                const voiceFile = event.target.files[0];
-                addMessage('bot', `Clonando voz de "${voiceFile.name}"... Esto puede tardar un momento.`);
-                try {
-                    const formData = new FormData();
-                    formData.append('audio_file', voiceFile);
+    // === MEJORADO: Lógica Responsive + Conserva comportamiento original ===
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
 
-                    const response = await fetch('https://raava.onrender.com/clone_voice', {
-                        method: 'POST',
-                        body: formData
-                    });
+    function isMobileView() {
+        return window.innerWidth <= 768;
+    }
 
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. ${errorData.error || 'Error desconocido.'}`);
-                    }
-                    const data = await response.json();
-                    clonedVoiceId = data.voice_id; // Almacena el ID de la voz clonada
-                    addMessage('bot', `¡Voz clonada exitosamente! Ahora hablaré con tu voz.`);
-                } catch (error) {
-                    console.error('Error al clonar la voz:', error);
-                    addMessage('bot', `Lo siento, hubo un error al clonar la voz. ${error.message}`);
-                }
+    if (sidebarLogoBtn && sidebarOverlay) {
+        sidebarLogoBtn.addEventListener('click', () => {
+            if (isMobileView()) {
+                sidebar.classList.add('open');
+                sidebarOverlay.classList.add('active');
+                document.body.classList.add('sidebar-open');
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContainer.classList.remove('sidebar-collapsed');
             }
-            event.target.value = ''; // Limpiar el input para permitir volver a subir el mismo archivo
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
         });
     }
+
+            event.target.value = ''; // Limpiar el input para permitir volver a subir el mismo archivo
+        });
+    
 
     // Evento para reemplazar la imagen del avatar Y ADJUNTARLA AL CHAT
     if (imageFileInput && avatarImage) {
@@ -391,7 +383,7 @@ playAudioButton.addEventListener('click', async () => {
 });
 
 actionsContainer.appendChild(playAudioButton);
-
+{
             // Añadir el contenedor de acciones al messageElement (FUERA DEL GLOBO)
             messageElement.appendChild(actionsContainer);
         }
@@ -545,33 +537,4 @@ actionsContainer.appendChild(playAudioButton);
 
     // Llama a initializeTheme para establecer el tema y los iconos al cargar la página
     initializeTheme();
-
-
-    // === MOBILE OVERLAY SIDEBAR LOGIC ===
-    const sidebarOverlay = document.getElementById('sidebar-overlay');
-
-    // Aplica overlay solo en móvil
-    function isMobile() {
-        return window.innerWidth <= 768;
-    }
-
-    if (sidebarLogoBtn && sidebarOverlay) {
-        sidebarLogoBtn.addEventListener('click', () => {
-            if (isMobile()) {
-                sidebar.classList.add('open');
-                sidebarOverlay.classList.add('active');
-                document.body.classList.add('sidebar-open');
-            } else {
-                sidebar.classList.toggle('collapsed');
-                mainContainer.classList.toggle('sidebar-collapsed');
-            }
-        });
-
-        sidebarOverlay.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-            sidebarOverlay.classList.remove('active');
-            document.body.classList.remove('sidebar-open');
-        });
-    }
-
-});
+};
