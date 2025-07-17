@@ -676,18 +676,21 @@ input:checked + .slider:before {
 
 .input-bar {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
   background-color: var(--button-bg);
-  border-radius: 10px;
-  padding: 4px 8px;
-  align-items: flex-end;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-  flex-shrink: 0;
-
-  position: sticky; /* 🔑 Fijo abajo */
-  bottom: 0;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
   border-top: 1px solid var(--border-color);
-  z-index: 2; /* Asegura que quede encima de los mensajes */
+
+  /* Estilos para centrar y limitar tamaño */
+  max-width: 800px;
+  width: 100%;
+  margin: 16px auto; /* ⬅ Centrado horizontal */
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
 .file-button {
@@ -707,9 +710,10 @@ input:checked + .slider:before {
 
 .input-bar textarea {
   flex: 1;
-  padding: 10px;
+  padding: 10px 14px;
   border: none;
-  background: transparent;
+  background-color: var(--chat-bg);
+  border-radius: 10px;
   color: var(--text-color);
   outline: none;
   font-size: 14px;
@@ -717,8 +721,9 @@ input:checked + .slider:before {
   overflow-y: hidden;
   min-height: 40px;
   line-height: 1.5;
-  margin: 0 8px;
+  transition: background-color 0.2s;
 }
+
 
 .send-button {
   background: transparent;
