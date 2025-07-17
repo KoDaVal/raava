@@ -545,4 +545,33 @@ actionsContainer.appendChild(playAudioButton);
 
     // Llama a initializeTheme para establecer el tema y los iconos al cargar la página
     initializeTheme();
+
+
+    // === MOBILE OVERLAY SIDEBAR LOGIC ===
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+    // Aplica overlay solo en móvil
+    function isMobile() {
+        return window.innerWidth <= 768;
+    }
+
+    if (sidebarLogoBtn && sidebarOverlay) {
+        sidebarLogoBtn.addEventListener('click', () => {
+            if (isMobile()) {
+                sidebar.classList.add('open');
+                sidebarOverlay.classList.add('active');
+                document.body.classList.add('sidebar-open');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                mainContainer.classList.toggle('sidebar-collapsed');
+            }
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
+        });
+    }
+
 });
