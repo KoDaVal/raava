@@ -546,6 +546,3 @@ actionsContainer.appendChild(playAudioButton);
     // Llama a initializeTheme para establecer el tema y los iconos al cargar la página
     initializeTheme();
 });
-    // Llama a initializeTheme para establecer el tema y los iconos al cargar la página
-    initializeTheme();
-});
