@@ -511,7 +511,13 @@ messagesContainer.scrollTop = messagesContainer.scrollHeight;
             displayMessage += (message ? ' ' : '') + `📎 Archivo adjunto: ${selectedFile.name}`;
         }
         await addMessage('user', displayMessage);
-
+        // Oculta bienvenida y baja la barra de entrada
+        const welcomeScreen = document.getElementById('welcome-screen');
+        if (welcomeScreen) welcomeScreen.classList.add('hidden');
+        const inputBar = document.getElementById('input-bar');
+        if (inputBar && inputBar.classList.contains('initial')) {
+        inputBar.classList.remove('initial');
+        }
         userInput.value = '';
         adjustTextareaHeight();
 
@@ -570,12 +576,6 @@ messagesContainer.scrollTop = messagesContainer.scrollHeight;
             adjustTextareaHeight();
         }
     }
-
-    // Mensaje de bienvenida inicial
-    (async () => {
-        await addMessage('bot', '¡Hola! Soy Raavax. ¿En qué puedo ayudarte hoy?');
-    })();
-
     // Llama a initializeTheme para establecer el tema y los iconos al cargar la página
     initializeTheme();
 });
