@@ -428,6 +428,8 @@ actionsContainer.appendChild(playAudioButton);
         }
 
         messagesContainer.appendChild(messageElement);
+        const welcomeScreen = document.getElementById('welcome-screen');
+        if (welcomeScreen) welcomeScreen.style.display = 'none';
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
         conversationHistory.push({
