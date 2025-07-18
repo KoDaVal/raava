@@ -17,6 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const voiceFileInput = document.getElementById('voice-file-input');
     const imageFileInput = document.getElementById('image-file-input');
     const infoFileInput = document.getElementById('info-file-input');
+    // Función utilitaria para encender y apagar botones
+function setButtonState(button, isActive) {
+    if (isActive) {
+        button.classList.add('active');
+    } else {
+        button.classList.remove('active');
+    }
+}
     const avatarImage = document.getElementById('avatar-image');
 
     // --- Elementos NUEVOS para el encabezado y el menú de ajustes ---
@@ -173,35 +181,16 @@ if (sidebarLogoBtn) {
     // FIN LÓGICA NUEVA
 
     // --- NUEVO: Manejo de la subida de archivo de voz para clonación ---
-    if (voiceFileInput) {
-        voiceFileInput.addEventListener('change', async (event) => {
-            if (event.target.files.length > 0) {
-                const voiceFile = event.target.files[0];
-                addMessage('bot', `Clonando voz de "${voiceFile.name}"... Esto puede tardar un momento.`);
-                try {
-                    const formData = new FormData();
-                    formData.append('audio_file', voiceFile);
-
-                    const response = await fetch('https://raava.onrender.com/clone_voice', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. ${errorData.error || 'Error desconocido.'}`);
-                    }
-                    const data = await response.json();
-                    clonedVoiceId = data.voice_id; // Almacena el ID de la voz clonada
-                    addMessage('bot', `¡Voz clonada exitosamente! Ahora hablaré con tu voz.`);
-                } catch (error) {
-                    console.error('Error al clonar la voz:', error);
-                    addMessage('bot', `Lo siento, hubo un error al clonar la voz. ${error.message}`);
-                }
-            }
-            event.target.value = ''; // Limpiar el input para permitir volver a subir el mismo archivo
-        });
-    }
+   if (voiceFileInput) {
+    voiceFileInput.addEventListener('change', (event) => {
+        if (event.target.files.length > 0) {
+            setButtonState(uploadVoiceBtn, true);
+            // Opcional: guardar archivo en variable si lo necesitas después
+        } else {
+            setButtonState(uploadVoiceBtn, false);
+        }
+    });
+}
 
     // Evento para reemplazar la imagen del avatar Y ADJUNTARLA AL CHAT
     if (imageFileInput && avatarImage) {
@@ -226,30 +215,25 @@ if (sidebarLogoBtn) {
 
     // --- CORRECCIÓN: Manejo del archivo de información (ya no adjunta al chat principal) ---
     if (infoFileInput && startMindButton) {
-        infoFileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file && file.type === 'text/plain') {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    uploadedInfoFileContent = e.target.result;
-                    startMindButton.classList.add('info-ready');
-                    addMessage('bot', `Archivo de instrucción "${file.name}" cargado. Presiona "Iniciar mente" para activar esta instrucción.`);
-                };
-                reader.onerror = () => {
-                    addMessage('bot', 'Error al leer el archivo de instrucción. Inténtalo de nuevo.');
-                    uploadedInfoFileContent = "";
-                    startMindButton.classList.remove('info-ready');
-                };
-                reader.readAsText(file);
-            } else {
-                addMessage('bot', 'Por favor, sube un archivo de texto (.txt) para la instrucción.');
-                uploadedInfoFileContent = "";
-                startMindButton.classList.remove('info-ready');
-            }
-            event.target.value = ''; // Limpia el input del archivo
-        });
-    }
-
+    infoFileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file && file.type === 'text/plain') {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedInfoFileContent = e.target.result;
+                setButtonState(uploadInfoBtn, true);  // prende botón de info
+                setButtonState(startMindButton, true);  // prende botón de mente
+                addMessage('bot', `Archivo "${file.name}" cargado. Presiona "Iniciar mente" para activar esta instrucción.`);
+            };
+            reader.readAsText(file);
+        } else {
+            uploadedInfoFileContent = "";
+            setButtonState(uploadInfoBtn, false);
+            setButtonState(startMindButton, false);
+            addMessage('bot', 'Por favor, sube un archivo .txt válido.');
+        }
+    });
+}
     // --- Lógica del botón "Iniciar mente" ---
     if (startMindButton && infoFileInput) {
         startMindButton.addEventListener('click', () => {
