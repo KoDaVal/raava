@@ -757,6 +757,19 @@ input:checked + .slider:before {
   letter-spacing: 0.3px;
 }
 
+.send-button {
+  background: transparent;
+  border: none;
+  color: var(--button-text-color);
+  padding: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
 .send-button:hover {
   background-color: var(--hover-color);
 }
