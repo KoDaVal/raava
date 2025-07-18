@@ -1051,3 +1051,11 @@ input:checked + .slider:before {
   pointer-events: none;
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
+
+/* input bar arriba primer mensaje */
+.input-bar.initial {
+  position: relative;
+  bottom: auto;
+  margin-top: 120px;
+}
+
