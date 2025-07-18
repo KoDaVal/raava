@@ -967,8 +967,7 @@ input:checked + .slider:before {
   align-items: center;
   gap: 12px;
   margin: 12px auto 0;
-  max-width: 1024px;
-  padding: 0 16px;
+  padding-bottom: 10px;
 }
 
 .action-button {
@@ -980,30 +979,32 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: center;
+  vertical-align: middle;
   cursor: pointer;
+  border: 2px solid transparent;
   transition: all 0.25s ease-in-out;
 }
 
 .action-button img {
   width: 22px;
   height: 22px;
-  filter: brightness(0) invert(1); /* blanco en fondo oscuro */
+  filter: brightness(0) invert(1);
 }
 
-/* Bordes de colores desde el inicio */
+/* Bordes por tipo */
 .voice-button {
-  border: 2px solid #3fa7d6;
+  border-color: #3fa7d6;
 }
 
 .file-button {
-  border: 2px solid #5ef38c;
+  border-color: #5ef38c;
 }
 
 .mind-button {
-  border: 2px solid #8a2be2;
+  border-color: #8a2be2;
 }
 
-/* Estado activado (ready) con fondo */
+/* Estados "encendidos" */
 .voice-button.ready {
   background-color: #3fa7d6;
 }
