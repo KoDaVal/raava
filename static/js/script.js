@@ -428,14 +428,14 @@ actionsContainer.appendChild(playAudioButton);
         }
 
         messagesContainer.appendChild(messageElement);
-        const welcomeScreen = document.getElementById('welcome-screen');
-        if (welcomeScreen) welcomeScreen.style.display = 'none';
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-        conversationHistory.push({
-            role: sender === 'user' ? 'user' : 'model',
-            parts: [{ text: text }]
-        });
+// Oculta la pantalla de bienvenida con animación
+const welcomeScreen = document.getElementById('welcome-screen');
+if (welcomeScreen) {
+    welcomeScreen.classList.add('hidden');
+}
+
+messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
         setTimeout(() => {
             messageElement.classList.add('appeared');
