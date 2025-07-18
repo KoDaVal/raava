@@ -586,7 +586,7 @@ function isMobile() {
 function handleMobileSidebar() {
     if (isMobile()) {
         sidebar.classList.add('mobile-overlay');
-        sidebar.classList.remove('collapsed'); // estará oculta por transform
+        sidebar.classList.add('collapsed');
         mainContainer.classList.add('sidebar-collapsed'); // previene scroll detrás
     } else {
         sidebar.classList.remove('mobile-overlay', 'active');
