@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.querySelector('.sidebar');
     const hideSidebarBtn = document.getElementById('hide-sidebar-btn');
     const sidebarLogoBtn = document.getElementById('sidebar-toggle-btn');
+    const mobileHamburgerBtn = document.getElementById('mobile-hamburger-btn');
     const mainContainer = document.querySelector('.main-container');
     // FIN NUEVOS ELEMENTOS
 
@@ -612,5 +613,12 @@ document.getElementById('sidebar-backdrop').addEventListener('click', () => {
     sidebar.classList.remove('active');
     document.getElementById('sidebar-backdrop').classList.remove('active');
 });
+    if (mobileHamburgerBtn) {
+    mobileHamburgerBtn.addEventListener('click', () => {
+        sidebar.classList.add('active');
+        document.getElementById('sidebar-backdrop').classList.add('active');
+    });
+}
+
 
 });
