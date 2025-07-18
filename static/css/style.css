@@ -712,42 +712,35 @@ input:checked + .slider:before {
 .input-bar textarea {
   flex: 1;
   padding: 10px 14px;
-  border: 1px solid var(--border-color);
-  background-color: rgba(255, 255, 255, 0.04); /* Suave para ambos modos */
+  border: none;
+  background-color: transparent;
   color: var(--text-color);
   font-size: 15px;
   line-height: 1.4;
-  border-radius: 12px;
+  border-radius: 10px;
   outline: none;
   resize: none;
   min-height: 40px;
   max-height: 120px;
   overflow-y: auto;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); /* Suave sombra interior */
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  box-shadow: none;
+  transition: none; /* Nada de animaciones llamativas */
+  scrollbar-width: none; /* Firefox: oculta la barra */
 }
 
-/* Al enfocar el textarea */
-.input-bar textarea:focus {
-  border-color: var(--accent-color);
-  background-color: rgba(255, 255, 255, 0.08); /* Un poco más clara al escribir */
-}
-
-/* Scrollbar personalizado (opcional, visualmente coherente) */
+/* Oculta la scrollbar en WebKit (Chrome, Edge, Safari) */
 .input-bar textarea::-webkit-scrollbar {
-  width: 6px;
-}
-.input-bar textarea::-webkit-scrollbar-track {
-  background: transparent;
-}
-.input-bar textarea::-webkit-scrollbar-thumb {
-  background-color: var(--link-color);
-  border-radius: 6px;
-}
-.input-bar textarea::-webkit-scrollbar-thumb:hover {
-  background-color: var(--text-color);
+  width: 0px;
+  height: 0px;
+  display: none;
 }
 
+/* Al sobrepasar contenido, la barra sigue invisible pero funcional */
+.input-bar textarea:focus {
+  border: none;
+  outline: none;
+  background-color: transparent;
+}
 .send-button {
   background: transparent;
   border: none;
