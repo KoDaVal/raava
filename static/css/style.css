@@ -1093,7 +1093,12 @@ input:checked + .slider:before {
   }
 
   .hide-sidebar-btn {
-    display: none !important; /* ocultamos el botón "≡" en móvil si quieres */
+    display: block !important; /* ✅ ahora se muestra en móvil */
+  }
+
+  .sidebar-raava-logo {
+    display: none; /* ✅ ocultamos el logo colapsado */
   }
 }
+
 
