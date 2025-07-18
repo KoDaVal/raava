@@ -966,32 +966,31 @@ input:checked + .slider:before {
   justify-content: center;
   align-items: center;
   gap: 12px;
-  margin: 12px auto 0;
+  margin: 10px auto 0;
   padding-bottom: 10px;
 }
 
 .action-button {
   width: 44px;
   height: 44px;
-  padding: 0;
   border-radius: 50%;
   background-color: transparent;
+  border: 2px solid transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  vertical-align: middle;
+  transition: all 0.2s ease;
   cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.25s ease-in-out;
+  padding: 0;
 }
 
 .action-button img {
   width: 22px;
   height: 22px;
-  filter: brightness(0) invert(1);
+  filter: brightness(0) invert(1); /* blanco en modo oscuro */
 }
 
-/* Bordes por tipo */
+/* Colores de borde por botón */
 .voice-button {
   border-color: #3fa7d6;
 }
@@ -1004,7 +1003,7 @@ input:checked + .slider:before {
   border-color: #8a2be2;
 }
 
-/* Estados "encendidos" */
+/* Encendidos */
 .voice-button.ready {
   background-color: #3fa7d6;
 }
