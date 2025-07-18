@@ -959,6 +959,7 @@ input:checked + .slider:before {
     box-shadow: 0 0 25px rgba(138, 43, 226, 1);
   }
 }
+
 /* botones */
 .action-buttons-row {
   display: flex;
@@ -974,30 +975,54 @@ input:checked + .slider:before {
   height: 42px;
   padding: 0;
   border-radius: 50%;
-  background-color: var(--hover-color);
+  background-color: transparent; /* apagado por defecto */
+  border: 2px solid var(--text-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
   cursor: pointer;
-  transition: background-color 0.25s ease, transform 0.2s ease;
+  transition: background-color 0.25s ease, transform 0.2s ease, border-color 0.25s ease;
 }
 
 .action-button img {
   width: 22px;
   height: 22px;
-  filter: brightness(0) invert(1); /* Hace los íconos blancos en modo oscuro */
+  filter: brightness(0) invert(1); /* blanco puro para fondo oscuro */
 }
 
-/* Colores base para cada tipo de botón */
-.voice-button {
-  background-color: #3fa7d6; /* Azul */
+/* Por defecto están apagados → sin fondo, solo borde */
+
+/* Cuando están activos (listos) se pintan */
+.action-button.ready.voice-button {
+  background-color: #3fa7d6;
+  border-color: #3fa7d6;
 }
 
-.file-button {
-  background-color: #5ef38c; /* Verde */
+.action-button.ready.file-button {
+  background-color: #5ef38c;
+  border-color: #5ef38c;
 }
 
-.mind-button {
-  background-color: #8a2be2; /* Morado */
+.action-button.ready.mind-button {
+  background-color: #8a2be2;
+  border-color: #8a2be2;
+}
+
+/* Efecto al pasar el mouse */
+.action-button:hover {
+  transform: scale(1.05);
+}
+
+/* Estilo limpio para el botón "+" en el input */
+.input-bar .file-button {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  font-size: 18px;
+  padding: 6px;
+}
+
+.input-bar .file-button:hover {
+  background-color: var(--hover-color);
+  border-radius: 8px;
 }
