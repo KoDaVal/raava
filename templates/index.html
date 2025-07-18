@@ -95,19 +95,35 @@
 </a>
 </div>
 
-    <div class="chat-main-section"> <div class="header">
-            <div class="header-left">
-                Raavax AI
-            </div>
-            <div class="header-right">
-                <img src="/static/person.jpg" alt="Foto de perfil" class="profile-pic" id="header-profile-pic">
-                <div class="settings-menu" id="settings-menu">
-                    <div class="settings-menu-item" id="settings-option">Ajustes</div>
-                    <div class="settings-menu-item">Ayuda</div>
-                    <div class="settings-menu-item">Cerrar sesión</div>
-                </div>
-            </div>
-        </div>
+    <div class="chat-main-section">
+  <div class="header">
+    <!-- En escritorio: texto alineado a la izquierda -->
+    <div class="header-left mobile-hide">
+      Raavax AI
+    </div>
+
+    <!-- En móvil: texto centrado -->
+    <div class="header-center mobile-show">
+      Raavax AI
+    </div>
+
+    <div class="header-right">
+      <!-- En móvil: botón hamburguesa -->
+      <button id="mobile-hamburger-btn" class="hamburger-btn mobile-show">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <!-- En escritorio: ícono de perfil -->
+      <img src="/static/person.jpg" alt="Foto de perfil" class="profile-pic mobile-hide" id="header-profile-pic">
+
+      <div class="settings-menu" id="settings-menu">
+        <div class="settings-menu-item" id="settings-option">Ajustes</div>
+        <div class="settings-menu-item">Ayuda</div>
+        <div class="settings-menu-item">Cerrar sesión</div>
+      </div>
+    </div>
+  </div>
+
 
         <div id="status-message" style="margin-top: 10px; text-align: center; color: #888; font-size: 0.9em;"></div>
 <div class="chat-area">
