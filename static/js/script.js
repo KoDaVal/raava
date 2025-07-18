@@ -173,36 +173,32 @@ if (sidebarLogoBtn) {
     // FIN LÓGICA NUEVA
 
     // --- NUEVO: Manejo de la subida de archivo de voz para clonación ---
-    if (voiceFileInput) {
-        voiceFileInput.addEventListener('change', async (event) => {
-            if (event.target.files.length > 0) {
-                const voiceFile = event.target.files[0];
-                addMessage('bot', `Clonando voz de "${voiceFile.name}"... Esto puede tardar un momento.`);
-                try {
-                    const formData = new FormData();
-                    formData.append('audio_file', voiceFile);
+   let voiceReady = false;
+let infoReady = false;
 
-                    const response = await fetch('https://raava.onrender.com/clone_voice', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. ${errorData.error || 'Error desconocido.'}`);
-                    }
-                    const data = await response.json();
-                    clonedVoiceId = data.voice_id; // Almacena el ID de la voz clonada
-                    addMessage('bot', `¡Voz clonada exitosamente! Ahora hablaré con tu voz.`);
-                } catch (error) {
-                    console.error('Error al clonar la voz:', error);
-                    addMessage('bot', `Lo siento, hubo un error al clonar la voz. ${error.message}`);
-                }
-            }
-            event.target.value = ''; // Limpiar el input para permitir volver a subir el mismo archivo
-        });
+function updateMindButtonState() {
+    if (voiceReady && infoReady) {
+        startMindButton.classList.add('ready');
+    } else {
+        startMindButton.classList.remove('ready');
     }
+}
 
+if (voiceFileInput) {
+    voiceFileInput.addEventListener('change', (event) => {
+        const voiceFile = event.target.files[0];
+        if (voiceFile) {
+            voiceReady = true;
+            uploadVoiceBtn.classList.add('ready');
+            addMessage('bot', `Archivo de voz "${voiceFile.name}" cargado. Presiona "Iniciar mente" para procesarlo.`);
+        } else {
+            voiceReady = false;
+            uploadVoiceBtn.classList.remove('ready');
+        }
+        updateMindButtonState();
+        event.target.value = '';
+    });
+}
     // Evento para reemplazar la imagen del avatar Y ADJUNTARLA AL CHAT
     if (imageFileInput && avatarImage) {
         imageFileInput.addEventListener('change', (event) => {
@@ -225,45 +221,80 @@ if (sidebarLogoBtn) {
     }
 
     // --- CORRECCIÓN: Manejo del archivo de información (ya no adjunta al chat principal) ---
-    if (infoFileInput && startMindButton) {
-        infoFileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file && file.type === 'text/plain') {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    uploadedInfoFileContent = e.target.result;
-                    startMindButton.classList.add('info-ready');
-                    addMessage('bot', `Archivo de instrucción "${file.name}" cargado. Presiona "Iniciar mente" para activar esta instrucción.`);
-                };
-                reader.onerror = () => {
-                    addMessage('bot', 'Error al leer el archivo de instrucción. Inténtalo de nuevo.');
-                    uploadedInfoFileContent = "";
-                    startMindButton.classList.remove('info-ready');
-                };
-                reader.readAsText(file);
-            } else {
-                addMessage('bot', 'Por favor, sube un archivo de texto (.txt) para la instrucción.');
+  if (infoFileInput) {
+    infoFileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file && file.type === 'text/plain') {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedInfoFileContent = e.target.result;
+                infoReady = true;
+                uploadInfoBtn.classList.add('ready');
+                addMessage('bot', `Instrucción "${file.name}" cargada. Esperando voz para iniciar mente.`);
+                updateMindButtonState();
+            };
+            reader.onerror = () => {
+                addMessage('bot', 'Error al leer el archivo de instrucción.');
                 uploadedInfoFileContent = "";
-                startMindButton.classList.remove('info-ready');
-            }
-            event.target.value = ''; // Limpia el input del archivo
-        });
-    }
-
+                infoReady = false;
+                uploadInfoBtn.classList.remove('ready');
+                updateMindButtonState();
+            };
+            reader.readAsText(file);
+        } else {
+            uploadedInfoFileContent = "";
+            infoReady = false;
+            uploadInfoBtn.classList.remove('ready');
+            addMessage('bot', 'Sube un archivo .txt válido para la instrucción.');
+            updateMindButtonState();
+        }
+        event.target.value = '';
+    });
+}
     // --- Lógica del botón "Iniciar mente" ---
-    if (startMindButton && infoFileInput) {
-        startMindButton.addEventListener('click', () => {
-            if (uploadedInfoFileContent) {
-                activePersistentInstruction = uploadedInfoFileContent;
-                uploadedInfoFileContent = ""; // Limpia el contenido temporal
-                startMindButton.classList.remove('info-ready'); // Desactiva la animación
-                addMessage('bot', '¡Mente iniciada! La IA ahora actuará bajo tu instrucción.');
-                infoFileInput.value = ''; // Limpia el input del archivo
-            } else {
-                addMessage('bot', 'Por favor, carga un archivo de información antes de iniciar la mente de la IA.');
+    if (startMindButton) {
+    startMindButton.addEventListener('click', async () => {
+        if (!voiceReady || !infoReady) {
+            addMessage('bot', 'Carga primero los dos archivos antes de iniciar la mente.');
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('instruction', uploadedInfoFileContent);
+
+            const voiceFile = voiceFileInput.files[0];
+            formData.append('audio_file', voiceFile);
+
+            const response = await fetch('https://raava.onrender.com/start_mind', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error HTTP ${response.status}`);
             }
-        });
-    }
+
+            const data = await response.json();
+            clonedVoiceId = data.voice_id || null;
+            activePersistentInstruction = uploadedInfoFileContent;
+
+            // Reset visual y lógicas
+            uploadVoiceBtn.classList.remove('ready');
+            uploadInfoBtn.classList.remove('ready');
+            startMindButton.classList.remove('ready');
+            voiceReady = false;
+            infoReady = false;
+            uploadedInfoFileContent = "";
+
+            addMessage('bot', '🧠 ¡Mente iniciada con tu voz e instrucción!');
+
+        } catch (err) {
+            console.error(err);
+            addMessage('bot', '❌ Hubo un error al iniciar la mente.');
+        }
+    });
+}
     // --- FIN LÓGICA ---
 
     // Función para ajustar la altura del textarea dinámicamente
