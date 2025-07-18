@@ -713,7 +713,7 @@ input:checked + .slider:before {
   flex: 1;
   padding: 10px 0;
   border: none;
-  background: transparent; /* 🔑 MISMO color que .input-bar */
+  background: transparent;
   color: var(--text-color);
   border-radius: 0;
   outline: none;
@@ -722,10 +722,9 @@ input:checked + .slider:before {
   min-height: 40px;
   max-height: 120px;
   overflow-y: auto;
-  box-shadow: none; /* ❌ Sin borde ni sombra */
+  box-shadow: none;
+  line-height: 1.4;
 }
-
-
 
 .send-button {
   background: transparent;
