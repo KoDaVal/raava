@@ -538,34 +538,6 @@ actionsContainer.appendChild(playAudioButton);
         }
     }
 
-    // === Encender botones cuando haya archivos cargados ===
-voiceFileInput?.addEventListener('change', () => {
-  if (voiceFileInput.files.length > 0) {
-    uploadVoiceBtn.classList.add('ready');
-  } else {
-    uploadVoiceBtn.classList.remove('ready');
-  }
-});
-
-infoFileInput?.addEventListener('change', () => {
-  if (infoFileInput.files.length > 0) {
-    uploadInfoBtn.classList.add('ready');
-  } else {
-    uploadInfoBtn.classList.remove('ready');
-  }
-});
-
-// "Iniciar mente" se enciende cuando hay archivo válido cargado
-startMindButton?.classList.remove('ready');
-infoFileInput?.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (file && file.name.endsWith('.txt')) {
-    startMindButton.classList.add('ready');
-  } else {
-    startMindButton.classList.remove('ready');
-  }
-});
-
     // Mensaje de bienvenida inicial
     (async () => {
         await addMessage('bot', '¡Hola! Soy Raavax. ¿En qué puedo ayudarte hoy?');
