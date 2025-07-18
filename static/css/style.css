@@ -1119,8 +1119,20 @@ input:checked + .slider:before {
   }
 
   .header {
-    justify-content: center;
+    display: flex;
+    justify-content: space-between; /* 🔧 mantiene alineación izquierda y derecha */
+    align-items: center;
     position: relative;
+    padding: 10px 20px;
+    background-color: var(--header-bg);
+    border-bottom: 1px solid var(--border-color);
+    height: 60px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
   .header-center {
