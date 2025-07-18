@@ -578,4 +578,39 @@ messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
     // Llama a initializeTheme para establecer el tema y los iconos al cargar la página
     initializeTheme();
+    // Solo aplica en móviles
+function isMobile() {
+    return window.innerWidth <= 768;
+}
+
+function handleMobileSidebar() {
+    if (isMobile()) {
+        sidebar.classList.add('mobile-overlay');
+        sidebar.classList.remove('collapsed'); // estará oculta por transform
+        mainContainer.classList.add('sidebar-collapsed'); // previene scroll detrás
+    } else {
+        sidebar.classList.remove('mobile-overlay', 'active');
+        document.getElementById('sidebar-backdrop').classList.remove('active');
+        mainContainer.classList.remove('sidebar-collapsed');
+    }
+}
+
+handleMobileSidebar();
+window.addEventListener('resize', handleMobileSidebar);
+
+sidebarLogoBtn.addEventListener('click', () => {
+    if (sidebar.classList.contains('mobile-overlay')) {
+        sidebar.classList.toggle('active');
+        document.getElementById('sidebar-backdrop').classList.toggle('active');
+    } else {
+        sidebar.classList.toggle('collapsed');
+        mainContainer.classList.toggle('sidebar-collapsed');
+    }
+});
+
+document.getElementById('sidebar-backdrop').addEventListener('click', () => {
+    sidebar.classList.remove('active');
+    document.getElementById('sidebar-backdrop').classList.remove('active');
+});
+
 });
