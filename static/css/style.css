@@ -964,65 +964,54 @@ input:checked + .slider:before {
 .action-buttons-row {
   display: flex;
   justify-content: center;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
-  margin: 10px auto 0;
+  margin: 12px auto 0;
   max-width: 1024px;
+  padding: 0 16px;
 }
 
 .action-button {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border-radius: 50%;
-  background-color: transparent; /* apagado por defecto */
-  border: 2px solid var(--text-color);
+  background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.25s ease, transform 0.2s ease, border-color 0.25s ease;
+  transition: all 0.25s ease-in-out;
 }
 
 .action-button img {
   width: 22px;
   height: 22px;
-  filter: brightness(0) invert(1); /* blanco puro para fondo oscuro */
+  filter: brightness(0) invert(1); /* blanco en fondo oscuro */
 }
 
-/* Por defecto están apagados → sin fondo, solo borde */
+/* Bordes de colores desde el inicio */
+.voice-button {
+  border: 2px solid #3fa7d6;
+}
 
-/* Cuando están activos (listos) se pintan */
-.action-button.ready.voice-button {
+.file-button {
+  border: 2px solid #5ef38c;
+}
+
+.mind-button {
+  border: 2px solid #8a2be2;
+}
+
+/* Estado activado (ready) con fondo */
+.voice-button.ready {
   background-color: #3fa7d6;
-  border-color: #3fa7d6;
 }
 
-.action-button.ready.file-button {
+.file-button.ready {
   background-color: #5ef38c;
-  border-color: #5ef38c;
 }
 
-.action-button.ready.mind-button {
+.mind-button.ready {
   background-color: #8a2be2;
-  border-color: #8a2be2;
-}
-
-/* Efecto al pasar el mouse */
-.action-button:hover {
-  transform: scale(1.05);
-}
-
-/* Estilo limpio para el botón "+" en el input */
-.input-bar .file-button {
-  background: none;
-  border: none;
-  color: var(--text-color);
-  font-size: 18px;
-  padding: 6px;
-}
-
-.input-bar .file-button:hover {
-  background-color: var(--hover-color);
-  border-radius: 8px;
 }
