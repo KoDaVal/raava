@@ -959,3 +959,45 @@ input:checked + .slider:before {
     box-shadow: 0 0 25px rgba(138, 43, 226, 1);
   }
 }
+/* botones */
+.action-buttons-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 10px auto 0;
+  max-width: 1024px;
+}
+
+.action-button {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 50%;
+  background-color: var(--hover-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.2s ease;
+}
+
+.action-button img {
+  width: 22px;
+  height: 22px;
+  filter: brightness(0) invert(1); /* Hace los íconos blancos en modo oscuro */
+}
+
+/* Colores base para cada tipo de botón */
+.voice-button {
+  background-color: #3fa7d6; /* Azul */
+}
+
+.file-button {
+  background-color: #5ef38c; /* Verde */
+}
+
+.mind-button {
+  background-color: #8a2be2; /* Morado */
+}
