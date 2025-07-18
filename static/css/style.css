@@ -715,6 +715,7 @@ input:checked + .slider:before {
   border: none;
   background-color: transparent;
   color: var(--text-color);
+  font-family: 'Inter', sans-serif;
   font-size: 15px;
   line-height: 1.4;
   border-radius: 10px;
@@ -724,34 +725,36 @@ input:checked + .slider:before {
   max-height: 120px;
   overflow-y: auto;
   box-shadow: none;
-  transition: none; /* Nada de animaciones llamativas */
-  scrollbar-width: none; /* Firefox: oculta la barra */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: var(--link-color) transparent;
 }
 
-/* Oculta la scrollbar en WebKit (Chrome, Edge, Safari) */
+/* Scrollbar para WebKit */
 .input-bar textarea::-webkit-scrollbar {
-  width: 0px;
-  height: 0px;
-  display: none;
+  width: 6px;
 }
 
-/* Al sobrepasar contenido, la barra sigue invisible pero funcional */
-.input-bar textarea:focus {
-  border: none;
-  outline: none;
-  background-color: transparent;
-}
-.send-button {
+.input-bar textarea::-webkit-scrollbar-track {
   background: transparent;
-  border: none;
-  color: var(--button-text-color);
-  padding: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
+}
+
+.input-bar textarea::-webkit-scrollbar-thumb {
+  background-color: var(--link-color);
   border-radius: 6px;
   transition: background-color 0.2s ease;
+}
+
+.input-bar textarea::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-color);
+}
+
+/* Estilo del placeholder */
+.input-bar textarea::placeholder {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--link-color);
+  opacity: 0.7;
+  letter-spacing: 0.3px;
 }
 
 .send-button:hover {
