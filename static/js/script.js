@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
      supabase.auth.getSession().then(({ data: { session } }) => {
-        const authContainer = document.getElementById('auth-container');
+       const authContainer = document.querySelector('#auth-overlay');
         const mainContainer = document.querySelector('.main-container');
 
         if (session && session.user) {
