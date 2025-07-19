@@ -664,5 +664,16 @@ window.toggleAuthMode = function () {
   document.querySelector('#auth-overlay .auth-box').classList.toggle('hidden');
   document.getElementById('register-box').classList.toggle('hidden');
 };
-
+     window.togglePasswordVisibility = function (inputId, icon) {
+  const input = document.getElementById(inputId);
+  if (input.type === "password") {
+    input.type = "text";
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    input.type = "password";
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+};
 });
