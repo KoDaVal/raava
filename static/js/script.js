@@ -167,10 +167,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 if (sidebarLogoBtn) {
     sidebarLogoBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        mainContainer.classList.toggle('sidebar-collapsed');
+        // Solo en escritorio: si NO es mobile overlay
+        if (!sidebar.classList.contains('mobile-overlay')) {
+            sidebar.classList.toggle('collapsed');
+            mainContainer.classList.toggle('sidebar-collapsed');
+        }
     });
 }
+
     // FIN LÓGICA NUEVA
 
     // --- NUEVO: Manejo de la subida de archivo de voz para clonación ---
@@ -613,12 +617,13 @@ document.getElementById('sidebar-backdrop').addEventListener('click', () => {
     sidebar.classList.remove('active');
     document.getElementById('sidebar-backdrop').classList.remove('active');
 });
-    if (mobileHamburgerBtn) {
-    mobileHamburgerBtn.addEventListener('click', () => {
-        sidebar.classList.add('active');
-        document.getElementById('sidebar-backdrop').classList.add('active');
-    });
+  if (mobileHamburgerBtn) {
+  mobileHamburgerBtn.addEventListener('click', () => {
+    if (!sidebar.classList.contains('active')) {
+      sidebar.classList.add('active');
+      document.getElementById('sidebar-backdrop').classList.add('active');
+    }
+  });
 }
 
 
-});
