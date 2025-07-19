@@ -1177,14 +1177,15 @@ input:checked + .slider:before {
     display: none;
   }
 }
-/* login */
-.auth-overlay {
+/* LOGIN OVERLAY ESTILIZADO */
+#auth-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(10, 10, 10, 0.85);
+  background: rgba(0, 0, 0, 0.3); /* Transparente con oscurecimiento ligero */
+  backdrop-filter: blur(6px); /* Desenfoque del fondo */
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -1198,7 +1199,8 @@ input:checked + .slider:before {
   border-radius: 12px;
   box-shadow: 0 0 20px rgba(0,0,0,0.5);
   text-align: center;
-  width: 300px;
+  width: 90%;
+  max-width: 320px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1208,6 +1210,7 @@ input:checked + .slider:before {
   padding: 10px;
   border: none;
   border-radius: 6px;
+  font-size: 0.95rem;
 }
 
 .auth-box button {
@@ -1217,6 +1220,7 @@ input:checked + .slider:before {
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  font-weight: bold;
 }
 
 .auth-box p {
@@ -1237,9 +1241,6 @@ input:checked + .slider:before {
 .hidden {
   display: none !important;
 }
-
-
-
 
 
 
