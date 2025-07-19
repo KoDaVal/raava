@@ -645,4 +645,24 @@ document.getElementById('sidebar-backdrop').addEventListener('click', () => {
             location.reload();
         }
     }
+     // REGISTRO de usuario
+window.register = async function () {
+  const email = document.getElementById('register-email').value;
+  const password = document.getElementById('register-password').value;
+
+  const { data, error } = await supabase.auth.signUp({ email, password });
+
+  if (error) {
+    document.getElementById('register-error').innerText = error.message;
+  } else {
+    location.reload();
+  }
+};
+
+// Cambiar entre login y registro
+window.toggleAuthMode = function () {
+  document.querySelector('#auth-overlay .auth-box').classList.toggle('hidden');
+  document.getElementById('register-box').classList.toggle('hidden');
+};
+
 });
