@@ -1,4 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
+     supabase.auth.getSession().then(({ data: { session } }) => {
+        const authContainer = document.getElementById('auth-container');
+        const mainContainer = document.querySelector('.main-container');
+
+        if (session && session.user) {
+            authContainer.style.display = 'none';
+            mainContainer.style.display = 'flex';
+
+            // Mostrar avatar si el usuario tiene uno
+            const avatarUrl = session.user.user_metadata?.avatar_url;
+            if (avatarUrl && headerProfilePic) {
+                headerProfilePic.src = avatarUrl;
+            }
+        } else {
+            authContainer.style.display = 'block';
+            mainContainer.style.display = 'none';
+        }
+    });
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const messagesContainer = document.querySelector('.messages');
@@ -614,6 +632,17 @@ document.getElementById('sidebar-backdrop').addEventListener('click', () => {
         document.getElementById('sidebar-backdrop').classList.add('active');
     });
 }
+  //login
+    window.login = async function () {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
 
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
+        if (error) {
+            document.getElementById('login-error').innerText = error.message;
+        } else {
+            location.reload();
+        }
+    }
 });
