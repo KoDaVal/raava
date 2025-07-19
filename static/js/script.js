@@ -1,22 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-     supabase.auth.getSession().then(({ data: { session } }) => {
-       const authContainer = document.querySelector('#auth-overlay');
-        const mainContainer = document.querySelector('.main-container');
-
-        if (session && session.user) {
-            authContainer.style.display = 'none';
-            mainContainer.style.display = 'flex';
-
-            // Mostrar avatar si el usuario tiene uno
-            const avatarUrl = session.user.user_metadata?.avatar_url;
-            if (avatarUrl && headerProfilePic) {
-                headerProfilePic.src = avatarUrl;
-            }
-        } else {
-            authContainer.style.display = 'block';
-            mainContainer.style.display = 'none';
-        }
-    });
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const messagesContainer = document.querySelector('.messages');
@@ -632,48 +614,6 @@ document.getElementById('sidebar-backdrop').addEventListener('click', () => {
         document.getElementById('sidebar-backdrop').classList.add('active');
     });
 }
-  //login
-    window.login = async function () {
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
 
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-        if (error) {
-            document.getElementById('login-error').innerText = error.message;
-        } else {
-            location.reload();
-        }
-    }
-     // REGISTRO de usuario
-window.register = async function () {
-  const email = document.getElementById('register-email').value;
-  const password = document.getElementById('register-password').value;
-
-  const { data, error } = await supabase.auth.signUp({ email, password });
-
-  if (error) {
-    document.getElementById('register-error').innerText = error.message;
-  } else {
-    location.reload();
-  }
-};
-
-// Cambiar entre login y registro
-window.toggleAuthMode = function () {
-  document.querySelector('#auth-overlay .auth-box').classList.toggle('hidden');
-  document.getElementById('register-box').classList.toggle('hidden');
-};
-     window.togglePasswordVisibility = function (inputId, icon) {
-  const input = document.getElementById(inputId);
-  if (input.type === "password") {
-    input.type = "text";
-    icon.classList.remove('fa-eye');
-    icon.classList.add('fa-eye-slash');
-  } else {
-    input.type = "password";
-    icon.classList.remove('fa-eye-slash');
-    icon.classList.add('fa-eye');
-  }
-};
 });
