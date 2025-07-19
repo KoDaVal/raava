@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmInput = document.getElementById('auth-confirm-password');
     const toggleText = document.getElementById('auth-toggle-text');
     const submitBtn = document.getElementById('auth-submit-btn');
-    const toggleText = document.getElementById('auth-toggle-text');
    document.addEventListener('click', (e) => {
   if (e.target && e.target.id === 'toggle-auth-mode') {
     e.preventDefault();
