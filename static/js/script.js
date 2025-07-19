@@ -1,4 +1,40 @@
 document.addEventListener('DOMContentLoaded', () => {
+    let isLoginMode = true;
+
+    const emailInput = document.getElementById('auth-email');
+    const passInput = document.getElementById('auth-password');
+    const confirmWrapper = document.getElementById('confirm-password-wrapper');
+    const confirmInput = document.getElementById('auth-confirm-password');
+    const submitBtn = document.getElementById('auth-submit-btn');
+    const toggleText = document.getElementById('auth-toggle-text');
+    toggleText.addEventListener('click', (e) => {
+  e.preventDefault();
+  isLoginMode = !isLoginMode;
+
+  confirmWrapper.style.display = isLoginMode ? 'none' : 'block';
+  submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
+
+  toggleText.innerHTML = isLoginMode
+    ? '¿No tienes cuenta? <a href="#" id="toggle-auth-mode">Regístrate</a>'
+    : '¿Ya tienes cuenta? <a href="#" id="toggle-auth-mode">Inicia sesión</a>';
+});
+    document.querySelectorAll('.toggle-password').forEach(toggle => {
+  toggle.addEventListener('click', () => {
+    const targetId = toggle.getAttribute('data-target');
+    const input = document.getElementById(targetId);
+    const icon = toggle.querySelector('i');
+
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    } else {
+      input.type = 'password';
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
+  });
+});
     const supabase = window.supabase.createClient(
   'https://awzyyjifxlklzbnvvlfv.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8'
@@ -21,25 +57,6 @@ supabase.auth.getSession().then(({ data: { session } }) => {
     mainContainer.style.display = 'none';
   }
 });
-let isLoginMode = true;
-
-const emailInput = document.getElementById('auth-email');
-const passInput = document.getElementById('auth-password');
-const confirmInput = document.getElementById('auth-confirm-password');
-const submitBtn = document.getElementById('auth-submit-btn');
-const toggleText = document.getElementById('toggle-auth-mode');
-
-toggleText.addEventListener('click', (e) => {
-  e.preventDefault();
-  isLoginMode = !isLoginMode;
-  confirmInput.style.display = isLoginMode ? 'none' : 'block';
-  submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
-  document.getElementById('auth-toggle-text').innerHTML =
-    isLoginMode
-      ? '¿No tienes cuenta? <a href="#" id="toggle-auth-mode">Regístrate</a>'
-      : '¿Ya tienes cuenta? <a href="#" id="toggle-auth-mode">Inicia sesión</a>';
-});
-
 submitBtn.addEventListener('click', async () => {
   const email = emailInput.value.trim();
   const password = passInput.value.trim();
@@ -66,6 +83,14 @@ submitBtn.addEventListener('click', async () => {
     alert('Error: ' + err.message);
   }
 });
+    document.getElementById('google-login').addEventListener('click', async () => {
+  await supabase.auth.signInWithOAuth({ provider: 'google' });
+});
+
+document.getElementById('github-login').addEventListener('click', async () => {
+  await supabase.auth.signInWithOAuth({ provider: 'github' });
+});
+
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const messagesContainer = document.querySelector('.messages');
