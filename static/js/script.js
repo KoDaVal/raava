@@ -167,8 +167,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 if (sidebarLogoBtn) {
     sidebarLogoBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        mainContainer.classList.toggle('sidebar-collapsed');
+        if (sidebar.classList.contains('mobile-overlay')) {
+            sidebar.classList.toggle('active');
+            document.getElementById('sidebar-backdrop').classList.toggle('active');
+        } else {
+            sidebar.classList.toggle('collapsed');
+            mainContainer.classList.toggle('sidebar-collapsed');
+        }
     });
 }
     // FIN LÓGICA NUEVA
@@ -598,16 +603,6 @@ function handleMobileSidebar() {
 
 handleMobileSidebar();
 window.addEventListener('resize', handleMobileSidebar);
-
-sidebarLogoBtn.addEventListener('click', () => {
-    if (sidebar.classList.contains('mobile-overlay')) {
-        sidebar.classList.toggle('active');
-        document.getElementById('sidebar-backdrop').classList.toggle('active');
-    } else {
-        sidebar.classList.toggle('collapsed');
-        mainContainer.classList.toggle('sidebar-collapsed');
-    }
-});
 
 document.getElementById('sidebar-backdrop').addEventListener('click', () => {
     sidebar.classList.remove('active');
