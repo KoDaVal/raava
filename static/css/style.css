@@ -76,7 +76,7 @@ body {
   font-size: 12px;
   background-color: var(--bg-color);
   color: var(--text-color);
-  height: 100vh;
+  height: 100dvh;
   display: flex; /* Cambiado para que el main-container ocupe toda la altura */
   transition: background 0.3s, color 0.3s;
   overflow: hidden; /* Evita el scroll del body principal */
@@ -675,11 +675,6 @@ input:checked + .slider:before {
 
 
 .input-bar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: env(safe-area-inset-bottom, 0);
-  z-index: 30;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -690,10 +685,14 @@ input:checked + .slider:before {
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   max-width: 1024px;
-  width: calc(100% - 40px);
-  margin: 0 auto 10px;
+  width: 100%;
+  margin: 20px auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
   transition: all 0.3s ease;
 }
+
 
 .file-button {
   background: transparent;
