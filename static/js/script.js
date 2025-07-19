@@ -164,15 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
         mainContainer.classList.toggle('sidebar-collapsed');
     });
 }
-
-if (sidebarLogoBtn) {
-    sidebarLogoBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        mainContainer.classList.toggle('sidebar-collapsed');
-    });
-}
-    // FIN LÓGICA NUEVA
-
     // --- NUEVO: Manejo de la subida de archivo de voz para clonación ---
    let voiceReady = false;
 let infoReady = false;
