@@ -598,36 +598,29 @@ function handleMobileSidebar() {
 
 handleMobileSidebar();
 window.addEventListener('resize', handleMobileSidebar);
-handleMobileSidebar();
-window.addEventListener('resize', handleMobileSidebar);
 
-// Logo de Raavax: solo colapsa sidebar en escritorio
-if (sidebarLogoBtn) {
-    sidebarLogoBtn.addEventListener('click', () => {
-        if (!sidebar.classList.contains('mobile-overlay')) {
-            sidebar.classList.toggle('collapsed');
-            mainContainer.classList.toggle('sidebar-collapsed');
-        }
-    });
-}
+sidebarLogoBtn.addEventListener('click', () => {
+    if (sidebar.classList.contains('mobile-overlay')) {
+        sidebar.classList.toggle('active');
+        document.getElementById('sidebar-backdrop').classList.toggle('active');
+    } else {
+        sidebar.classList.toggle('collapsed');
+        mainContainer.classList.toggle('sidebar-collapsed');
+    }
+});
 
-// Botón hamburguesa (solo en móvil)
-if (mobileHamburgerBtn) {
+document.getElementById('sidebar-backdrop').addEventListener('click', () => {
+    sidebar.classList.remove('active');
+    document.getElementById('sidebar-backdrop').classList.remove('active');
+});
+    if (mobileHamburgerBtn) {
     mobileHamburgerBtn.addEventListener('click', () => {
         sidebar.classList.add('active');
         document.getElementById('sidebar-backdrop').classList.add('active');
     });
 }
 
-// Tocar el backdrop para cerrar la sidebar (solo en móvil)
-const backdrop = document.getElementById('sidebar-backdrop');
-if (backdrop) {
-    backdrop.addEventListener('click', () => {
-        sidebar.classList.remove('active');
-        backdrop.classList.remove('active');
-    });
-}
 
-
+});
 
 
