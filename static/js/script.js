@@ -622,5 +622,3 @@ document.getElementById('sidebar-backdrop').addEventListener('click', () => {
 
 
 });
-
-
