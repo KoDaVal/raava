@@ -1,22 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
     let isLoginMode = true;
-
     const emailInput = document.getElementById('auth-email');
     const passInput = document.getElementById('auth-password');
     const confirmWrapper = document.getElementById('confirm-password-wrapper');
     const confirmInput = document.getElementById('auth-confirm-password');
     const submitBtn = document.getElementById('auth-submit-btn');
-    const toggleText = document.getElementById('auth-toggle-text');
-    toggleText.addEventListener('click', (e) => {
-  e.preventDefault();
-  isLoginMode = !isLoginMode;
+   document.addEventListener('click', (e) => {
+  if (e.target && e.target.id === 'toggle-auth-mode') {
+    e.preventDefault();
+    isLoginMode = !isLoginMode;
 
-  confirmWrapper.style.display = isLoginMode ? 'none' : 'block';
-  submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
+    confirmWrapper.style.display = isLoginMode ? 'none' : 'block';
+    submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
 
-  toggleText.innerHTML = isLoginMode
-    ? '¿No tienes cuenta? <a href="#" id="toggle-auth-mode">Regístrate</a>'
-    : '¿Ya tienes cuenta? <a href="#" id="toggle-auth-mode">Inicia sesión</a>';
+    toggleText.innerHTML = isLoginMode
+      ? '¿No tienes cuenta? <a href="#" id="toggle-auth-mode">Regístrate</a>'
+      : '¿Ya tienes cuenta? <a href="#" id="toggle-auth-mode">Inicia sesión</a>';
+  }
 });
     document.querySelectorAll('.toggle-password').forEach(toggle => {
   toggle.addEventListener('click', () => {
