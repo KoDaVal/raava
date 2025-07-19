@@ -1153,24 +1153,30 @@ input:checked + .slider:before {
     padding: 6px 10px;
   }
 }
-/* Oculta el row de botones móviles en desktop */
-.action-buttons-row.mobile-show {
+.mobile-only {
   display: none;
 }
 
-/* Solo visible y bien posicionado en móviles */
+.desktop-only {
+  display: flex;
+}
+
 @media (max-width: 768px) {
-  .action-buttons-row.mobile-show {
+  .mobile-only {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 12px;
     margin: 20px auto 10px;
-    padding-bottom: 0;
     position: relative;
     z-index: 10;
   }
+
+  .desktop-only {
+    display: none;
+  }
 }
+
 
 
 
