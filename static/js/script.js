@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmWrapper = document.getElementById('confirm-password-wrapper');
     const confirmInput = document.getElementById('auth-confirm-password');
     const submitBtn = document.getElementById('auth-submit-btn');
+    const toggleText = document.getElementById('auth-toggle-text');
    document.addEventListener('click', (e) => {
   if (e.target && e.target.id === 'toggle-auth-mode') {
     e.preventDefault();
@@ -73,7 +74,16 @@ submitBtn.addEventListener('click', async () => {
       result = await supabase.auth.signInWithPassword({ email, password });
     } else {
       result = await supabase.auth.signUp({ email, password });
+         if (result.error) throw result.error;
+  // Vuelve a login tras registrarse exitosamente
+  isLoginMode = true;
+  confirmWrapper.style.display = 'none';
+  submitBtn.textContent = 'Iniciar sesión';
+  toggleText.innerHTML = '¿No tienes cuenta? <a href="#" id="toggle-auth-mode">Regístrate</a>';
+  alert('Registro exitoso. Verifica tu correo y vuelve a iniciar sesión.');
+  return;
     }
+      
 
     if (result.error) throw result.error;
     location.reload(); // ✅ recarga al iniciar sesión
