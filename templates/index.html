@@ -127,16 +127,21 @@
   <h1>¿En qué puedo ayudarte hoy?</h1>
 </div>
 
-  <!-- BOTONES SOLO PARA MÓVIL -->
+<!-- BOTONES SOLO PARA MÓVIL -->
 <div class="action-buttons-row mobile-only">
-  <button id="upload-voice-btn-mobile" class="action-button voice-button" title="Subir voz">
+  <!-- Botón: Subir voz (como label) -->
+  <label for="voice-file-input" class="action-button voice-button" title="Subir voz">
     <img src="/static/icons/micicon.png" alt="Micrófono">
-  </button>
+  </label>
+  <input type="file" id="voice-file-input" accept="audio/*" hidden>
 
-  <button id="upload-info-btn-mobile" class="action-button file-button" title="Subir información">
+  <!-- Botón: Subir información (como label) -->
+  <label for="info-file-input" class="action-button file-button" title="Subir información">
     <img src="/static/icons/fileicon.png" alt="Archivo de información">
-  </button>
+  </label>
+  <input type="file" id="info-file-input" accept=".txt" hidden>
 
+  <!-- Botón: Iniciar mente (sigue siendo botón real) -->
   <button id="start-mind-button-mobile" class="action-button mind-button" title="Iniciar mente">
     <img src="/static/icons/brainicon.png" alt="Iniciar mente">
   </button>
