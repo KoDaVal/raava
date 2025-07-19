@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const passInput = document.getElementById('auth-password');
     const confirmWrapper = document.getElementById('confirm-password-wrapper');
     const confirmInput = document.getElementById('auth-confirm-password');
+    const toggleText = document.getElementById('auth-toggle-text');
     const submitBtn = document.getElementById('auth-submit-btn');
     const toggleText = document.getElementById('auth-toggle-text');
    document.addEventListener('click', (e) => {
