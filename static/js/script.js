@@ -1,4 +1,71 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const supabase = window.supabase.createClient(
+  'https://awzyyjifxlklzbnvvlfv.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8'
+);
+
+const authOverlay = document.getElementById('auth-overlay');
+const mainContainer = document.querySelector('.main-container');
+
+supabase.auth.getSession().then(({ data: { session } }) => {
+  if (session && session.user) {
+    authOverlay.style.display = 'none';
+    mainContainer.style.display = 'flex';
+    const avatarUrl = session.user.user_metadata?.avatar_url;
+    if (avatarUrl) {
+      const avatarImg = document.getElementById('header-profile-pic');
+      if (avatarImg) avatarImg.src = avatarUrl;
+    }
+  } else {
+    authOverlay.style.display = 'flex';
+    mainContainer.style.display = 'none';
+  }
+});
+let isLoginMode = true;
+
+const emailInput = document.getElementById('auth-email');
+const passInput = document.getElementById('auth-password');
+const confirmInput = document.getElementById('auth-confirm-password');
+const submitBtn = document.getElementById('auth-submit-btn');
+const toggleText = document.getElementById('toggle-auth-mode');
+
+toggleText.addEventListener('click', (e) => {
+  e.preventDefault();
+  isLoginMode = !isLoginMode;
+  confirmInput.style.display = isLoginMode ? 'none' : 'block';
+  submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
+  document.getElementById('auth-toggle-text').innerHTML =
+    isLoginMode
+      ? '¿No tienes cuenta? <a href="#" id="toggle-auth-mode">Regístrate</a>'
+      : '¿Ya tienes cuenta? <a href="#" id="toggle-auth-mode">Inicia sesión</a>';
+});
+
+submitBtn.addEventListener('click', async () => {
+  const email = emailInput.value.trim();
+  const password = passInput.value.trim();
+  const confirm = confirmInput.value.trim();
+
+  if (!email || !password || (!isLoginMode && password !== confirm)) {
+    alert('Revisa los campos.');
+    return;
+  }
+
+  try {
+    let result;
+    if (isLoginMode) {
+      result = await supabase.auth.signInWithPassword({ email, password });
+    } else {
+      result = await supabase.auth.signUp({ email, password });
+    }
+
+    if (result.error) throw result.error;
+    location.reload(); // ✅ recarga al iniciar sesión
+
+  } catch (err) {
+    console.error('Error:', err.message);
+    alert('Error: ' + err.message);
+  }
+});
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const messagesContainer = document.querySelector('.messages');
@@ -65,7 +132,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    const logoutBtn = Array.from(document.querySelectorAll('.settings-menu-item'))
+  .find(el => el.textContent.trim() === 'Cerrar sesión');
 
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    location.reload();
+  });
+}
     // --- NUEVO: Manejo del clic en "Ajustes" para abrir el modal de ajustes ---
     if (settingsOption) {
         settingsOption.addEventListener('click', () => {
