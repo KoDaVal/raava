@@ -1153,5 +1153,25 @@ input:checked + .slider:before {
     padding: 6px 10px;
   }
 }
+@media (max-width: 768px) {
+  .input-bar {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .action-buttons-row {
+    order: -1;
+    margin-bottom: 8px;
+    justify-content: center;
+  }
+
+  .input-bar textarea {
+    width: 100%;
+  }
+
+  .send-button {
+    align-self: flex-end;
+  }
+}
 
 
