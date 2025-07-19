@@ -1177,6 +1177,59 @@ input:checked + .slider:before {
     display: none;
   }
 }
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-card {
+  background: #1f1f1f;
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  text-align: center;
+  width: 90%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-card input {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+}
+
+.auth-card button {
+  background-color: #5EF38C;
+  color: black;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.auth-card .auth-toggle {
+  font-size: 13px;
+  color: #ccc;
+}
+
+.auth-card .auth-toggle a {
+  color: #5EF38C;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 
 
 
