@@ -12,31 +12,6 @@
 
 <body>
   <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
-  <div id="auth-overlay" class="auth-overlay">
-  <div class="auth-container">
-    <img src="/static/raava_logo.png" alt="Raavax Logo" class="auth-logo">
-
-    <div id="login-form" class="auth-box">
-      <h2>Inicia sesión</h2>
-      <input type="email" id="login-email" placeholder="Correo electrónico" />
-      <input type="password" id="login-password" placeholder="Contraseña" />
-      <button onclick="login()">Entrar</button>
-      <a href="#" class="auth-link" onclick="recoverPassword()">¿Olvidaste tu contraseña?</a>
-      <div id="login-error" class="auth-error"></div>
-      <p>¿No tienes cuenta? <span class="auth-toggle" onclick="toggleAuthMode()">Regístrate</span></p>
-    </div>
-
-    <div id="register-form" class="auth-box hidden">
-      <h2>Crear cuenta</h2>
-      <input type="email" id="register-email" placeholder="Correo electrónico" />
-      <input type="password" id="register-password" placeholder="Contraseña" />
-      <button onclick="register()">Registrarse</button>
-      <div id="register-success" class="auth-success hidden">📩 Se ha enviado un link de verificación a tu correo.</div>
-      <div id="register-error" class="auth-error"></div>
-      <p>¿Ya tienes cuenta? <span class="auth-toggle" onclick="toggleAuthMode()">Inicia sesión</span></p>
-    </div>
-  </div>
-</div>
   <div class="settings-modal" id="settings-modal">
     <div class="settings-content">
       <div class="settings-header">
@@ -90,6 +65,7 @@
       </div>
     </div>
   </div>
+
   <div class="main-container">
     <div class="sidebar">
   <div class="sidebar-header">
@@ -208,16 +184,7 @@
   <input type="file" id="voice-file-input" accept="audio/*" hidden>
   <input type="file" id="info-file-input"  accept=".txt" hidden>
 </div>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const client = supabase.createClient(
-    'https://awzyyjifxlklzbnvvlfv.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8'
-  );
 
-  // Para que puedas usarlo globalmente en script.js:
-  window.supabase = client;
-</script>
-<script src="/static/js/script.js"></script>
+  <script src="/static/js/script.js"></script>
 </body>
 </html>
