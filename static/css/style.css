@@ -1153,18 +1153,8 @@ input:checked + .slider:before {
     padding: 6px 10px;
   }
 }
-@media (max-width: 768px) {
-  .mobile-toolbar-wrapper {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    padding-bottom: 4px;
-    position: sticky;
-    bottom: 90px; /* justo arriba de input-bar */
-    z-index: 25;
-    background-color: var(--chat-bg); /* para que no quede flotando sobre mensajes */
-  }
-}
+
+
 
 
 
