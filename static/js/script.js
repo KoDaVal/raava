@@ -83,15 +83,17 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       if (isLoginMode) {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) {
-          if (error.message.toLowerCase().includes('email not confirmed')) {
-            alert('Primero confirma tu correo antes de iniciar sesión.');
-          } else {
-            alert("Error: " + error.message);
-          }
-          return;
-        }
-        loadUserProfile(data.user);
+       if (error || !data.session) {
+       if (error?.message?.toLowerCase().includes('email not confirmed')) {
+       alert('Primero confirma tu correo antes de iniciar sesión.');
+       } else if (error?.message) {
+      alert("Error: " + error.message);
+      } else {
+     alert("Inicio de sesión fallido. Verifica tu correo y contraseña.");
+     }
+     return;
+     }
+     loadUserProfile(data.user);
       } else {
         if (password !== confirmInput.value) {
           alert('Las contraseñas no coinciden');
