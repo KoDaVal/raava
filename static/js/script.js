@@ -1,4 +1,101 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+  // --------------------
+  // 1. BLOQUE LOGIN / REGISTRO / SOCIAL
+  // --------------------
+  let isLoginMode = true;
+  const emailInput = document.getElementById('auth-email');
+  const passInput = document.getElementById('auth-password');
+  const confirmInput = document.getElementById('auth-confirm-password');
+  const confirmWrapper = document.getElementById('confirm-password-wrapper');
+  const submitBtn = document.getElementById('auth-submit-btn');
+  const toggleText = document.getElementById('auth-toggle-text');
+
+  const supabase = window.supabase.createClient(
+    'https://tuinstancia.supabase.co', 'tuapikey'
+  );
+
+  toggleText.addEventListener('click', (e) => {
+    e.preventDefault();
+    isLoginMode = !isLoginMode;
+    confirmWrapper.style.display = isLoginMode ? 'none' : 'block';
+    submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
+    toggleText.innerHTML = isLoginMode
+      ? '¿No tienes cuenta? <a href="#" id="toggle-auth-mode">Regístrate</a>'
+      : '¿Ya tienes cuenta? <a href="#" id="toggle-auth-mode">Inicia sesión</a>';
+  });
+
+  document.querySelectorAll('.toggle-password').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      const inputId = toggle.getAttribute('data-target');
+      const input = document.getElementById(inputId);
+      const icon = toggle.querySelector('i');
+
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    });
+  });
+
+  submitBtn.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    const password = passInput.value.trim();
+    const confirm = confirmInput.value.trim();
+
+    if (!email || !password || (!isLoginMode && password !== confirm)) {
+      alert('Revisa los campos.');
+      return;
+    }
+
+    try {
+      let result;
+      if (isLoginMode) {
+        result = await supabase.auth.signInWithPassword({ email, password });
+      } else {
+        result = await supabase.auth.signUp({ email, password });
+
+        if (result.error) throw result.error;
+
+        isLoginMode = true;
+        confirmWrapper.style.display = 'none';
+        submitBtn.textContent = 'Iniciar sesión';
+        toggleText.innerHTML = '¿No tienes cuenta? <a href="#" id="toggle-auth-mode">Regístrate</a>';
+        alert('Registro exitoso. Verifica tu correo antes de iniciar sesión.');
+        return;
+      }
+
+      if (result.error) throw result.error;
+      location.reload();
+
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  });
+
+  document.getElementById('google-login').addEventListener('click', async () => {
+    await supabase.auth.signInWithOAuth({ provider: 'google' });
+  });
+
+  document.getElementById('github-login').addEventListener('click', async () => {
+    await supabase.auth.signInWithOAuth({ provider: 'github' });
+  });
+
+  // --------------------
+  // 2. TODA TU LÓGICA DE RAAVAX
+  // --------------------
+
+  const userInput = document.getElementById('user-input');
+  const sendButton = document.getElementById('send-button');
+  // ... (todo tu código restante como ya lo tienes)
+
+});
+
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const messagesContainer = document.querySelector('.messages');
