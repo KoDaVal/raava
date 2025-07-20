@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-
   // --------------------
   // 1. BLOQUE LOGIN / REGISTRO / SOCIAL
   // --------------------
@@ -10,21 +9,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const confirmWrapper = document.getElementById('confirm-password-wrapper');
   const submitBtn = document.getElementById('auth-submit-btn');
   const toggleText = document.getElementById('auth-toggle-text');
+  const captchaCheckbox = document.getElementById('fake-captcha'); // si usas uno ficticio
 
   const supabase = window.supabase.createClient(
-    'https://tuinstancia.supabase.co', 'tuapikey'
+    'https://awzyyjifxlklzbnvvlfv.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8'
   );
 
-  toggleText.addEventListener('click', (e) => {
-    e.preventDefault();
-    isLoginMode = !isLoginMode;
-    confirmWrapper.style.display = isLoginMode ? 'none' : 'block';
-    submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
-    toggleText.innerHTML = isLoginMode
-      ? '¿No tienes cuenta? <a href="#" id="toggle-auth-mode">Regístrate</a>'
-      : '¿Ya tienes cuenta? <a href="#" id="toggle-auth-mode">Inicia sesión</a>';
-  });
+  function attachToggleListener() {
+    const toggleLink = document.getElementById('toggle-auth-mode');
+    if (toggleLink) {
+      toggleLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        isLoginMode = !isLoginMode;
+        confirmWrapper.style.display = isLoginMode ? 'none' : 'block';
+        submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
+        toggleText.innerHTML = isLoginMode
+          ? '¿No tienes cuenta? <a href="#" id="toggle-auth-mode">Regístrate</a>'
+          : '¿Ya tienes cuenta? <a href="#" id="toggle-auth-mode">Inicia sesión</a>';
+        attachToggleListener(); // Re-asigna listener al nuevo DOM
+      });
+    }
+  }
 
+  attachToggleListener(); // inicial
+
+  // Mostrar/ocultar contraseña
   document.querySelectorAll('.toggle-password').forEach(toggle => {
     toggle.addEventListener('click', () => {
       const inputId = toggle.getAttribute('data-target');
@@ -43,13 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Acción al presionar "Iniciar sesión" o "Registrarse"
   submitBtn.addEventListener('click', async () => {
     const email = emailInput.value.trim();
     const password = passInput.value.trim();
     const confirm = confirmInput.value.trim();
 
     if (!email || !password || (!isLoginMode && password !== confirm)) {
-      alert('Revisa los campos.');
+      alert('Revisa los campos. La contraseña debe coincidir.');
+      return;
+    }
+
+    if (captchaCheckbox && !captchaCheckbox.checked) {
+      alert("Marca la casilla de 'No soy un robot'.");
       return;
     }
 
@@ -62,15 +78,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (result.error) throw result.error;
 
+        // Después de registrarse, vuelve a login
         isLoginMode = true;
         confirmWrapper.style.display = 'none';
         submitBtn.textContent = 'Iniciar sesión';
         toggleText.innerHTML = '¿No tienes cuenta? <a href="#" id="toggle-auth-mode">Regístrate</a>';
+        attachToggleListener();
         alert('Registro exitoso. Verifica tu correo antes de iniciar sesión.');
         return;
       }
 
       if (result.error) throw result.error;
+
+      // Login exitoso
       location.reload();
 
     } catch (err) {
@@ -78,14 +98,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  document.getElementById('google-login').addEventListener('click', async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'google' });
-  });
+  // Login con Google
+  const googleBtn = document.getElementById('google-login');
+  if (googleBtn) {
+    googleBtn.addEventListener('click', async () => {
+      await supabase.auth.signInWithOAuth({ provider: 'google' });
+    });
+  }
 
-  document.getElementById('github-login').addEventListener('click', async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'github' });
-  });
-
+  // Login con GitHub
+  const githubBtn = document.getElementById('github-login');
+  if (githubBtn) {
+    githubBtn.addEventListener('click', async () => {
+      await supabase.auth.signInWithOAuth({ provider: 'github' });
+    });
+  }
+});
   // --------------------
   // 2. TODA TU LÓGICA DE RAAVAX
   // --------------------
