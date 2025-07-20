@@ -1,6 +1,6 @@
 // ═══════════════ Supabase Setup ═══════════════
 const SUPABASE_URL    = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…'; // tu ANON KEY completa
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8'; //ANON KEY completa
 const supabaseClient  = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ═══════════════ Estado y Helpers ═══════════════
