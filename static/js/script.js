@@ -10,7 +10,6 @@ function hideOverlay() { document.getElementById('auth-overlay').style.display =
 
 // ═══════════════ Auth & UI Logic ═══════════════
 document.addEventListener('DOMContentLoaded', () => {
-  // Referencias al DOM
   const authForm           = document.getElementById('auth-form');
   const emailInput         = document.getElementById('auth-email');
   const passwordInput      = document.getElementById('auth-password');
@@ -27,10 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const eyeToggle          = document.getElementById('toggle-password');
   const confirmEyeToggle   = document.getElementById('toggle-confirm-password');
 
-  // Ocultar indicador de fuerza por defecto
   passwordStrength.style.display = 'none';
 
-  // ── Mostrar/ocultar contraseña ──
+  // Mostrar/ocultar contraseña
   eyeToggle.addEventListener('click', () => {
     const type = passwordInput.type === 'password' ? 'text' : 'password';
     passwordInput.type = type;
@@ -44,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmEyeToggle.querySelector('i').classList.toggle('fa-eye');
   });
 
-  // ── Medidor de fuerza de contraseña ──
+  // Fuerza de contraseña
   passwordInput.addEventListener('input', () => {
     const val = passwordInput.value;
     const strong = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_\-+=])(?=.{8,})/.test(val);
@@ -54,54 +52,54 @@ document.addEventListener('DOMContentLoaded', () => {
     passwordStrength.style.color = strong ? 'lightgreen' : 'salmon';
   });
 
-  // ── Toggle Login / Register ──
+  // Cambiar entre login y registro
   toggleLink.addEventListener('click', e => {
     e.preventDefault();
     isLoginMode = !isLoginMode;
     if (isLoginMode) {
-      // LOGIN
-      submitBtn.textContent        = 'Iniciar sesión';
-      toggleText.textContent       = '¿No tienes cuenta? ';
+      submitBtn.textContent = 'Iniciar sesión';
+      toggleText.textContent = '¿No tienes cuenta? ';
       toggleText.appendChild(toggleLink);
-      toggleLink.textContent       = 'Regístrate';
+      toggleLink.textContent = 'Regístrate';
       confirmWrapper.style.display = 'none';
-      // Ocultar fuerza de contraseña
       passwordStrength.style.display = 'none';
     } else {
-      // REGISTER
-      submitBtn.textContent        = 'Registrarse';
-      toggleText.textContent       = '¿Ya tienes cuenta? ';
+      submitBtn.textContent = 'Registrarse';
+      toggleText.textContent = '¿Ya tienes cuenta? ';
       toggleText.appendChild(toggleLink);
-      toggleLink.textContent       = 'Inicia sesión';
+      toggleLink.textContent = 'Inicia sesión';
       confirmWrapper.style.display = 'flex';
-      // Mostrar fuerza de contraseña
       passwordStrength.style.display = 'inline-block';
     }
   });
 
-  // ── Envío del formulario de autenticación ──
+  // Envío del formulario
   authForm.addEventListener('submit', async e => {
     e.preventDefault();
-    const email    = emailInput.value.trim();
+    const email = emailInput.value.trim();
     const password = passwordInput.value;
     if (!email || !password || (!isLoginMode && !confirmInput.value)) return;
 
     try {
       if (isLoginMode) {
-        // LOGIN
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (error) {
+          if (error.message.toLowerCase().includes('email not confirmed')) {
+            alert('Primero confirma tu correo antes de iniciar sesión.');
+          } else {
+            alert("Error: " + error.message);
+          }
+          return;
+        }
         loadUserProfile(data.user);
       } else {
-        // REGISTER
         if (password !== confirmInput.value) {
           alert('Las contraseñas no coinciden');
           return;
         }
         const { error } = await supabaseClient.auth.signUp({ email, password });
         if (error) throw error;
-        // Mostrar mensaje de verificación
-        authForm.style.display       = 'none';
+        authForm.style.display = 'none';
         successContainer.style.display = 'block';
       }
     } catch (err) {
@@ -110,23 +108,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ── Botón tras registro ──
+  // Botón "Ir a iniciar sesión"
   successBtn.addEventListener('click', () => {
-    // Volver a modo login
-    successContainer.style.display = 'none';
-    authForm.style.display         = 'block';
-    isLoginMode = true;
-    submitBtn.textContent = 'Iniciar sesión';
-    toggleText.innerHTML  = '¿No tienes cuenta? <a href="#" id="auth-toggle-link">Regístrate</a>';
-    // Ocultar fuerza de contraseña al volver
-    passwordStrength.style.display = 'none';
+    location.reload(); // Recomendado: recarga la app y resetea todo
   });
 
-  // ── OAuth Google / GitHub ──
+  // Login con Google / GitHub
   googleBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
   githubBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
 
-  // ── Estado de sesión ──
+  // Manejo de sesión activa
   supabaseClient.auth.onAuthStateChange((_, session) => {
     if (session?.user) loadUserProfile(session.user);
     else showOverlay();
@@ -138,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else showOverlay();
   })();
 
-  // ── Carga perfil y oculta overlay ──
+  // Cargar avatar y ocultar login
   function loadUserProfile(user) {
     hideOverlay();
     const avatar = document.getElementById('header-profile-pic');
