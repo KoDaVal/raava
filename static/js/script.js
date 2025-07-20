@@ -27,6 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const eyeToggle          = document.getElementById('toggle-password');
   const confirmEyeToggle   = document.getElementById('toggle-confirm-password');
 
+  // Ocultar indicador de fuerza por defecto
+  passwordStrength.style.display = 'none';
+
   // ── Mostrar/ocultar contraseña ──
   eyeToggle.addEventListener('click', () => {
     const type = passwordInput.type === 'password' ? 'text' : 'password';
@@ -56,17 +59,23 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     isLoginMode = !isLoginMode;
     if (isLoginMode) {
+      // LOGIN
       submitBtn.textContent        = 'Iniciar sesión';
       toggleText.textContent       = '¿No tienes cuenta? ';
       toggleText.appendChild(toggleLink);
       toggleLink.textContent       = 'Regístrate';
       confirmWrapper.style.display = 'none';
+      // Ocultar fuerza de contraseña
+      passwordStrength.style.display = 'none';
     } else {
+      // REGISTER
       submitBtn.textContent        = 'Registrarse';
       toggleText.textContent       = '¿Ya tienes cuenta? ';
       toggleText.appendChild(toggleLink);
       toggleLink.textContent       = 'Inicia sesión';
       confirmWrapper.style.display = 'flex';
+      // Mostrar fuerza de contraseña
+      passwordStrength.style.display = 'inline-block';
     }
   });
 
@@ -92,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const { error } = await supabaseClient.auth.signUp({ email, password });
         if (error) throw error;
         // Mostrar mensaje de verificación
-        authForm.style.display = 'none';
+        authForm.style.display       = 'none';
         successContainer.style.display = 'block';
       }
     } catch (err) {
@@ -109,6 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
     isLoginMode = true;
     submitBtn.textContent = 'Iniciar sesión';
     toggleText.innerHTML  = '¿No tienes cuenta? <a href="#" id="auth-toggle-link">Regístrate</a>';
+    // Ocultar fuerza de contraseña al volver
+    passwordStrength.style.display = 'none';
   });
 
   // ── OAuth Google / GitHub ──
@@ -134,7 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (user.user_metadata?.avatar_url && avatar) avatar.src = user.user_metadata.avatar_url;
   }
 });
-
 // ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════
 document.addEventListener('DOMContentLoaded', () => {
   // ... tu código original de chat, sidebar, etc.
