@@ -6,40 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Raavax AI</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 
 <body>
-  <!-- Auth Overlay -->
-  <div id="auth-overlay" class="auth-overlay">
-    <div class="auth-card">
-      <img src="/static/raava_logo.png" alt="Raavax Logo" class="auth-logo">
-      <div class="auth-form">
-        <input type="email" id="auth-email" placeholder="Correo electrónico">
-        <div class="password-wrapper">
-        <input type="password" id="auth-password" placeholder="Contraseña">
-        <i class="fas fa-eye toggle-password"></i>
-          <i class="fas fa-eye toggle-password" id="toggle-password"></i>
-        </div>
-        <div class="password-wrapper" id="confirm-password-wrapper" style="display:none;">
-          <input type="password" id="auth-confirm-password" placeholder="Confirmar contraseña">
-          <i class="fas fa-eye toggle-password" id="toggle-confirm-password"></i>
-        </div>
-        <button id="auth-submit-btn">Iniciar sesión</button>
-      </div>
-      <div class="auth-toggle">
-        <span id="auth-toggle-text">¿No tienes cuenta? <a href="#" id="auth-toggle-link">Regístrate</a></span>
-      </div>
-      <div class="auth-social">
-        <button id="google-signin" class="social-btn"><i class="fab fa-google"></i> Google</button>
-        <button id="github-signin" class="social-btn"><i class="fab fa-github"></i> GitHub</button>
-      </div>
-      <div class="captcha-placeholder"><i class="fas fa-shield-alt"></i> reCAPTCHA placeholder</div>
-    </div>
-  </div>
-  <!-- Codigo Normal -->
   <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
   <div class="settings-modal" id="settings-modal">
     <div class="settings-content">
@@ -144,7 +115,7 @@
     <div class="settings-menu" id="settings-menu">
       <div class="settings-menu-item" id="settings-option">Ajustes</div>
       <div class="settings-menu-item">Ayuda</div>
-      <div class="settings-menu-item" id="signout-btn">Cerrar sesión</div>
+      <div class="settings-menu-item">Cerrar sesión</div>
     </div>
   </div>
 </div>
