@@ -1,23 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // ---------------- Supabase Auth Setup ----------------
-const SUPABASE_URL = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      // ----- Supabase setup -----
+ const SUPABASE_URL = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
+ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.…';
+ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Elementos de auth
-const authOverlay             = document.getElementById('auth-overlay');
-const authEmail               = document.getElementById('auth-email');
-const authPassword            = document.getElementById('auth-password');
-const confirmPasswordInput    = document.getElementById('auth-confirm-password');
-const confirmPasswordWrapper  = document.getElementById('confirm-password-wrapper');
-const authSubmitBtn           = document.getElementById('auth-submit-btn');
-const authToggleText          = document.getElementById('auth-toggle-text');
-const authToggleLink          = document.getElementById('auth-toggle-link');
-const googleSigninBtn         = document.getElementById('google-signin');
-const githubSigninBtn         = document.getElementById('github-signin');
-const mainContainer           = document.querySelector('.main-container');
-const headerProfilePic        = document.getElementById('header-profile-pic');
-const signoutBtn              = document.getElementById('signout-btn');
+const authOverlay = document.getElementById('auth-overlay');
+const authEmail = document.getElementById('auth-email');
+const authPassword = document.getElementById('auth-password');
+const confirmPasswordInput = document.getElementById('auth-confirm-password');
+const confirmPasswordWrapper = document.getElementById('confirm-password-wrapper');
+const authSubmitBtn= document.getElementById('auth-submit-btn');
+const authToggleText = document.getElementById('auth-toggle-text');
+const authToggleLink = document.getElementById('auth-toggle-link');
+const googleSigninBtn = document.getElementById('google-signin');
+const githubSigninBtn = document.getElementById('github-signin');
+const mainContainer = document.querySelector('.main-container');
+const headerProfilePic = document.getElementById('header-profile-pic');
+const signoutBtn = document.getElementById('signout-btn');
 
 let isLoginMode = true;
 
