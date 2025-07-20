@@ -1,4 +1,93 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // ---------------- Supabase Auth Setup ----------------
+const SUPABASE_URL = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Elementos de auth
+const authOverlay             = document.getElementById('auth-overlay');
+const authEmail               = document.getElementById('auth-email');
+const authPassword            = document.getElementById('auth-password');
+const confirmPasswordInput    = document.getElementById('auth-confirm-password');
+const confirmPasswordWrapper  = document.getElementById('confirm-password-wrapper');
+const authSubmitBtn           = document.getElementById('auth-submit-btn');
+const authToggleText          = document.getElementById('auth-toggle-text');
+const authToggleLink          = document.getElementById('auth-toggle-link');
+const googleSigninBtn         = document.getElementById('google-signin');
+const githubSigninBtn         = document.getElementById('github-signin');
+const mainContainer           = document.querySelector('.main-container');
+const headerProfilePic        = document.getElementById('header-profile-pic');
+const signoutBtn              = document.getElementById('signout-btn');
+
+let isLoginMode = true;
+
+// 1) Comprobar sesión al cargar
+async function checkSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    authOverlay.style.display = 'none';
+    mainContainer.style.display = 'flex';
+    if (session.user.user_metadata?.avatar_url) {
+      headerProfilePic.src = session.user.user_metadata.avatar_url;
+    }
+  } else {
+    authOverlay.style.display = 'flex';
+    mainContainer.style.display = 'none';
+  }
+}
+checkSession();
+
+// 2) Escuchar cambios de auth (login/logout)
+supabase.auth.onAuthStateChange((_event, session) => {
+  checkSession();
+});
+
+// 3) Toggle entre Login / Sign-Up
+authToggleLink.addEventListener('click', e => {
+  e.preventDefault();
+  isLoginMode = !isLoginMode;
+  if (isLoginMode) {
+    authSubmitBtn.textContent = 'Iniciar sesión';
+    authToggleText.innerHTML = '¿No tienes cuenta? <a href="#" id="auth-toggle-link">Regístrate</a>';
+    confirmPasswordWrapper.style.display = 'none';
+  } else {
+    authSubmitBtn.textContent = 'Regístrate';
+    authToggleText.innerHTML = '¿Ya tienes cuenta? <a href="#" id="auth-toggle-link">Iniciar sesión</a>';
+    confirmPasswordWrapper.style.display = 'block';
+  }
+});
+
+// 4) Manejar envío de formulario
+authSubmitBtn.addEventListener('click', async e => {
+  e.preventDefault();
+  const email = authEmail.value;
+  const password = authPassword.value;
+  if (!email || !password) {
+    alert('Por favor ingresa correo y contraseña');
+    return;
+  }
+  if (!isLoginMode && password !== confirmPasswordInput.value) {
+    alert('Las contraseñas no coinciden');
+    return;
+  }
+  if (isLoginMode) {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) alert(error.message);
+  } else {
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) alert(error.message);
+  }
+});
+
+// 5) OAuth con Google / GitHub
+googleSigninBtn .addEventListener('click', () => supabase.auth.signInWithOAuth({ provider: 'google' }));
+githubSigninBtn .addEventListener('click', () => supabase.auth.signInWithOAuth({ provider: 'github' }));
+
+// 6) Cerrar sesión
+signoutBtn .addEventListener('click', async () => {
+  await supabase.auth.signOut();
+});
+// ------------------------------------------------------
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const messagesContainer = document.querySelector('.messages');
