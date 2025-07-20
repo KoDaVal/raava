@@ -1,3 +1,122 @@
+// ═══════════════ Supabase Setup ═══════════════
+const SUPABASE_URL    = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…'; // tu ANON KEY completa
+const supabaseClient  = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ═══════════════ Estado y Helpers ═══════════════
+let isLoginMode = true;
+
+function showOverlay() {
+  document.getElementById('auth-overlay').style.display = 'flex';
+}
+function hideOverlay() {
+  document.getElementById('auth-overlay').style.display = 'none';
+}
+
+// ═══════════════ DOMContentLoaded ═══════════════
+document.addEventListener('DOMContentLoaded', () => {
+  // Referencias al DOM
+  const authForm        = document.getElementById('auth-form');
+  const emailInput      = document.getElementById('auth-email');
+  const passwordInput   = document.getElementById('auth-password');
+  const confirmWrapper  = document.getElementById('confirm-password-wrapper');
+  const confirmInput    = document.getElementById('auth-confirm-password');
+  const submitBtn       = document.getElementById('auth-submit-btn');
+  const toggleText      = document.getElementById('auth-toggle-text');
+  const toggleLink      = document.getElementById('auth-toggle-link');
+  const googleBtn       = document.getElementById('google-signin');
+  const githubBtn       = document.getElementById('github-signin');
+
+  // ── Alternar entre Login / Register ──
+  toggleLink.addEventListener('click', e => {
+    e.preventDefault();
+    isLoginMode = !isLoginMode;
+    if (isLoginMode) {
+      submitBtn.textContent        = 'Iniciar sesión';
+      toggleText.textContent       = '¿No tienes cuenta? ';
+      toggleText.appendChild(toggleLink);
+      toggleLink.textContent       = 'Regístrate';
+      confirmWrapper.style.display = 'none';
+    } else {
+      submitBtn.textContent        = 'Registrarse';
+      toggleText.textContent       = '¿Ya tienes cuenta? ';
+      toggleText.appendChild(toggleLink);
+      toggleLink.textContent       = 'Inicia sesión';
+      confirmWrapper.style.display = 'flex';
+    }
+  });
+
+  // ── Manejo de envío del formulario ──
+  authForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const email    = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!email || !password || (!isLoginMode && !confirmInput.value)) return;
+
+    try {
+      let result;
+      if (isLoginMode) {
+        result = await supabaseClient.auth.signInWithPassword({ email, password });
+      } else {
+        if (password !== confirmInput.value) {
+          alert('Las contraseñas no coinciden');
+          return;
+        }
+        result = await supabaseClient.auth.signUp({ email, password });
+      }
+      if (result.error) throw result.error;
+      hideOverlay();
+      emailInput.value = passwordInput.value = confirmInput.value = '';
+    } catch (error) {
+      console.error('Auth error:', error);
+      alert(error.message);
+    }
+  });
+
+  // ── OAuth: Google / GitHub ──
+  googleBtn.addEventListener('click', () => {
+    supabaseClient.auth.signInWithOAuth({ provider: 'google' })
+      .catch(err => console.error('Google OAuth error:', err));
+  });
+  githubBtn.addEventListener('click', () => {
+    supabaseClient.auth.signInWithOAuth({ provider: 'github' })
+      .catch(err => console.error('GitHub OAuth error:', err));
+  });
+
+  // ── Escucha cambios de sesión ──
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session && session.user) {
+      loadUserProfile(session.user);
+    } else {
+      showOverlay();
+    }
+  });
+
+  // ── Comprobar sesión al cargar ──
+  (async function checkSession() {
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    if (error) console.error('Session check error:', error);
+    if (session && session.user) {
+      loadUserProfile(session.user);
+    } else {
+      showOverlay();
+    }
+  })();
+
+  // ── Carga datos del usuario en la UI ──
+  function loadUserProfile(user) {
+    hideOverlay();
+    // Avatar en header (si existe)
+    const avatarUrl = user.user_metadata?.avatar_url;
+    if (avatarUrl) {
+      const headerPic = document.getElementById('header-profile-pic');
+      if (headerPic) headerPic.src = avatarUrl;
+    }
+    // Aquí podrías mostrar el botón de logout o el menú de usuario
+  }
+});
+// ════════════════════════════════════════════
+
 document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
