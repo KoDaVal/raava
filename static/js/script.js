@@ -1,33 +1,57 @@
 // ═══════════════ Supabase Setup ═══════════════
-const SUPABASE_URL    = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8'; //ANON KEY completa
-const supabaseClient  = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_URL     = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
+const supabaseClient   = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ═══════════════ Estado y Helpers ═══════════════
 let isLoginMode = true;
+function showOverlay() { document.getElementById('auth-overlay').style.display = 'flex'; }
+function hideOverlay() { document.getElementById('auth-overlay').style.display = 'none'; }
 
-function showOverlay() {
-  document.getElementById('auth-overlay').style.display = 'flex';
-}
-function hideOverlay() {
-  document.getElementById('auth-overlay').style.display = 'none';
-}
-
-// ═══════════════ DOMContentLoaded ═══════════════
+// ═══════════════ Auth & UI Logic ═══════════════
 document.addEventListener('DOMContentLoaded', () => {
   // Referencias al DOM
-  const authForm        = document.getElementById('auth-form');
-  const emailInput      = document.getElementById('auth-email');
-  const passwordInput   = document.getElementById('auth-password');
-  const confirmWrapper  = document.getElementById('confirm-password-wrapper');
-  const confirmInput    = document.getElementById('auth-confirm-password');
-  const submitBtn       = document.getElementById('auth-submit-btn');
-  const toggleText      = document.getElementById('auth-toggle-text');
-  const toggleLink      = document.getElementById('auth-toggle-link');
-  const googleBtn       = document.getElementById('google-signin');
-  const githubBtn       = document.getElementById('github-signin');
+  const authForm           = document.getElementById('auth-form');
+  const emailInput         = document.getElementById('auth-email');
+  const passwordInput      = document.getElementById('auth-password');
+  const confirmWrapper     = document.getElementById('confirm-password-wrapper');
+  const confirmInput       = document.getElementById('auth-confirm-password');
+  const submitBtn          = document.getElementById('auth-submit-btn');
+  const toggleText         = document.getElementById('auth-toggle-text');
+  const toggleLink         = document.getElementById('auth-toggle-link');
+  const googleBtn          = document.getElementById('google-signin');
+  const githubBtn          = document.getElementById('github-signin');
+  const successContainer   = document.getElementById('auth-success');
+  const successBtn         = document.getElementById('auth-success-btn');
+  const passwordStrength   = document.getElementById('password-strength');
+  const eyeToggle          = document.getElementById('toggle-password');
+  const confirmEyeToggle   = document.getElementById('toggle-confirm-password');
 
-  // ── Alternar entre Login / Register ──
+  // ── Mostrar/ocultar contraseña ──
+  eyeToggle.addEventListener('click', () => {
+    const type = passwordInput.type === 'password' ? 'text' : 'password';
+    passwordInput.type = type;
+    eyeToggle.querySelector('i').classList.toggle('fa-eye-slash');
+    eyeToggle.querySelector('i').classList.toggle('fa-eye');
+  });
+  confirmEyeToggle.addEventListener('click', () => {
+    const type = confirmInput.type === 'password' ? 'text' : 'password';
+    confirmInput.type = type;
+    confirmEyeToggle.querySelector('i').classList.toggle('fa-eye-slash');
+    confirmEyeToggle.querySelector('i').classList.toggle('fa-eye');
+  });
+
+  // ── Medidor de fuerza de contraseña ──
+  passwordInput.addEventListener('input', () => {
+    const val = passwordInput.value;
+    const strong = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_\-+=])(?=.{8,})/.test(val);
+    passwordStrength.textContent = strong
+      ? 'Fuerza: ✅ Cumple requisitos'
+      : 'Fuerza: mínimo 8 caracteres, 1 mayúscula, 1 especial';
+    passwordStrength.style.color = strong ? 'lightgreen' : 'salmon';
+  });
+
+  // ── Toggle Login / Register ──
   toggleLink.addEventListener('click', e => {
     e.preventDefault();
     isLoginMode = !isLoginMode;
@@ -46,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ── Manejo de envío del formulario ──
+  // ── Envío del formulario de autenticación ──
   authForm.addEventListener('submit', async e => {
     e.preventDefault();
     const email    = emailInput.value.trim();
@@ -54,69 +78,67 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!email || !password || (!isLoginMode && !confirmInput.value)) return;
 
     try {
-      let result;
       if (isLoginMode) {
-        result = await supabaseClient.auth.signInWithPassword({ email, password });
+        // LOGIN
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        loadUserProfile(data.user);
       } else {
+        // REGISTER
         if (password !== confirmInput.value) {
           alert('Las contraseñas no coinciden');
           return;
         }
-        result = await supabaseClient.auth.signUp({ email, password });
+        const { error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) throw error;
+        // Mostrar mensaje de verificación
+        authForm.style.display = 'none';
+        successContainer.style.display = 'block';
       }
-      if (result.error) throw result.error;
-      hideOverlay();
-      emailInput.value = passwordInput.value = confirmInput.value = '';
-    } catch (error) {
-      console.error('Auth error:', error);
-      alert(error.message);
+    } catch (err) {
+      console.error('Auth error:', err);
+      alert(err.message);
     }
   });
 
-  // ── OAuth: Google / GitHub ──
-  googleBtn.addEventListener('click', () => {
-    supabaseClient.auth.signInWithOAuth({ provider: 'google' })
-      .catch(err => console.error('Google OAuth error:', err));
-  });
-  githubBtn.addEventListener('click', () => {
-    supabaseClient.auth.signInWithOAuth({ provider: 'github' })
-      .catch(err => console.error('GitHub OAuth error:', err));
-  });
-
-  // ── Escucha cambios de sesión ──
-  supabaseClient.auth.onAuthStateChange((event, session) => {
-    if (session && session.user) {
-      loadUserProfile(session.user);
-    } else {
-      showOverlay();
-    }
+  // ── Botón tras registro ──
+  successBtn.addEventListener('click', () => {
+    // Volver a modo login
+    successContainer.style.display = 'none';
+    authForm.style.display         = 'block';
+    isLoginMode = true;
+    submitBtn.textContent = 'Iniciar sesión';
+    toggleText.innerHTML  = '¿No tienes cuenta? <a href="#" id="auth-toggle-link">Regístrate</a>';
   });
 
-  // ── Comprobar sesión al cargar ──
-  (async function checkSession() {
-    const { data: { session }, error } = await supabaseClient.auth.getSession();
-    if (error) console.error('Session check error:', error);
-    if (session && session.user) {
-      loadUserProfile(session.user);
-    } else {
-      showOverlay();
-    }
+  // ── OAuth Google / GitHub ──
+  googleBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
+  githubBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
+
+  // ── Estado de sesión ──
+  supabaseClient.auth.onAuthStateChange((_, session) => {
+    if (session?.user) loadUserProfile(session.user);
+    else showOverlay();
+  });
+
+  (async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session?.user) loadUserProfile(session.user);
+    else showOverlay();
   })();
 
-  // ── Carga datos del usuario en la UI ──
+  // ── Carga perfil y oculta overlay ──
   function loadUserProfile(user) {
     hideOverlay();
-    // Avatar en header (si existe)
-    const avatarUrl = user.user_metadata?.avatar_url;
-    if (avatarUrl) {
-      const headerPic = document.getElementById('header-profile-pic');
-      if (headerPic) headerPic.src = avatarUrl;
-    }
-    // Aquí podrías mostrar el botón de logout o el menú de usuario
+    const avatar = document.getElementById('header-profile-pic');
+    if (user.user_metadata?.avatar_url && avatar) avatar.src = user.user_metadata.avatar_url;
   }
 });
-// ════════════════════════════════════════════
 
+// ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════
+document.addEventListener('DOMContentLoaded', () => {
+  // ... tu código original de chat, sidebar, etc.
+});
 document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
