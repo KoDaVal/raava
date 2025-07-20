@@ -74,42 +74,65 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Envío del formulario
-  authForm.addEventListener('submit', async e => {
-    e.preventDefault();
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
-    if (!email || !password || (!isLoginMode && !confirmInput.value)) return;
+ authForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+  if (!email || !password || (!isLoginMode && !confirmInput.value)) {
+    alert('Por favor, ingresa tu correo y contraseña.'); // Añadido: alerta si faltan campos
+    return;
+  }
 
-    try {
-      if (isLoginMode) {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-       if (error || !data.session) {
-       if (error?.message?.toLowerCase().includes('email not confirmed')) {
-       alert('Primero confirma tu correo antes de iniciar sesión.');
-       } else if (error?.message) {
-      alert("Error: " + error.message);
-      } else {
-     alert("Inicio de sesión fallido. Verifica tu correo y contraseña.");
-     }
-     return;
-     }
-     loadUserProfile(data.user);
-      } else {
-        if (password !== confirmInput.value) {
-          alert('Las contraseñas no coinciden');
-          return;
+  // Deshabilita el botón para evitar envíos múltiples y dar feedback visual
+  submitBtn.disabled = true;
+  submitBtn.textContent = isLoginMode ? 'Iniciando sesión...' : 'Registrando...';
+
+  try {
+    if (isLoginMode) {
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) { // Añadido: manejo de errores específicos de Supabase
+        if (error.message.includes('Invalid login credentials')) {
+          alert('Correo o contraseña incorrectos. Por favor, inténtalo de nuevo.');
+        } else if (error.message.includes('Email not confirmed')) {
+          alert('Tu correo aún no ha sido confirmado. Revisa tu bandeja de entrada.');
+        } else {
+          alert(`Error al iniciar sesión: ${error.message}`);
         }
-        const { error } = await supabaseClient.auth.signUp({ email, password });
-        if (error) throw error;
-        authForm.style.display = 'none';
-        successContainer.style.display = 'block';
+        console.error('Error de inicio de sesión:', error); // Para depuración
+        return;
       }
-    } catch (err) {
-      console.error('Auth error:', err);
-      alert(err.message);
-    }
-  });
+      // Si no hay error y hay sesión, carga el perfil
+      if (data && data.session) {
+        loadUserProfile(data.user);
+      } else {
+        // Caso raro donde no hay error pero tampoco sesión/usuario (podría ser un caso edge)
+        alert('Inicio de sesión fallido. Por favor, verifica tus credenciales.');
+      }
 
+    } else { // Modo de registro
+      if (password !== confirmInput.value) {
+        alert('Las contraseñas no coinciden.');
+        return;
+      }
+      const { error } = await supabaseClient.auth.signUp({ email, password });
+      if (error) {
+        alert(`Error al registrarse: ${error.message}`);
+        console.error('Error de registro:', error); // Para depuración
+        return;
+      }
+      authForm.style.display = 'none';
+      successContainer.style.display = 'block';
+    }
+  } catch (err) {
+    // Captura cualquier otro error inesperado
+    console.error('Error inesperado durante la autenticación:', err);
+    alert('Ocurrió un error inesperado. Por favor, inténtalo de nuevo.');
+  } finally {
+    // Siempre vuelve a habilitar el botón y restaura su texto original
+    submitBtn.disabled = false;
+    submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
+  }
+});
   // Botón "Ir a iniciar sesión"
   successBtn.addEventListener('click', () => {
     location.reload(); // Recomendado: recarga la app y resetea todo
