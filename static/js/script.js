@@ -1,106 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    let isLoginMode = true;
-    const emailInput = document.getElementById('auth-email');
-    const passInput = document.getElementById('auth-password');
-    const confirmWrapper = document.getElementById('confirm-password-wrapper');
-    const confirmInput = document.getElementById('auth-confirm-password');
-    const toggleText = document.getElementById('auth-toggle-text');
-    const submitBtn = document.getElementById('auth-submit-btn');
-   document.addEventListener('click', (e) => {
-  if (e.target && e.target.id === 'toggle-auth-mode') {
-    e.preventDefault();
-    isLoginMode = !isLoginMode;
-
-    confirmWrapper.style.display = isLoginMode ? 'none' : 'block';
-    submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
-
-    toggleText.innerHTML = isLoginMode
-      ? '¿No tienes cuenta? <a href="#" id="toggle-auth-mode">Regístrate</a>'
-      : '¿Ya tienes cuenta? <a href="#" id="toggle-auth-mode">Inicia sesión</a>';
-  }
-});
-    document.querySelectorAll('.toggle-password').forEach(toggle => {
-  toggle.addEventListener('click', () => {
-    const targetId = toggle.getAttribute('data-target');
-    const input = document.getElementById(targetId);
-    const icon = toggle.querySelector('i');
-
-    if (input.type === 'password') {
-      input.type = 'text';
-      icon.classList.remove('fa-eye');
-      icon.classList.add('fa-eye-slash');
-    } else {
-      input.type = 'password';
-      icon.classList.remove('fa-eye-slash');
-      icon.classList.add('fa-eye');
-    }
-  });
-});
-    const supabase = window.supabase.createClient(
-  'https://awzyyjifxlklzbnvvlfv.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8'
-);
-
-const authOverlay = document.getElementById('auth-overlay');
-const mainContainer = document.querySelector('.main-container');
-
-supabase.auth.getSession().then(({ data: { session } }) => {
-  if (session && session.user) {
-    authOverlay.style.display = 'none';
-    mainContainer.style.display = 'flex';
-    const avatarUrl = session.user.user_metadata?.avatar_url;
-    if (avatarUrl) {
-      const avatarImg = document.getElementById('header-profile-pic');
-      if (avatarImg) avatarImg.src = avatarUrl;
-    }
-  } else {
-    authOverlay.style.display = 'flex';
-    mainContainer.style.display = 'none';
-  }
-});
-submitBtn.addEventListener('click', async () => {
-  const email = emailInput.value.trim();
-  const password = passInput.value.trim();
-  const confirm = confirmInput.value.trim();
-
-  if (!email || !password || (!isLoginMode && password !== confirm)) {
-    alert('Revisa los campos.');
-    return;
-  }
-
-  try {
-    let result;
-    if (isLoginMode) {
-      result = await supabase.auth.signInWithPassword({ email, password });
-    } else {
-      result = await supabase.auth.signUp({ email, password });
-         if (result.error) throw result.error;
-  // Vuelve a login tras registrarse exitosamente
-  isLoginMode = true;
-  confirmWrapper.style.display = 'none';
-  submitBtn.textContent = 'Iniciar sesión';
-  toggleText.innerHTML = '¿No tienes cuenta? <a href="#" id="toggle-auth-mode">Regístrate</a>';
-  alert('Registro exitoso. Verifica tu correo y vuelve a iniciar sesión.');
-  return;
-    }
-      
-
-    if (result.error) throw result.error;
-    location.reload(); // ✅ recarga al iniciar sesión
-
-  } catch (err) {
-    console.error('Error:', err.message);
-    alert('Error: ' + err.message);
-  }
-});
-    document.getElementById('google-login').addEventListener('click', async () => {
-  await supabase.auth.signInWithOAuth({ provider: 'google' });
-});
-
-document.getElementById('github-login').addEventListener('click', async () => {
-  await supabase.auth.signInWithOAuth({ provider: 'github' });
-});
-
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const messagesContainer = document.querySelector('.messages');
@@ -167,15 +65,7 @@ document.getElementById('github-login').addEventListener('click', async () => {
             }
         });
     }
-    const logoutBtn = Array.from(document.querySelectorAll('.settings-menu-item'))
-  .find(el => el.textContent.trim() === 'Cerrar sesión');
 
-if (logoutBtn) {
-  logoutBtn.addEventListener('click', async () => {
-    await supabase.auth.signOut();
-    location.reload();
-  });
-}
     // --- NUEVO: Manejo del clic en "Ajustes" para abrir el modal de ajustes ---
     if (settingsOption) {
         settingsOption.addEventListener('click', () => {
