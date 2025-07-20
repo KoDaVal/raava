@@ -28,8 +28,11 @@
           placeholder="Contraseña"
           required
         />
-        <span class="toggle-password" id="toggle-password">👁️</span>
+        <span class="toggle-password" id="toggle-password">
+  <i class="fas fa-eye"></i>
+</span>
       </div>
+      <span id="password-strength" class="password-strength"></span>
       <div
         id="confirm-password-wrapper"
         class="password-wrapper"
@@ -65,6 +68,14 @@
         </button>
       </div>
     </form>
+     <!-- Mensaje tras registro: revisar correo -->
+    <div
+      id="auth-success"
+      style="display:none; text-align:center; margin:16px 0;"
+    >
+      <p>Revisa tu correo electrónico. Te hemos enviado un enlace de verificación.</p>
+      <button id="auth-success-btn">Ir a Iniciar sesión</button>
+    </div>
   </div>
 </div>
   <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
