@@ -81,23 +81,34 @@ def chat():
     except json.JSONDecodeError:
         return jsonify({"response": "Error: Formato de historial inválido."}), 400
 
-    parts_for_gemini = conversation_history
     response_message = "Lo siento, hubo un error desconocido."
     audio_base64 = None
 
-    base_instruction = "Responde de forma concisa y clara, ofreciendo la información esencial con un tono amable y humano, evitando la simplicidad excesiva:"
-    full_user_message_text = f"{base_instruction} {user_message}"
+    # --- Instrucción base como system ---
+    messages = []
     if persistent_instruction:
-        full_user_message_text = f"{persistent_instruction}\n\n{full_user_message_text}"
+        messages.append({"role": "system", "parts": [persistent_instruction]})
+    else:
+        messages.append({
+            "role": "system",
+            "parts": ["Responde de forma concisa y clara, ofreciendo la información esencial con un tono amable y humano, evitando la simplicidad excesiva:"]
+        })
 
+    # --- Historial anterior (user y assistant) ---
+    for msg in conversation_history:
+        if msg.get("role") in ["user", "assistant"] and msg.get("parts"):
+            messages.append({
+                "role": msg["role"],
+                "parts": msg["parts"]
+            })
+
+    # --- Procesar mensaje actual + archivo ---
     current_user_parts = []
-    if full_user_message_text:
-        current_user_parts.append({'text': full_user_message_text})
+    full_user_message_text = user_message
 
     if uploaded_file:
         file_name = uploaded_file.filename
         file_type = uploaded_file.content_type
-
         try:
             if file_type.startswith('image/'):
                 image_bytes = uploaded_file.read()
@@ -108,48 +119,43 @@ def chat():
                         "data": base64_image
                     }
                 })
-                if not user_message:
-                    current_user_parts.append({'text': f"Adjuntaste la imagen '{file_name}'. ¿Qué quieres saber sobre ella?"})
-                else:
-                    current_user_parts.append({'text': f"Imagen adjunta: '{file_name}'."})
-
+                current_user_parts.append({'text': f"Imagen adjunta: '{file_name}'."})
             elif file_type.startswith('text/'):
                 text_content = uploaded_file.read().decode('utf-8')
                 current_user_parts.append({'text': f"Contenido del archivo de texto '{file_name}':\n{text_content}"})
                 if not user_message:
-                    current_user_parts.append({'text': f"Adjuntaste el archivo de texto '{file_name}'. ¿Qué quieres que analice?"})
-                else:
-                    current_user_parts.append({'text': f"Archivo de texto adjunto: '{file_name}'."})
+                    current_user_parts.append({'text': f"¿Qué deseas que haga con el archivo '{file_name}'?"})
             else:
-                current_user_parts.append({'text': f"Se adjuntó un archivo de tipo {file_type} ('{file_name}'). Actualmente, solo puedo procesar imágenes y texto simple directamente. ¿Hay algo más en lo que pueda ayudarte?"})
-
+                current_user_parts.append({'text': f"Se adjuntó un archivo '{file_name}' de tipo {file_type}, pero solo puedo procesar imágenes y texto directamente."})
         except Exception as e:
-            print(f"Error al procesar el archivo adjunto: {e}")
+            print(f"Error al procesar archivo adjunto: {e}")
             return jsonify({"response": "Lo siento, hubo un error al procesar el archivo adjunto."}), 500
+
+    if full_user_message_text:
+        current_user_parts.insert(0, {"text": full_user_message_text})
 
     if not current_user_parts:
         return jsonify({"response": "Por favor, envía un mensaje o un archivo válido para que pueda responderte."}), 400
 
-    parts_for_gemini.append({'role': 'user', 'parts': current_user_parts})
+    messages.append({
+        "role": "user",
+        "parts": current_user_parts
+    })
 
     try:
-        gemini_response = model.generate_content(parts_for_gemini)
+        chat = model.start_chat(history=messages)
+        gemini_response = chat.send_message(current_user_parts)
         response_message = gemini_response.text
 
-        # --- AUDIO SE GENERA POR SEPARADO ---
-        audio_base64 = None  # Se generará desde el frontend con /generate_audio
-        # --- FIN CAMBIO ---
+        return jsonify({
+            "response": response_message,
+            "audio": None,  # audio se generará aparte
+            "updated_history": messages + [{"role": "assistant", "parts": [{"text": response_message}]}]
+        })
 
-        return jsonify({"response": response_message, "audio": audio_base64})
-
-    except requests.exceptions.HTTPError as e:
-        print(f"Error de conexión o API con Eleven Labs al generar audio: {e.response.status_code} - {e.response.text}")
-        response_message = f"Lo siento, hubo un problema al generar el audio: {e.response.text}. Por favor, revisa tu clave API de Eleven Labs o los límites de tu cuenta."
-        return jsonify({"response": response_message, "audio": None})
     except Exception as e:
-        print(f"Error inesperado al conectar con la API de Gemini o generar audio: {e}")
-        response_message = "Lo siento, hubo un problema al procesar tu solicitud con la IA o generar audio. Por favor, intenta de nuevo."
-        return jsonify({"response": response_message, "audio": None})
+        print(f"Error inesperado en Gemini: {e}")
+        return jsonify({"response": "Hubo un problema al procesar tu solicitud con Gemini.", "audio": None}), 500
 
 # --- NUEVO ENDPOINT PARA GENERAR AUDIO BAJO DEMANDA ---
 @app.route('/generate_audio', methods=['POST'])
