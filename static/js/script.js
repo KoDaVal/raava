@@ -710,7 +710,10 @@ messagesContainer.scrollTop = messagesContainer.scrollHeight;
         try {
             const formData = new FormData();
             formData.append('message', message);
-            formData.append('history', JSON.stringify(conversationHistory.slice(0, -1)));
+            formData.append('history', JSON.stringify(conversationHistory));
+            if (data.updated_history) {
+            conversationHistory = data.updated_history;
+            }
 
             // --- AÑADIDO: Añade la instrucción persistente si está activa ---
             if (activePersistentInstruction) {
