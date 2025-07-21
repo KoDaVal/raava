@@ -1,6 +1,6 @@
 // ═══════════════ Supabase Setup ═══════════════
 const SUPABASE_URL     = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
+const SUPABASE_ANON_KEY= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
 const supabaseClient   = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ═══════════════ Estado y Helpers ═══════════════
@@ -26,6 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const eyeToggle          = document.getElementById('toggle-password');
   const confirmEyeToggle   = document.getElementById('toggle-confirm-password');
 
+  // Inicializar estado de confirmación
+  confirmWrapper.style.display = 'none';
+  confirmInput.disabled = true;
+  confirmInput.required = false;
   passwordStrength.style.display = 'none';
 
   // Mostrar/ocultar contraseña
@@ -56,90 +60,95 @@ document.addEventListener('DOMContentLoaded', () => {
   toggleLink.addEventListener('click', e => {
     e.preventDefault();
     isLoginMode = !isLoginMode;
+
     if (isLoginMode) {
-      submitBtn.textContent = 'Iniciar sesión';
-      toggleText.textContent = '¿No tienes cuenta? ';
-      toggleText.appendChild(toggleLink);
-      toggleLink.textContent = 'Regístrate';
-      confirmWrapper.style.display = 'none';
+      // MODO LOGIN
+      submitBtn.textContent       = 'Iniciar sesión';
+      toggleText.textContent      = '¿No tienes cuenta? ';
+      toggleLink.textContent      = 'Regístrate';
+      confirmWrapper.style.display= 'none';
+      confirmInput.disabled       = true;
+      confirmInput.required       = false;
       passwordStrength.style.display = 'none';
     } else {
-      submitBtn.textContent = 'Registrarse';
-      toggleText.textContent = '¿Ya tienes cuenta? ';
-      toggleText.appendChild(toggleLink);
-      toggleLink.textContent = 'Inicia sesión';
-      confirmWrapper.style.display = 'flex';
+      // MODO REGISTRO
+      submitBtn.textContent       = 'Registrarse';
+      toggleText.textContent      = '¿Ya tienes cuenta? ';
+      toggleLink.textContent      = 'Inicia sesión';
+      confirmWrapper.style.display= 'flex';
+      confirmInput.disabled       = false;
+      confirmInput.required       = true;
       passwordStrength.style.display = 'inline-block';
     }
+
+    // Reanexar el link al texto
+    toggleText.appendChild(toggleLink);
   });
 
   // Envío del formulario
- authForm.addEventListener('submit', async e => {
-  e.preventDefault();
-  const email = emailInput.value.trim();
-  const password = passwordInput.value;
-  if (!email || !password || (!isLoginMode && !confirmInput.value)) {
-    alert('Por favor, ingresa tu correo y contraseña.'); // Añadido: alerta si faltan campos
-    return;
-  }
+  authForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const email    = emailInput.value.trim();
+    const password = passwordInput.value;
 
-  // Deshabilita el botón para evitar envíos múltiples y dar feedback visual
-  submitBtn.disabled = true;
-  submitBtn.textContent = isLoginMode ? 'Iniciando sesión...' : 'Registrando...';
-
-  try {
-    if (isLoginMode) {
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) { // Añadido: manejo de errores específicos de Supabase
-        if (error.message.includes('Invalid login credentials')) {
-          alert('Correo o contraseña incorrectos. Por favor, inténtalo de nuevo.');
-        } else if (error.message.includes('Email not confirmed')) {
-          alert('Tu correo aún no ha sido confirmado. Revisa tu bandeja de entrada.');
-        } else {
-          alert(`Error al iniciar sesión: ${error.message}`);
-        }
-        console.error('Error de inicio de sesión:', error); // Para depuración
-        return;
-      }
-      // Si no hay error y hay sesión, carga el perfil
-      if (data && data.session) {
-        loadUserProfile(data.user);
-      } else {
-        // Caso raro donde no hay error pero tampoco sesión/usuario (podría ser un caso edge)
-        alert('Inicio de sesión fallido. Por favor, verifica tus credenciales.');
-      }
-
-    } else { // Modo de registro
-      if (password !== confirmInput.value) {
-        alert('Las contraseñas no coinciden.');
-        return;
-      }
-      const { error } = await supabaseClient.auth.signUp({ email, password });
-      if (error) {
-        alert(`Error al registrarse: ${error.message}`);
-        console.error('Error de registro:', error); // Para depuración
-        return;
-      }
-      authForm.style.display = 'none';
-      successContainer.style.display = 'block';
+    if (!email || !password || (!isLoginMode && !confirmInput.value)) {
+      alert('Por favor, ingresa tu correo y contraseña.');
+      return;
     }
-  } catch (err) {
-    // Captura cualquier otro error inesperado
-    console.error('Error inesperado durante la autenticación:', err);
-    alert('Ocurrió un error inesperado. Por favor, inténtalo de nuevo.');
-  } finally {
-    // Siempre vuelve a habilitar el botón y restaura su texto original
-    submitBtn.disabled = false;
-    submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
-  }
-});
-  // Botón "Ir a iniciar sesión"
-  successBtn.addEventListener('click', () => {
-    location.reload(); // Recomendado: recarga la app y resetea todo
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = isLoginMode ? 'Iniciando sesión...' : 'Registrando...';
+
+    try {
+      if (isLoginMode) {
+        // LOGIN
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) {
+          const msg = error.message;
+          if (msg.includes('Invalid login credentials')) {
+            alert('Correo o contraseña incorrectos.');
+          } else if (msg.includes('Email not confirmed')) {
+            alert('Tu correo aún no ha sido confirmado.');
+          } else {
+            alert(`Error al iniciar sesión: ${msg}`);
+          }
+          console.error(error);
+          return;
+        }
+        if (data?.session) {
+          loadUserProfile(data.user);
+        } else {
+          alert('Inicio de sesión fallido. Verifica tus credenciales.');
+        }
+      } else {
+        // REGISTRO
+        if (password !== confirmInput.value) {
+          alert('Las contraseñas no coinciden.');
+          return;
+        }
+        const { error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) {
+          alert(`Error al registrarse: ${error.message}`);
+          console.error(error);
+          return;
+        }
+        authForm.style.display     = 'none';
+        successContainer.style.display = 'block';
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Ocurrió un error inesperado. Inténtalo de nuevo.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
+    }
   });
 
+  // Botón "Ir a iniciar sesión"
+  successBtn.addEventListener('click', () => location.reload());
+
   // Login con Google / GitHub
-  googleBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
+  googleBtn.addEventListener('click',  () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
   githubBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
 
   // Manejo de sesión activa
@@ -158,7 +167,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadUserProfile(user) {
     hideOverlay();
     const avatar = document.getElementById('header-profile-pic');
-    if (user.user_metadata?.avatar_url && avatar) avatar.src = user.user_metadata.avatar_url;
+    if (user.user_metadata?.avatar_url && avatar) {
+      avatar.src = user.user_metadata.avatar_url;
+    }
   }
 });
 // ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════
