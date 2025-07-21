@@ -711,47 +711,50 @@ messagesContainer.scrollTop = messagesContainer.scrollHeight;
             const formData = new FormData();
             formData.append('message', message);
             formData.append('history', JSON.stringify(conversationHistory));
-            if (data.updated_history) {
-            conversationHistory = data.updated_history;
-            }
 
-            // --- AÑADIDO: Añade la instrucción persistente si está activa ---
+            // Añadir instrucción persistente si existe
             if (activePersistentInstruction) {
-                formData.append('persistent_instruction', activePersistentInstruction);
-            }
+             formData.append('persistent_instruction', activePersistentInstruction);
+              }
 
-            // --- AÑADIDO: Si hay un voiceId clonado, envíalo también ---
+            // Añadir voice ID si existe
             if (clonedVoiceId) {
-                formData.append('cloned_voice_id', clonedVoiceId);
+            formData.append('cloned_voice_id', clonedVoiceId);
             }
 
-            if (selectedFile) {
-                formData.append('file', selectedFile);
-            }
+             // Adjuntar archivo si existe
+             if (selectedFile) {
+             formData.append('file', selectedFile);
+              }
 
-            const response = await fetch('https://raava.onrender.com/chat', {
-                method: 'POST',
-                body: formData
-            });
+              const response = await fetch('https://raava.onrender.com/chat', {
+              method: 'POST',
+              body: formData
+             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. ${errorText}`);
-            }
-            const data = await response.json();
-            hideTypingIndicator();
-            // Pasa el audio (data.audio) a addMessage si existe
-            await addMessage('bot', data.response, data.audio);
+            const errorText = await response.text();
+             throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. ${errorText}`);
+               }
 
-            // Limpiar selectedFile y fileInput después de enviar el mensaje
-            selectedFile = null;
-            fileInput.value = ''; // Asegura que el input principal también se limpie
-            // No limpiar imageFileInput.value o infoFileInput.value aquí,
-            // ya que se limpian en sus propios change listeners.
-            fileDisplay.style.display = 'none';
-            adjustTextareaHeight();
+const data = await response.json(); // AQUÍ recién se puede usar data
 
-        } catch (error) {
+hideTypingIndicator();
+await addMessage('bot', data.response, data.audio);
+
+                  // SOLO DESPUÉS de definir `data`, puedes hacer esto:
+                 if (data.updated_history) {
+                  conversationHistory = data.updated_history;
+                }
+
+               // Limpiar archivo y reset visual
+               selectedFile = null;
+               fileInput.value = '';
+               fileDisplay.style.display = 'none';
+               adjustTextareaHeight();
+             } 
+          
+        catch (error) {
             console.error('Error al comunicarse con el backend:', error);
             hideTypingIndicator();
             await addMessage('bot', 'Lo siento, hubo un error al conectar con el chatbot. Por favor, revisa la consola del navegador y asegúrate de que el backend esté corriendo.');
