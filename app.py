@@ -11,6 +11,8 @@ CORS(app)
 
 # --- CONFIGURACIÓN DE GEMINI ---
 gemini_api_key = os.getenv("GEMINI_API_KEY")
+if not gemini_api_key:
+    raise EnvironmentError("Falta la variable de entorno GEMINI_API_KEY")
 genai.configure(api_key=gemini_api_key)
 model = genai.GenerativeModel('gemini-1.5-flash')
 # --- FIN CONFIGURACIÓN DE GEMINI ---
