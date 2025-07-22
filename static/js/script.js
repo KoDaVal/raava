@@ -710,7 +710,7 @@ messagesContainer.scrollTop = messagesContainer.scrollHeight;
         try {
             const formData = new FormData();
             formData.append('message', message);
-            formData.append('history', JSON.stringify(conversationHistory.slice(0, -1)));
+            formData.append('history', JSON.stringify(conversationHistory));
 
             // --- AÑADIDO: Añade la instrucción persistente si está activa ---
             if (activePersistentInstruction) {
@@ -739,7 +739,14 @@ messagesContainer.scrollTop = messagesContainer.scrollHeight;
             hideTypingIndicator();
             // Pasa el audio (data.audio) a addMessage si existe
             await addMessage('bot', data.response, data.audio);
-
+          conversationHistory.push({
+    role: 'user',
+    parts: [{ text: message }]
+});
+conversationHistory.push({
+    role: 'model',
+    parts: [{ text: data.response }]
+});
             // Limpiar selectedFile y fileInput después de enviar el mensaje
             selectedFile = null;
             fileInput.value = ''; // Asegura que el input principal también se limpie
