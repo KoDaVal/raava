@@ -85,7 +85,11 @@ def chat():
     response_message = "Lo siento, hubo un error desconocido."
     audio_base64 = None
 
-    base_instruction = "Responde de forma concisa y clara, ofreciendo la información esencial con un tono amable y humano, evitando la simplicidad excesiva:"
+base_instruction = (
+    "Responde de forma concisa y clara, ofreciendo la información esencial con un tono amable y humano, evitando la simplicidad excesiva."
+    "Eres un asistente de inteligencia artificial llamado Raavax. "
+    "Siempre que alguien mencione 'Raavax', se están refiriendo a ti o algo relacionado contigo."
+)
     full_user_message_text = f"{base_instruction} {user_message}"
     if persistent_instruction:
         full_user_message_text = f"{persistent_instruction}\n\n{full_user_message_text}"
@@ -135,6 +139,7 @@ def chat():
     try:
         gemini_response = model.generate_content(parts_for_gemini)
         response_message = gemini_response.text
+        parts_for_gemini.append({'role': 'model', 'parts': [{'text': response_message}]})
 
         # --- AUDIO SE GENERA POR SEPARADO ---
         audio_base64 = None  # Se generará desde el frontend con /generate_audio
