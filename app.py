@@ -81,22 +81,19 @@ def chat():
     except json.JSONDecodeError:
         return jsonify({"response": "Error: Formato de historial inválido."}), 400
 
-   parts_for_gemini = conversation_history
-response_message = "Lo siento, hubo un error desconocido."
-audio_base64 = None
+    parts_for_gemini = conversation_history
+    response_message = "Lo siento, hubo un error desconocido."
+    audio_base64 = None
 
-base_instruction = (
-    "Responde de forma concisa y clara, ofreciendo la información esencial con un tono amable y humano, evitando la simplicidad excesiva. "
-    "Eres un asistente de inteligencia artificial llamado Raavax. "
-    "Siempre que alguien mencione 'Raavax', se están refiriendo a ti o algo relacionado contigo."
-)
+    base_instruction = (
+        "Responde de forma concisa y clara, ofreciendo la información esencial con un tono amable y humano, evitando la simplicidad excesiva. "
+        "Eres un asistente de inteligencia artificial llamado Raavax. "
+        "Siempre que alguien mencione 'Raavax', se están refiriendo a ti o algo relacionado contigo."
+    )
 
-full_user_message_text = f"{base_instruction} {user_message}"
-if persistent_instruction:
-    full_user_message_text = f"{persistent_instruction}\n\n{full_user_message_text}"
-    current_user_parts = []
-    if full_user_message_text:
-        current_user_parts.append({'text': full_user_message_text})
+    full_user_message_text = f"{base_instruction} {user_message}"
+    if persistent_instruction:
+        full_user_message_text = f"{persistent_instruction}\n\n{full_user_message_text}"
 
     if uploaded_file:
         file_name = uploaded_file.filename
