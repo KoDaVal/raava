@@ -68,7 +68,6 @@ def clone_voice():
         print(f"Error inesperado al clonar voz: {e}")
         return jsonify({'error': f"Error inesperado al clonar la voz: {str(e)}"}), 500
 # --- FIN RUTA PARA CLONAR VOZ ---
-
 @app.route('/chat', methods=['POST'])
 def chat():
     history_json = request.form.get('history', '[]')
@@ -94,6 +93,10 @@ def chat():
     full_user_message_text = f"{base_instruction} {user_message}"
     if persistent_instruction:
         full_user_message_text = f"{persistent_instruction}\n\n{full_user_message_text}"
+
+    current_user_parts = []
+    if full_user_message_text:
+        current_user_parts.append({'text': full_user_message_text})
 
     if uploaded_file:
         file_name = uploaded_file.filename
@@ -139,7 +142,7 @@ def chat():
         parts_for_gemini.append({'role': 'model', 'parts': [{'text': response_message}]})
 
         # --- AUDIO SE GENERA POR SEPARADO ---
-        audio_base64 = None  # Se generará desde el frontend con /generate_audio
+        audio_base64 = None
         # --- FIN CAMBIO ---
 
         return jsonify({"response": response_message, "audio": audio_base64})
