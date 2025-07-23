@@ -803,12 +803,12 @@ document.getElementById('sidebar-backdrop').addEventListener('click', () => {
 }
 // === GUARDAR CHAT AUTOMÁTICAMENTE DESPUÉS DE RESPUESTA ===
 async function autoSaveChat() {
-    const user = (await supabaseClient.auth.getUser()).data.user;
+    const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
     const res = await fetch('/save_chat', {
         method: 'POST',
         body: new URLSearchParams({
-            user_id: user.id,
+            user_id: user.id, // <-- Siempre manda el UUID correcto
             chat_data: JSON.stringify(conversationHistory)
         })
     });
@@ -819,7 +819,7 @@ async function autoSaveChat() {
     }
 }
 
-// === OVERLAY PARA VER Y BORRAR CHATS GUARDADOS ===
+// === OVERLAY PARA VER Y BUSCAR CHATS GUARDADOS ===
 const savedChatsBtn = document.createElement('button');
 savedChatsBtn.textContent = "Ver chats guardados";
 savedChatsBtn.classList.add('saved-chats-btn');
@@ -830,10 +830,20 @@ overlay.classList.add('saved-chats-overlay');
 overlay.innerHTML = `
   <div class="saved-chats-modal">
     <h3>Chats guardados</h3>
+    <input type="text" id="search-chat" placeholder="Buscar chat..." />
     <ul id="saved-chats-list"></ul>
     <button id="close-chats-overlay">Cerrar</button>
   </div>`;
 document.body.appendChild(overlay);
+
+const searchChatInput = overlay.querySelector('#search-chat');
+searchChatInput.addEventListener('input', () => {
+    const term = searchChatInput.value.toLowerCase();
+    const chats = overlay.querySelectorAll('#saved-chats-list li');
+    chats.forEach(chat => {
+        chat.style.display = chat.textContent.toLowerCase().includes(term) ? 'block' : 'none';
+    });
+});
 
 savedChatsBtn.addEventListener('click', async () => {
     const user = (await supabaseClient.auth.getUser()).data.user;
@@ -858,6 +868,7 @@ savedChatsBtn.addEventListener('click', async () => {
     });
     overlay.style.display = 'flex';
 });
+
 document.getElementById('close-chats-overlay').addEventListener('click', () => {
     overlay.style.display = 'none';
 });
