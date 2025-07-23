@@ -799,6 +799,77 @@ document.getElementById('sidebar-backdrop').addEventListener('click', () => {
         document.getElementById('sidebar-backdrop').classList.add('active');
     });
 }
+// === GUARDAR CHAT AUTOMÁTICAMENTE DESPUÉS DE RESPUESTA ===
+async function autoSaveChat() {
+    const user = (await supabaseClient.auth.getUser()).data.user;
+    if (!user) return;
+    const res = await fetch('/save_chat', {
+        method: 'POST',
+        body: new URLSearchParams({
+            user_id: user.id,
+            chat_data: JSON.stringify(conversationHistory)
+        })
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        console.warn(error.error);
+        alert(error.error);
+    }
+}
+
+// === LLAMAR AUTOMÁTICAMENTE TRAS RESPUESTA DE RAAVAX ===
+// Busca donde agregas la respuesta del bot, y justo después añade:
+await autoSaveChat();
+
+// === OVERLAY PARA VER Y BORRAR CHATS GUARDADOS ===
+const savedChatsBtn = document.createElement('button');
+savedChatsBtn.textContent = "Ver chats guardados";
+savedChatsBtn.classList.add('saved-chats-btn');
+document.querySelector('.header-right').appendChild(savedChatsBtn);
+
+const overlay = document.createElement('div');
+overlay.classList.add('saved-chats-overlay');
+overlay.innerHTML = `
+  <div class="saved-chats-modal">
+    <h3>Chats guardados</h3>
+    <ul id="saved-chats-list"></ul>
+    <button id="close-chats-overlay">Cerrar</button>
+  </div>`;
+document.body.appendChild(overlay);
+
+savedChatsBtn.addEventListener('click', async () => {
+    const user = (await supabaseClient.auth.getUser()).data.user;
+    if (!user) return alert("Inicia sesión");
+    const res = await fetch(`/get_chats?user_id=${user.id}`);
+    const chats = await res.json();
+    const list = document.getElementById('saved-chats-list');
+    list.innerHTML = '';
+    chats.forEach(chat => {
+        const li = document.createElement('li');
+        li.textContent = `Chat del ${new Date(chat.created_at).toLocaleString()}`;
+        li.addEventListener('click', () => loadChat(chat.chat_data));
+        const delBtn = document.createElement('button');
+        delBtn.textContent = "X";
+        delBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            await fetch('/delete_chat', {method:'POST', body:new URLSearchParams({chat_id: chat.id})});
+            li.remove();
+        });
+        li.appendChild(delBtn);
+        list.appendChild(li);
+    });
+    overlay.style.display = 'flex';
+});
+document.getElementById('close-chats-overlay').addEventListener('click', () => {
+    overlay.style.display = 'none';
+});
+
+function loadChat(chatData) {
+    conversationHistory = JSON.parse(chatData);
+    messagesContainer.innerHTML = '';
+    conversationHistory.forEach(m => addMessage(m.role === 'user' ? 'user' : 'bot', m.parts.map(p => p.text).join(' ')));
+    overlay.style.display = 'none';
+}
 
 
 });
