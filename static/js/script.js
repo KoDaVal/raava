@@ -450,7 +450,7 @@ if (voiceFileInput) {
             const voiceFile = voiceFileInput.files[0];
             formData.append('audio_file', voiceFile);
 
-            const response = await fetch('https://raava.onrender.com/start_mind', {
+            const response = await fetch('/start_mind', {
                 method: 'POST',
                 body: formData
             });
@@ -726,7 +726,7 @@ messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 formData.append('file', selectedFile);
             }
 
-            const response = await fetch('https://raava.onrender.com/chat', {
+            const response = await fetch('/chat', {
                 method: 'POST',
                 body: formData
             });
