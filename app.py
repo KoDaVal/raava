@@ -70,6 +70,48 @@ def clone_voice():
         print(f"Error inesperado al clonar voz: {e}")
         return jsonify({'error': f"Error inesperado al clonar la voz: {str(e)}"}), 500
 # --- FIN RUTA PARA CLONAR VOZ ---
+# --- NUEVA RUTA: INICIAR MENTE ---
+@app.route('/start_mind', methods=['POST'])
+def start_mind():
+    global cloned_voice_id
+
+    instruction = request.form.get('instruction', '')
+    audio_file = request.files.get('audio_file')
+
+    if not instruction or not audio_file:
+        return jsonify({'error': 'Se requieren instrucción y archivo de voz.'}), 400
+
+    if not eleven_labs_api_key or eleven_labs_api_key == "sk_try_only":
+        return jsonify({'error': 'Clave API de Eleven Labs no configurada o inválida.'}), 500
+
+    try:
+        # Subir el archivo a ElevenLabs para clonar voz
+        url = "https://api.elevenlabs.io/v1/voices/add"
+        headers = {"xi-api-key": eleven_labs_api_key}
+        data = {
+            "name": "User Cloned Voice",
+            "description": "Clonada desde muestra de usuario"
+        }
+        files = {
+            'files': (audio_file.filename, audio_file.read(), audio_file.content_type)
+        }
+
+        response = requests.post(url, headers=headers, data=data, files=files)
+        response.raise_for_status()
+        voice_data = response.json()
+        cloned_voice_id = voice_data.get('voice_id')
+
+        return jsonify({
+            'message': 'Mente iniciada correctamente.',
+            'voice_id': cloned_voice_id
+        }), 200
+    except requests.exceptions.RequestException as e:
+        print(f"Error al conectar con Eleven Labs: {e}")
+        return jsonify({'error': 'Error al procesar la voz.'}), 500
+    except Exception as e:
+        print(f"Error inesperado: {e}")
+        return jsonify({'error': 'Error interno al iniciar la mente.'}), 500
+
 @app.route('/chat', methods=['POST'])
 def chat():
     history_json = request.form.get('history', '[]')
