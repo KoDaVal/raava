@@ -210,7 +210,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let activePersistentInstruction = ""; // La instrucción activa para Gemini
 
     // Botón de "Iniciar mente"
-    const startMindButton = document.getElementById('start-mind-button');
+    const startMindButtons = [
+  document.getElementById('start-mind-button'),
+  document.getElementById('start-mind-button-mobile')
+];
+
+const mobileVoiceLabel = document.querySelector('.mobile-only .voice-button');
+const mobileInfoLabel = document.querySelector('.mobile-only .file-button');
+
 
     // --- NUEVAS variables para Eleven Labs ---
     let clonedVoiceId = null; // Almacena el ID de la voz clonada por Eleven Labs
@@ -362,25 +369,25 @@ if (sidebarLogoBtn) {
 let infoReady = false;
 
 function updateMindButtonState() {
-    if (voiceReady && infoReady) {
-        startMindButton.classList.add('ready');
-    } else {
-        startMindButton.classList.remove('ready');
-    }
+    const ready = voiceReady && infoReady;
+    startMindButtons.forEach(btn => btn?.classList.toggle('ready', ready));
 }
 
 if (voiceFileInput) {
     voiceFileInput.addEventListener('change', (event) => {
+      mobileVoiceLabel?.classList.add('ready');
         const voiceFile = event.target.files[0];
         if (voiceFile) {
             uploadedVoiceFile = voiceFile; // Guardamos el archivo globalmente
             voiceReady = true;
             uploadVoiceBtn.classList.add('ready');
             addMessage('bot', `Archivo de voz "${voiceFile.name}" cargado. Presiona "Iniciar mente" para procesarlo.`);
-        } else {
+        } 
+        else {
             uploadedVoiceFile = null;
             voiceReady = false;
             uploadVoiceBtn.classList.remove('ready');
+          mobileVoiceLabel?.classList.remove('ready');
         }
         updateMindButtonState();
         event.target.value = ''; // Limpiamos el input
@@ -417,6 +424,7 @@ if (voiceFileInput) {
                 uploadedInfoFileContent = e.target.result;
                 infoReady = true;
                 uploadInfoBtn.classList.add('ready');
+                mobileInfoLabel?.classList.add('ready');
                 addMessage('bot', `Instrucción "${file.name}" cargada. Esperando voz para iniciar mente.`);
                 updateMindButtonState();
             };
@@ -425,6 +433,7 @@ if (voiceFileInput) {
                 uploadedInfoFileContent = "";
                 infoReady = false;
                 uploadInfoBtn.classList.remove('ready');
+                mobileInfoLabel?.classList.remove('ready');
                 updateMindButtonState();
             };
             reader.readAsText(file);
@@ -438,49 +447,38 @@ if (voiceFileInput) {
         event.target.value = '';
     });
 }
-    // --- Lógica del botón "Iniciar mente" ---
-    if (startMindButton) {
-    startMindButton.addEventListener('click', async () => {
-        if (!voiceReady || !infoReady) {
-            addMessage('bot', 'Carga primero los dos archivos antes de iniciar la mente.');
-            return;
-        }
+   // --- Lógica del botón "Iniciar mente" ---
+startMindButtons.forEach(btn => {
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      if (!voiceReady || !infoReady) {
+        addMessage('bot', 'Carga primero los dos archivos antes de iniciar la mente.');
+        return;
+      }
+      try {
+        const formData = new FormData();
+        formData.append('instruction', uploadedInfoFileContent);
+        formData.append('audio_file', uploadedVoiceFile);
 
-        try {
-            const formData = new FormData();
-            formData.append('instruction', uploadedInfoFileContent);
+        const response = await fetch('/start_mind', { method: 'POST', body: formData });
+        if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
+        const data = await response.json();
+        clonedVoiceId = data.voice_id || null;
+        activePersistentInstruction = uploadedInfoFileContent;
 
-            formData.append('audio_file', uploadedVoiceFile);
+        [uploadVoiceBtn, mobileVoiceLabel, uploadInfoBtn, mobileInfoLabel, ...startMindButtons].forEach(b => b?.classList.remove('ready'));
+        voiceReady = false;
+        infoReady = false;
+        uploadedInfoFileContent = "";
 
-            const response = await fetch('/start_mind', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!response.ok) {
-                throw new Error(`Error HTTP ${response.status}`);
-            }
-
-            const data = await response.json();
-            clonedVoiceId = data.voice_id || null;
-            activePersistentInstruction = uploadedInfoFileContent;
-
-            // Reset visual y lógicas
-            uploadVoiceBtn.classList.remove('ready');
-            uploadInfoBtn.classList.remove('ready');
-            startMindButton.classList.remove('ready');
-            voiceReady = false;
-            infoReady = false;
-            uploadedInfoFileContent = "";
-
-            addMessage('bot', '🧠 ¡Mente iniciada con tu voz e instrucción!');
-
-        } catch (err) {
-            console.error(err);
-            addMessage('bot', '❌ Hubo un error al iniciar la mente.');
-        }
+        addMessage('bot', '🧠 ¡Mente iniciada con tu voz e instrucción!');
+      } catch (err) {
+        console.error(err);
+        addMessage('bot', '❌ Hubo un error al iniciar la mente.');
+      }
     });
-}
+  }
+});
     // --- FIN LÓGICA ---
 
     // Función para ajustar la altura del textarea dinámicamente
