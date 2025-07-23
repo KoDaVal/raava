@@ -1342,12 +1342,29 @@ input:checked + .slider:before {
   gap: 8px;
   color: #ccc;
 }
-
-
-
-
-
-
-
-
-
+.saved-chats-overlay {
+  position: fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background: rgba(0,0,0,0.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:2000;
+}
+.saved-chats-modal {
+  background: var(--panel-bg);
+  padding:20px;
+  border-radius:12px;
+  width:90%;
+  max-width:400px;
+  color: var(--text-color);
+}
+#saved-chats-list li {
+  display:flex;
+  justify-content:space-between;
+  padding:8px;
+  border-bottom:1px solid var(--border-color);
+  cursor:pointer;
+}
+#saved-chats-list li:hover { background: var(--hover-color); }
