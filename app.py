@@ -118,18 +118,50 @@ def stripe_webhook():
     except stripe.error.SignatureVerificationError:
         return "Invalid signature", 400
 
+    # --- Pago completado ---
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         customer_id = session["customer"]
         subscription = stripe.Subscription.retrieve(session["subscription"])
         price_id = subscription["items"]["data"][0]["price"]["id"]
+
         if price_id == os.getenv("STRIPE_PRICE_PLUS"):
             new_plan = "plus"
         elif price_id == os.getenv("STRIPE_PRICE_LEGACY"):
             new_plan = "legacy"
         else:
             new_plan = "essence"
-        supabase.table("profiles").update({"plan": new_plan, "tts_used": 0}).eq("stripe_customer_id", customer_id).execute()
+
+        supabase.table("profiles").update(
+            {"plan": new_plan, "tts_used": 0}
+        ).eq("stripe_customer_id", customer_id).execute()
+
+    # --- Suscripción actualizada (cambio de plan o renovación) ---
+    elif event["type"] == "customer.subscription.updated":
+        subscription = event["data"]["object"]
+        customer_id = subscription["customer"]
+        price_id = subscription["items"]["data"][0]["price"]["id"]
+
+        if price_id == os.getenv("STRIPE_PRICE_PLUS"):
+            new_plan = "plus"
+        elif price_id == os.getenv("STRIPE_PRICE_LEGACY"):
+            new_plan = "legacy"
+        else:
+            new_plan = "essence"
+
+        supabase.table("profiles").update(
+            {"plan": new_plan}
+        ).eq("stripe_customer_id", customer_id).execute()
+
+    # --- Suscripción cancelada ---
+    elif event["type"] == "customer.subscription.deleted":
+        subscription = event["data"]["object"]
+        customer_id = subscription["customer"]
+
+        supabase.table("profiles").update(
+            {"plan": "essence"}
+        ).eq("stripe_customer_id", customer_id).execute()
+
     return "", 200
 
 # --- CHAT ---
