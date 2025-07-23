@@ -118,6 +118,16 @@ def stripe_webhook():
     except stripe.error.SignatureVerificationError:
         return "Invalid signature", 400
 
+    def enforce_chat_limit(user_id, max_chats):
+        try:
+            chats = supabase.table("saved_chats").select("id").eq("user_id", user_id).order("created_at", desc=True).execute()
+            if chats.data and len(chats.data) > max_chats:
+                # Borra los más antiguos
+                for chat in chats.data[max_chats:]:
+                    supabase.table("saved_chats").delete().eq("id", chat["id"]).execute()
+        except Exception as e:
+            print("Error limpiando chats:", e)
+
     # --- Pago completado ---
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
@@ -127,16 +137,20 @@ def stripe_webhook():
 
         if price_id == os.getenv("STRIPE_PRICE_PLUS"):
             new_plan = "plus"
+            max_chats = 5
         elif price_id == os.getenv("STRIPE_PRICE_LEGACY"):
             new_plan = "legacy"
+            max_chats = 12
         else:
             new_plan = "essence"
+            max_chats = 1
 
         supabase.table("profiles").update(
             {"plan": new_plan, "tts_used": 0}
         ).eq("stripe_customer_id", customer_id).execute()
+        enforce_chat_limit(customer_id, max_chats)
 
-    # --- Suscripción actualizada (cambio de plan o renovación) ---
+    # --- Suscripción actualizada ---
     elif event["type"] == "customer.subscription.updated":
         subscription = event["data"]["object"]
         customer_id = subscription["customer"]
@@ -144,14 +158,18 @@ def stripe_webhook():
 
         if price_id == os.getenv("STRIPE_PRICE_PLUS"):
             new_plan = "plus"
+            max_chats = 5
         elif price_id == os.getenv("STRIPE_PRICE_LEGACY"):
             new_plan = "legacy"
+            max_chats = 12
         else:
             new_plan = "essence"
+            max_chats = 1
 
         supabase.table("profiles").update(
             {"plan": new_plan}
         ).eq("stripe_customer_id", customer_id).execute()
+        enforce_chat_limit(customer_id, max_chats)
 
     # --- Suscripción cancelada ---
     elif event["type"] == "customer.subscription.deleted":
@@ -161,6 +179,7 @@ def stripe_webhook():
         supabase.table("profiles").update(
             {"plan": "essence"}
         ).eq("stripe_customer_id", customer_id).execute()
+        enforce_chat_limit(customer_id, 1)
 
     return "", 200
 
@@ -169,7 +188,6 @@ def stripe_webhook():
 def chat():
     user_id = request.form.get('user_id')
     plan_info = get_user_plan(user_id)
-    # (cuando conectes GPT, aquí cambiarás el modelo según plan_info["model"])
 
     history_json = request.form.get('history', '[]')
     user_message = request.form.get('message', '')
@@ -217,13 +235,11 @@ def generate_audio():
         tts_response.raise_for_status()
         audio_content = b''.join(chunk for chunk in tts_response.iter_content(chunk_size=4096))
         audio_base64 = base64.b64encode(audio_content).decode('utf-8')
-
-        # Registrar uso (1 token = 1 petición; ajusta según tu lógica)
         add_tts_usage(user_id, 1)
-
         return jsonify({"audio": audio_base64})
     except Exception as e:
         return jsonify({"error": f"Error al generar el audio: {str(e)}"}), 500
+
 # === GUARDAR CHAT ===
 @app.route('/save_chat', methods=['POST'])
 def save_chat():
@@ -232,11 +248,9 @@ def save_chat():
     if not user_id or not chat_data:
         return jsonify({"error": "Faltan parámetros"}), 400
 
-    # Obtener plan y límite
     plan_info = get_user_plan(user_id)
     max_chats = 1 if plan_info["plan"] == "essence" else 5 if plan_info["plan"] == "plus" else 12
 
-    # Ver cuántos chats tiene guardados
     try:
         current = supabase.table("saved_chats").select("id").eq("user_id", user_id).execute()
         if current.data and len(current.data) >= max_chats:
@@ -285,3 +299,4 @@ def delete_chat():
     except Exception as e:
         print("Error borrando chat:", e)
         return jsonify({"error": "No se pudo borrar el chat"}), 500
+
