@@ -820,11 +820,6 @@ async function autoSaveChat() {
 }
 
 // === OVERLAY PARA VER Y BUSCAR CHATS GUARDADOS ===
-const savedChatsBtn = document.createElement('button');
-savedChatsBtn.textContent = "Ver chats guardados";
-savedChatsBtn.classList.add('saved-chats-btn');
-document.querySelector('.header-right').appendChild(savedChatsBtn);
-
 const overlay = document.createElement('div');
 overlay.classList.add('saved-chats-overlay');
 overlay.innerHTML = `
@@ -845,7 +840,7 @@ searchChatInput.addEventListener('input', () => {
     });
 });
 
-savedChatsBtn.addEventListener('click', async () => {
+document.getElementById('search-chat-btn').addEventListener('click', async () => {
     const user = (await supabaseClient.auth.getUser()).data.user;
     if (!user) return alert("Inicia sesión");
     const res = await fetch(`/get_chats?user_id=${user.id}`);
