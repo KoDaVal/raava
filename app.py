@@ -192,3 +192,64 @@ def generate_audio():
         return jsonify({"audio": audio_base64})
     except Exception as e:
         return jsonify({"error": f"Error al generar el audio: {str(e)}"}), 500
+# === GUARDAR CHAT ===
+@app.route('/save_chat', methods=['POST'])
+def save_chat():
+    user_id = request.form.get('user_id')
+    chat_data = request.form.get('chat_data')
+    if not user_id or not chat_data:
+        return jsonify({"error": "Faltan parámetros"}), 400
+
+    # Obtener plan y límite
+    plan_info = get_user_plan(user_id)
+    max_chats = 1 if plan_info["plan"] == "essence" else 5 if plan_info["plan"] == "plus" else 12
+
+    # Ver cuántos chats tiene guardados
+    try:
+        current = supabase.table("saved_chats").select("id").eq("user_id", user_id).execute()
+        if current.data and len(current.data) >= max_chats:
+            return jsonify({"error": f"Límite alcanzado ({max_chats} chats). Borra uno para guardar otro."}), 403
+    except Exception as e:
+        print("Error verificando chats:", e)
+
+    try:
+        supabase.table("saved_chats").insert({
+            "user_id": user_id,
+            "chat_data": chat_data
+        }).execute()
+        return jsonify({"message": "Chat guardado"}), 200
+    except Exception as e:
+        print("Error guardando chat:", e)
+        return jsonify({"error": "No se pudo guardar el chat"}), 500
+
+# === LISTAR CHATS ===
+@app.route('/get_chats', methods=['GET'])
+def get_chats():
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify([])
+
+    try:
+        chats = supabase.table("saved_chats")\
+            .select("id, created_at, chat_data")\
+            .eq("user_id", user_id)\
+            .order("created_at", desc=True)\
+            .execute()
+        return jsonify(chats.data), 200
+    except Exception as e:
+        print("Error obteniendo chats:", e)
+        return jsonify([]), 500
+
+# === BORRAR CHAT ===
+@app.route('/delete_chat', methods=['POST'])
+def delete_chat():
+    chat_id = request.form.get('chat_id')
+    if not chat_id:
+        return jsonify({"error": "Falta el chat_id"}), 400
+
+    try:
+        supabase.table("saved_chats").delete().eq("id", chat_id).execute()
+        return jsonify({"message": "Chat eliminado"}), 200
+    except Exception as e:
+        print("Error borrando chat:", e)
+        return jsonify({"error": "No se pudo borrar el chat"}), 500
