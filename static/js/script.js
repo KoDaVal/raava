@@ -210,10 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let activePersistentInstruction = ""; // La instrucción activa para Gemini
 
     // Botón de "Iniciar mente"
-    const startMindButtons = [
-  document.getElementById('start-mind-button'),
-  document.getElementById('start-mind-button-mobile')
-];
+    const startMindButton = document.getElementById('start-mind-button');
+
     // --- NUEVAS variables para Eleven Labs ---
     let clonedVoiceId = null; // Almacena el ID de la voz clonada por Eleven Labs
 
@@ -437,58 +435,51 @@ if (voiceFileInput) {
         event.target.value = '';
     });
 }
-   // --- Lógica del botón "Iniciar mente" ---
-const startMindButtons = [
-  document.getElementById('start-mind-button'),
-  document.getElementById('start-mind-button-mobile')
-];
-
-startMindButtons.forEach(startMindButton => {
-  if (startMindButton) {
+    // --- Lógica del botón "Iniciar mente" ---
+    if (startMindButton) {
     startMindButton.addEventListener('click', async () => {
-      if (!voiceReady || !infoReady) {
-        addMessage('bot', 'Carga primero los dos archivos antes de iniciar la mente.');
-        return;
-      }
-
-      try {
-        const formData = new FormData();
-        formData.append('instruction', uploadedInfoFileContent);
-
-        const voiceFile = voiceFileInput.files[0];
-        formData.append('audio_file', voiceFile);
-
-        const response = await fetch('https://raava.onrender.com/start_mind', {
-          method: 'POST',
-          body: formData
-        });
-
-        if (!response.ok) {
-          throw new Error(`Error HTTP ${response.status}`);
+        if (!voiceReady || !infoReady) {
+            addMessage('bot', 'Carga primero los dos archivos antes de iniciar la mente.');
+            return;
         }
 
-        const data = await response.json();
-        clonedVoiceId = data.voice_id || null;
-        activePersistentInstruction = uploadedInfoFileContent;
+        try {
+            const formData = new FormData();
+            formData.append('instruction', uploadedInfoFileContent);
 
-        // Reset visual y lógicas
-        uploadVoiceBtn?.classList.remove('ready');
-        uploadInfoBtn?.classList.remove('ready');
-        startMindButtons.forEach(btn => btn?.classList.remove('ready'));
-        voiceReady = false;
-        infoReady = false;
-        uploadedInfoFileContent = "";
+            const voiceFile = voiceFileInput.files[0];
+            formData.append('audio_file', voiceFile);
 
-        addMessage('bot', '🧠 ¡Mente iniciada con tu voz e instrucción!');
+            const response = await fetch('https://raava.onrender.com/start_mind', {
+                method: 'POST',
+                body: formData
+            });
 
-      } catch (err) {
-        console.error(err);
-        addMessage('bot', '❌ Hubo un error al iniciar la mente.');
-      }
+            if (!response.ok) {
+                throw new Error(`Error HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            clonedVoiceId = data.voice_id || null;
+            activePersistentInstruction = uploadedInfoFileContent;
+
+            // Reset visual y lógicas
+            uploadVoiceBtn.classList.remove('ready');
+            uploadInfoBtn.classList.remove('ready');
+            startMindButton.classList.remove('ready');
+            voiceReady = false;
+            infoReady = false;
+            uploadedInfoFileContent = "";
+
+            addMessage('bot', '🧠 ¡Mente iniciada con tu voz e instrucción!');
+
+        } catch (err) {
+            console.error(err);
+            addMessage('bot', '❌ Hubo un error al iniciar la mente.');
+        }
     });
-  }
-});
-// --- FIN LÓGICA ---
+}
+    // --- FIN LÓGICA ---
 
     // Función para ajustar la altura del textarea dinámicamente
     function adjustTextareaHeight() {
