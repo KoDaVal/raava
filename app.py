@@ -5,6 +5,13 @@ import os
 import base64
 import json
 import requests # Necesario para Eleven Labs
+import stripe
+from supabase import create_client
+
+# --- CONFIGURACIÓN STRIPE + SUPABASE ---
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
+WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 app = Flask(__name__)
 CORS(app)
@@ -22,6 +29,24 @@ eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_try_only")
 default_eleven_labs_voice_id = "21m00Tcm4TlvDq8ikWAM"
 cloned_voice_id = None
 # --- FIN CONFIGURACIÓN DE ELEVEN LABS ---
+
+# --- FUNCIÓN PARA OBTENER PLAN Y LIMITES ---
+def get_user_plan(user_id):
+    try:
+        profile = supabase.table("profiles").select("plan").eq("id", user_id).single().execute()
+        plan = profile.data["plan"] if profile.data else "essence"
+    except Exception as e:
+        print(f"Error al obtener plan del usuario: {e}")
+        plan = "essence"
+
+    # Configurar límites por plan
+    if plan == "essence":
+        return {"plan": plan, "tts_tokens": 500, "model": "gemini"}
+    elif plan == "plus":
+        return {"plan": plan, "tts_tokens": 6000, "model": "gpt"}
+    elif plan == "legacy":
+        return {"plan": plan, "tts_tokens": 999999, "model": "gpt"}  # acceso anticipado
+    return {"plan": "essence", "tts_tokens": 500, "model": "gemini"}
 
 # --- RUTA PARA SERVIR EL FRONTEND ---
 @app.route('/')
