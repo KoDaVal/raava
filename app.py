@@ -4,7 +4,7 @@ import google.generativeai as genai
 import os
 import base64
 import json
-import requests # Necesario para Eleven Labs
+import requests  # Para Eleven Labs
 import stripe
 from supabase import create_client
 
@@ -21,7 +21,7 @@ gemini_api_key = os.getenv("GEMINI_API_KEY")
 if not gemini_api_key:
     raise EnvironmentError("Falta la variable de entorno GEMINI_API_KEY")
 genai.configure(api_key=gemini_api_key)
-model = genai.GenerativeModel('gemini-1.5-flash')
+gemini_model = genai.GenerativeModel('gemini-1.5-flash')
 # --- FIN CONFIGURACIÓN DE GEMINI ---
 
 # --- CONFIGURACIÓN DE ELEVEN LABS ---
@@ -30,112 +30,83 @@ default_eleven_labs_voice_id = "21m00Tcm4TlvDq8ikWAM"
 cloned_voice_id = None
 # --- FIN CONFIGURACIÓN DE ELEVEN LABS ---
 
-# --- FUNCIÓN PARA OBTENER PLAN Y LIMITES ---
+# --- FUNCIÓN PARA OBTENER PLAN Y TOKENS ---
 def get_user_plan(user_id):
     try:
-        profile = supabase.table("profiles").select("plan").eq("id", user_id).single().execute()
+        profile = supabase.table("profiles").select("plan, tts_used").eq("id", user_id).single().execute()
         plan = profile.data["plan"] if profile.data else "essence"
+        used = profile.data["tts_used"] if profile.data and profile.data.get("tts_used") is not None else 0
     except Exception as e:
-        print(f"Error al obtener plan del usuario: {e}")
-        plan = "essence"
+        print(f"Error al obtener plan: {e}")
+        plan, used = "essence", 0
 
-    # Configurar límites por plan
     if plan == "essence":
-        return {"plan": plan, "tts_tokens": 500, "model": "gemini"}
+        return {"plan": plan, "tts_limit": 500, "tts_used": used, "model": "gemini"}
     elif plan == "plus":
-        return {"plan": plan, "tts_tokens": 6000, "model": "gpt"}
+        return {"plan": plan, "tts_limit": 6000, "tts_used": used, "model": "gpt"}
     elif plan == "legacy":
-        return {"plan": plan, "tts_tokens": 999999, "model": "gpt"}  # acceso anticipado
-    return {"plan": "essence", "tts_tokens": 500, "model": "gemini"}
+        return {"plan": plan, "tts_limit": 999999, "tts_used": used, "model": "gpt"}
+    return {"plan": "essence", "tts_limit": 500, "tts_used": used, "model": "gemini"}
 
-# --- RUTA PARA SERVIR EL FRONTEND ---
-@.route('/')
+# --- FUNCIÓN PARA DESCONTAR TOKENS ---
+def add_tts_usage(user_id, tokens):
+    try:
+        profile = supabase.table("profiles").select("tts_used").eq("id", user_id).single().execute()
+        current = profile.data["tts_used"] if profile.data and profile.data.get("tts_used") is not None else 0
+        supabase.table("profiles").update({"tts_used": current + tokens}).eq("id", user_id).execute()
+    except Exception as e:
+        print(f"Error al actualizar tokens: {e}")
+
+# --- RUTA PARA SERVIR FRONTEND ---
+@app.route('/')
 def index():
     return render_template('index.html')
-# --- FIN RUTA DEL FRONTEND ---
 
-# --- RUTA PARA CLONAR VOZ (Eleven Labs) ---
-@.route('/clone_voice', methods=['POST'])
+# --- RUTA PARA CLONAR VOZ ---
+@app.route('/clone_voice', methods=['POST'])
 def clone_voice():
     global cloned_voice_id
-
     if 'audio_file' not in request.files:
         return jsonify({'error': 'No se proporcionó archivo de audio.'}), 400
 
     audio_file = request.files['audio_file']
     if audio_file.filename == '':
         return jsonify({'error': 'No se seleccionó archivo de audio.'}), 400
-
     if not eleven_labs_api_key or eleven_labs_api_key == "sk_try_only":
         return jsonify({'error': 'Clave API de Eleven Labs no configurada o inválida.'}), 500
 
     url = "https://api.elevenlabs.io/v1/voices/add"
-    headers = {
-        "xi-api-key": eleven_labs_api_key
-    }
-    data = {
-        "name": "Cloned Voice",
-        "description": "Voice cloned from user sample"
-    }
-    files = {
-        'files': (audio_file.filename, audio_file.read(), audio_file.content_type)
-    }
+    headers = {"xi-api-key": eleven_labs_api_key}
+    data = {"name": "Cloned Voice", "description": "Voice cloned from user sample"}
+    files = {'files': (audio_file.filename, audio_file.read(), audio_file.content_type)}
 
     try:
         response = requests.post(url, headers=headers, data=data, files=files)
         response.raise_for_status()
-        voice_data = response.json()
-        cloned_voice_id = voice_data['voice_id']
-        print(f"Voz clonada ID: {cloned_voice_id}")
+        cloned_voice_id = response.json()['voice_id']
         return jsonify({'message': 'Voz clonada exitosamente.', 'voice_id': cloned_voice_id}), 200
-    except requests.exceptions.HTTPError as e:
-        print(f"Error de conexión o API con Eleven Labs al clonar voz: {e.response.status_code} - {e.response.text}")
-        return jsonify({'error': f"Error al clonar la voz con Eleven Labs: {e.response.text}"}), e.response.status_code
     except Exception as e:
-        print(f"Error inesperado al clonar voz: {e}")
-        return jsonify({'error': f"Error inesperado al clonar la voz: {str(e)}"}), 500
-# --- FIN RUTA PARA CLONAR VOZ ---
-# --- NUEVA RUTA: INICIAR MENTE ---
+        return jsonify({'error': f"Error al clonar voz: {str(e)}"}), 500
+
+# --- RUTA: INICIAR MENTE ---
 @app.route('/start_mind', methods=['POST'])
 def start_mind():
     global cloned_voice_id
-
     instruction = request.form.get('instruction', '')
     audio_file = request.files.get('audio_file')
-
     if not instruction or not audio_file:
         return jsonify({'error': 'Se requieren instrucción y archivo de voz.'}), 400
-
-    if not eleven_labs_api_key or eleven_labs_api_key == "sk_try_only":
-        return jsonify({'error': 'Clave API de Eleven Labs no configurada o inválida.'}), 500
-
     try:
-        # Subir el archivo a ElevenLabs para clonar voz
         url = "https://api.elevenlabs.io/v1/voices/add"
         headers = {"xi-api-key": eleven_labs_api_key}
-        data = {
-            "name": "User Cloned Voice",
-            "description": "Clonada desde muestra de usuario"
-        }
-        files = {
-            'files': (audio_file.filename, audio_file.read(), audio_file.content_type)
-        }
-
+        data = {"name": "User Cloned Voice", "description": "Clonada desde muestra de usuario"}
+        files = {'files': (audio_file.filename, audio_file.read(), audio_file.content_type)}
         response = requests.post(url, headers=headers, data=data, files=files)
         response.raise_for_status()
-        voice_data = response.json()
-        cloned_voice_id = voice_data.get('voice_id')
-
-        return jsonify({
-            'message': 'Mente iniciada correctamente.',
-            'voice_id': cloned_voice_id
-        }), 200
-    except requests.exceptions.RequestException as e:
-        print(f"Error al conectar con Eleven Labs: {e}")
-        return jsonify({'error': 'Error al procesar la voz.'}), 500
+        cloned_voice_id = response.json().get('voice_id')
+        return jsonify({'message': 'Mente iniciada correctamente.', 'voice_id': cloned_voice_id}), 200
     except Exception as e:
-        print(f"Error inesperado: {e}")
-        return jsonify({'error': 'Error interno al iniciar la mente.'}), 500
+        return jsonify({'error': f"Error: {str(e)}"}), 500
 
 # --- WEBHOOK STRIPE ---
 @app.route("/stripe-webhook", methods=["POST"])
@@ -152,33 +123,25 @@ def stripe_webhook():
         customer_id = session["customer"]
         subscription = stripe.Subscription.retrieve(session["subscription"])
         price_id = subscription["items"]["data"][0]["price"]["id"]
-
-        # Mapear price_id a plan (usa tus IDs reales como variables de entorno)
         if price_id == os.getenv("STRIPE_PRICE_PLUS"):
             new_plan = "plus"
         elif price_id == os.getenv("STRIPE_PRICE_LEGACY"):
             new_plan = "legacy"
         else:
             new_plan = "essence"
-
-        # Actualizar plan en Supabase
-        supabase.table("profiles").update({"plan": new_plan}).eq("stripe_customer_id", customer_id).execute()
-
+        supabase.table("profiles").update({"plan": new_plan, "tts_used": 0}).eq("stripe_customer_id", customer_id).execute()
     return "", 200
 
+# --- CHAT ---
 @app.route('/chat', methods=['POST'])
 def chat():
+    user_id = request.form.get('user_id')
+    plan_info = get_user_plan(user_id)
+    # (cuando conectes GPT, aquí cambiarás el modelo según plan_info["model"])
+
     history_json = request.form.get('history', '[]')
     user_message = request.form.get('message', '')
     uploaded_file = request.files.get('file')
-        # --- CONTROL DE PLAN ---
-    user_id = request.form.get('user_id')  # Debes pasar este ID desde el frontend
-    plan_info = get_user_plan(user_id)
-
-    # Elegir modelo según plan (por ahora solo Gemini, GPT listo cuando se conecte)
-    if plan_info["model"] == "gpt":
-        # Aquí integrarás GPT cuando esté disponible
-        pass
     persistent_instruction = request.form.get('persistent_instruction', '')
 
     try:
@@ -186,123 +149,46 @@ def chat():
     except json.JSONDecodeError:
         return jsonify({"response": "Error: Formato de historial inválido."}), 400
 
-    parts_for_gemini = conversation_history
-    response_message = "Lo siento, hubo un error desconocido."
-    audio_base64 = None
-
-    base_instruction = (
-        "Responde como Raavax, un asistente conversacional inteligente, claro y cercano. "
-        "Por defecto, mantén respuestas breves, útiles y al grano, como si platicaras con alguien de confianza, evitando sonar formal o excesivamente emocional. "
-        "No te extiendas con mensajes largos a menos que el usuario explícitamente lo pida (por ejemplo: 'explícate más', 'aconsejame', 'háblame largo') o comparta algo que requiera apoyo emocional profundo. "
-        "En esos casos, adapta tu respuesta para ser empático, desarrollada y comprensiva, ajustando tu tono al contexto. "
-        "Si el usuario sube un archivo con instrucciones o personalidad, adopta ese estilo, pero siempre mantén coherencia y naturalidad. "
-        "Evita tecnicismos innecesarios, repeticiones o parecer robótico. "
-        "Sé humano, adaptable y auténtico, con el objetivo de ser un buen acompañante cuando se necesite, y un asistente práctico cuando no."
-    )
-
-    full_user_message_text = f"{base_instruction} {user_message}"
+    parts_for_model = conversation_history
+    full_user_message_text = f"{user_message}"
     if persistent_instruction:
         full_user_message_text = f"{persistent_instruction}\n\n{full_user_message_text}"
-
-    current_user_parts = []
     if full_user_message_text:
-        current_user_parts.append({'text': full_user_message_text})
-
-    if uploaded_file:
-        file_name = uploaded_file.filename
-        file_type = uploaded_file.content_type
-
-        try:
-            if file_type.startswith('image/'):
-                image_bytes = uploaded_file.read()
-                base64_image = base64.b64encode(image_bytes).decode('utf-8')
-                current_user_parts.append({
-                    "inlineData": {
-                        "mimeType": file_type,
-                        "data": base64_image
-                    }
-                })
-                if not user_message:
-                    current_user_parts.append({'text': f"Adjuntaste la imagen '{file_name}'. ¿Qué quieres saber sobre ella?"})
-                else:
-                    current_user_parts.append({'text': f"Imagen adjunta: '{file_name}'."})
-
-            elif file_type.startswith('text/'):
-                text_content = uploaded_file.read().decode('utf-8')
-                current_user_parts.append({'text': f"Contenido del archivo de texto '{file_name}':\n{text_content}"})
-                if not user_message:
-                    current_user_parts.append({'text': f"Adjuntaste el archivo de texto '{file_name}'. ¿Qué quieres que analice?"})
-                else:
-                    current_user_parts.append({'text': f"Archivo de texto adjunto: '{file_name}'."})
-            else:
-                current_user_parts.append({'text': f"Se adjuntó un archivo de tipo {file_type} ('{file_name}'). Actualmente, solo puedo procesar imágenes y texto simple directamente. ¿Hay algo más en lo que pueda ayudarte?"})
-
-        except Exception as e:
-            print(f"Error al procesar el archivo adjunto: {e}")
-            return jsonify({"response": "Lo siento, hubo un error al procesar el archivo adjunto."}), 500
-
-    if not current_user_parts:
-        return jsonify({"response": "Por favor, envía un mensaje o un archivo válido para que pueda responderte."}), 400
-
-    parts_for_gemini.append({'role': 'user', 'parts': current_user_parts})
+        parts_for_model.append({'role': 'user', 'parts': [{'text': full_user_message_text}]})
 
     try:
-        gemini_response = model.generate_content(parts_for_gemini)
+        gemini_response = gemini_model.generate_content(parts_for_model)
         response_message = gemini_response.text
-        parts_for_gemini.append({'role': 'model', 'parts': [{'text': response_message}]})
-
-        # --- AUDIO SE GENERA POR SEPARADO ---
-        audio_base64 = None
-        # --- FIN CAMBIO ---
-
-        return jsonify({"response": response_message, "audio": audio_base64})
-
-    except requests.exceptions.HTTPError as e:
-        print(f"Error de conexión o API con Eleven Labs al generar audio: {e.response.status_code} - {e.response.text}")
-        response_message = f"Lo siento, hubo un problema al generar el audio: {e.response.text}. Por favor, revisa tu clave API de Eleven Labs o los límites de tu cuenta."
         return jsonify({"response": response_message, "audio": None})
     except Exception as e:
-        print(f"Error inesperado al conectar con la API de Gemini o generar audio: {e}")
-        response_message = "Lo siento, hubo un problema al procesar tu solicitud con la IA o generar audio. Por favor, intenta de nuevo."
-        return jsonify({"response": response_message, "audio": None})
+        return jsonify({"response": f"Error: {str(e)}", "audio": None})
 
-# --- NUEVO ENDPOINT PARA GENERAR AUDIO BAJO DEMANDA ---
+# --- GENERAR AUDIO ---
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
     text = request.form.get('text', '')
-    if not text:
-        return jsonify({"error": "Texto vacío para generar audio."}), 400
-            # --- CONTROL DE TOKENS DE VOZ ---
-    user_id = request.form.get('user_id')  # Debes pasar este ID desde el frontend
-    plan_info = get_user_plan(user_id)
-    if plan_info["tts_tokens"] <= 0:
-        return jsonify({"error": "Se agotaron tus tokens de voz para este plan"}), 403
+    user_id = request.form.get('user_id')
+    if not text or not user_id:
+        return jsonify({"error": "Texto o usuario no válidos."}), 400
 
+    plan_info = get_user_plan(user_id)
+    if plan_info["tts_used"] >= plan_info["tts_limit"]:
+        return jsonify({"error": "Se agotaron tus tokens de voz para este plan"}), 403
 
     current_voice_id = cloned_voice_id if cloned_voice_id else default_eleven_labs_voice_id
     tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{current_voice_id}/stream"
-    tts_headers = {
-        "xi-api-key": eleven_labs_api_key,
-        "Content-Type": "application/json",
-        "accept": "audio/mpeg"
-    }
-    tts_data = {
-        "text": text,
-        "model_id": "eleven_multilingual_v2",
-        "voice_settings": {
-            "stability": 0.5,
-            "similarity_boost": 0.75
-        }
-    }
+    tts_headers = {"xi-api-key": eleven_labs_api_key, "Content-Type": "application/json", "accept": "audio/mpeg"}
+    tts_data = {"text": text, "model_id": "eleven_multilingual_v2", "voice_settings": {"stability": 0.5, "similarity_boost": 0.75}}
 
     try:
         tts_response = requests.post(tts_url, headers=tts_headers, json=tts_data, stream=True)
         tts_response.raise_for_status()
-        audio_content = b''
-        for chunk in tts_response.iter_content(chunk_size=4096):
-            audio_content += chunk
+        audio_content = b''.join(chunk for chunk in tts_response.iter_content(chunk_size=4096))
         audio_base64 = base64.b64encode(audio_content).decode('utf-8')
+
+        # Registrar uso (1 token = 1 petición; ajusta según tu lógica)
+        add_tts_usage(user_id, 1)
+
         return jsonify({"audio": audio_base64})
-    except requests.exceptions.HTTPError as e:
-        print(f"Error de conexión o API con Eleven Labs al generar audio: {e.response.status_code} - {e.response.text}")
-        return jsonify({"error": f"Error al generar el audio: {e.response.text}"}), e.response.status
+    except Exception as e:
+        return jsonify({"error": f"Error al generar el audio: {str(e)}"}), 500
