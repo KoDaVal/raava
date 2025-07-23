@@ -3,3 +3,4 @@ Flask-Cors
 google-generativeai
 gunicorn
 requests
+stripe
