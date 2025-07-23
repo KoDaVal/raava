@@ -214,6 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- NUEVAS variables para Eleven Labs ---
     let clonedVoiceId = null; // Almacena el ID de la voz clonada por Eleven Labs
+    let uploadedVoiceFile = null;
 
     // --- NUEVOS ELEMENTOS PARA LA BARRA LATERAL IZQUIERDA ---
     const sidebar = document.querySelector('.sidebar');
@@ -372,15 +373,17 @@ if (voiceFileInput) {
     voiceFileInput.addEventListener('change', (event) => {
         const voiceFile = event.target.files[0];
         if (voiceFile) {
+            uploadedVoiceFile = voiceFile; // Guardamos el archivo globalmente
             voiceReady = true;
             uploadVoiceBtn.classList.add('ready');
             addMessage('bot', `Archivo de voz "${voiceFile.name}" cargado. Presiona "Iniciar mente" para procesarlo.`);
         } else {
+            uploadedVoiceFile = null;
             voiceReady = false;
             uploadVoiceBtn.classList.remove('ready');
         }
         updateMindButtonState();
-        event.target.value = '';
+        event.target.value = ''; // Limpiamos el input
     });
 }
     // Evento para reemplazar la imagen del avatar Y ADJUNTARLA AL CHAT
@@ -447,8 +450,7 @@ if (voiceFileInput) {
             const formData = new FormData();
             formData.append('instruction', uploadedInfoFileContent);
 
-            const voiceFile = voiceFileInput.files[0];
-            formData.append('audio_file', voiceFile);
+            formData.append('audio_file', uploadedVoiceFile);
 
             const response = await fetch('/start_mind', {
                 method: 'POST',
