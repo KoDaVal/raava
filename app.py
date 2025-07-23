@@ -49,13 +49,13 @@ def get_user_plan(user_id):
     return {"plan": "essence", "tts_tokens": 500, "model": "gemini"}
 
 # --- RUTA PARA SERVIR EL FRONTEND ---
-@app.route('/')
+@.route('/')
 def index():
     return render_template('index.html')
 # --- FIN RUTA DEL FRONTEND ---
 
 # --- RUTA PARA CLONAR VOZ (Eleven Labs) ---
-@app.route('/clone_voice', methods=['POST'])
+@.route('/clone_voice', methods=['POST'])
 def clone_voice():
     global cloned_voice_id
 
@@ -137,11 +137,48 @@ def start_mind():
         print(f"Error inesperado: {e}")
         return jsonify({'error': 'Error interno al iniciar la mente.'}), 500
 
+# --- WEBHOOK STRIPE ---
+@app.route("/stripe-webhook", methods=["POST"])
+def stripe_webhook():
+    payload = request.data
+    sig = request.headers.get("Stripe-Signature")
+    try:
+        event = stripe.Webhook.construct_event(payload, sig, WEBHOOK_SECRET)
+    except stripe.error.SignatureVerificationError:
+        return "Invalid signature", 400
+
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        customer_id = session["customer"]
+        subscription = stripe.Subscription.retrieve(session["subscription"])
+        price_id = subscription["items"]["data"][0]["price"]["id"]
+
+        # Mapear price_id a plan (usa tus IDs reales como variables de entorno)
+        if price_id == os.getenv("STRIPE_PRICE_PLUS"):
+            new_plan = "plus"
+        elif price_id == os.getenv("STRIPE_PRICE_LEGACY"):
+            new_plan = "legacy"
+        else:
+            new_plan = "essence"
+
+        # Actualizar plan en Supabase
+        supabase.table("profiles").update({"plan": new_plan}).eq("stripe_customer_id", customer_id).execute()
+
+    return "", 200
+
 @app.route('/chat', methods=['POST'])
 def chat():
     history_json = request.form.get('history', '[]')
     user_message = request.form.get('message', '')
     uploaded_file = request.files.get('file')
+        # --- CONTROL DE PLAN ---
+    user_id = request.form.get('user_id')  # Debes pasar este ID desde el frontend
+    plan_info = get_user_plan(user_id)
+
+    # Elegir modelo según plan (por ahora solo Gemini, GPT listo cuando se conecte)
+    if plan_info["model"] == "gpt":
+        # Aquí integrarás GPT cuando esté disponible
+        pass
     persistent_instruction = request.form.get('persistent_instruction', '')
 
     try:
@@ -235,6 +272,12 @@ def generate_audio():
     text = request.form.get('text', '')
     if not text:
         return jsonify({"error": "Texto vacío para generar audio."}), 400
+            # --- CONTROL DE TOKENS DE VOZ ---
+    user_id = request.form.get('user_id')  # Debes pasar este ID desde el frontend
+    plan_info = get_user_plan(user_id)
+    if plan_info["tts_tokens"] <= 0:
+        return jsonify({"error": "Se agotaron tus tokens de voz para este plan"}), 403
+
 
     current_voice_id = cloned_voice_id if cloned_voice_id else default_eleven_labs_voice_id
     tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{current_voice_id}/stream"
