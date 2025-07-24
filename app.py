@@ -315,19 +315,15 @@ def get_usage():
         if not user_email:
             return jsonify({"error": "Falta email"}), 400
 
-        # Buscar el usuario en auth.users para obtener su id
-        auth_user = supabase.table("auth.users").select("id").eq("email", user_email).single().execute()
-        if not auth_user or not auth_user.data:
-            return jsonify({"error": "Usuario no encontrado en Auth"}), 404
-        user_id = auth_user.data.get("id")
+        print(f"[get_usage] Consultando perfil para: {user_email}")
 
         # Intentar cargar perfil
         profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
+        print(f"[get_usage] Resultado inicial: {profile.data}")
 
         if not profile or not profile.data:
-            # Crear perfil por defecto si no existe
-            supabase.table("profiles").insert({
-                "id": user_id,  # mismo id que en auth.users
+            print(f"[get_usage] Perfil no encontrado, creando perfil por defecto...")
+            insert_res = supabase.table("profiles").insert({
                 "email": user_email,
                 "plan": "essence",
                 "plan_expiry": None,
@@ -335,10 +331,13 @@ def get_usage():
                 "gpt_tokens_used": 0,
                 "tts_tokens_used": 0
             }).execute()
+            print(f"[get_usage] Resultado insert: {insert_res.data}")
             # Volvemos a cargarlo
             profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
+            print(f"[get_usage] Perfil recargado: {profile.data}")
 
         if not profile or not profile.data:
+            print("[get_usage] ERROR: No se pudo crear el perfil.")
             return jsonify({"error": "No se pudo crear el perfil"}), 500
 
         plan = profile.data.get("plan", "essence")
@@ -350,6 +349,7 @@ def get_usage():
         }
         return jsonify(usage)
     except Exception as e:
-        print(f"Error en get_usage: {e}")
-        return jsonify({"error": "Error interno al obtener el plan"}), 500
+        print(f"[get_usage] Error inesperado: {e}")
+        return jsonify({"error": f"Error interno al obtener el plan: {str(e)}"}), 500
 # --- FIN CONSULTAR USO ---
+
