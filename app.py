@@ -328,7 +328,6 @@ def ensure_profile_exists(user_email):
     except Exception as e:
         print(f"[ensure_profile_exists] Error al asegurar perfil para {user_email}: {e}")
         return None
-
 # --- FIN HELPER ---
 
 
