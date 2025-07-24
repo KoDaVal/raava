@@ -315,10 +315,11 @@ def get_usage():
     if not user_email:
         return jsonify({"error": "Falta email"}), 400
 
+    # Intentar cargar perfil
     profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
 
     if not profile.data:
-        # Crear perfil por defecto
+        # Si no existe, lo creamos por defecto
         supabase.table("profiles").insert({
             "email": user_email,
             "plan": "essence",
@@ -327,16 +328,21 @@ def get_usage():
             "gpt_tokens_used": 0,
             "tts_tokens_used": 0
         }).execute()
-        # Vuelve a cargarlo
+        # Volvemos a cargarlo
         profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
+
+    # Proteger por si sigue vacío
+    if not profile.data:
+        return jsonify({"error": "No se pudo crear el perfil"}), 500
 
     plan = profile.data.get("plan", "essence")
     usage = {
         "plan": plan,
         "plan_expiry": profile.data.get("plan_expiry"),
         "tts_tokens_used": profile.data.get("tts_tokens_used", 0),
-        "tts_tokens_limit": PLAN_LIMITS[plan]["tts_tokens"]
+        "tts_tokens_limit": PLAN_LIMITS.get(plan, PLAN_LIMITS["essence"])["tts_tokens"]
     }
     return jsonify(usage)
+
 
 # --- FIN CONSULTAR USO ---
