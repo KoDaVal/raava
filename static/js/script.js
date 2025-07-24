@@ -459,6 +459,10 @@ startMindButtons.forEach(btn => {
         const formData = new FormData();
         formData.append('instruction', uploadedInfoFileContent);
         formData.append('audio_file', uploadedVoiceFile);
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) return alert("Inicia sesión para chatear");
+        formData.append('user_id', user.id);
+
 
         const response = await fetch('/start_mind', { method: 'POST', body: formData });
         if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
@@ -563,16 +567,21 @@ playAudioButton.addEventListener('click', async () => {
     try {
         playAudioButton.classList.add('loading');
         playAudioButton.classList.remove('playing');
+// Solicita el audio al backend
+const { data: { user } } = await supabaseClient.auth.getUser();
+if (!user) {
+    alert("Inicia sesión para generar audio");
+    playAudioButton.classList.remove('loading');
+    return;
+}
 
-        // Solicita el audio al backend
-        const response = await fetch('/generate_audio', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams({ text: messageText })
-        });
-
+const response = await fetch('/generate_audio', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: new URLSearchParams({ text: messageText, user_id: user.id })
+});
         const data = await response.json();
         if (!data.audio) {
             console.warn('No se recibió audio desde el backend.');
