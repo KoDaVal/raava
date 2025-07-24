@@ -1,3 +1,4 @@
+
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import google.generativeai as genai
@@ -49,6 +50,8 @@ def get_user_plan(user_id):
     try:
         profile = supabase.table("profiles").select("plan, tts_used").eq("id", user_id).execute()
         if not profile.data or len(profile.data) == 0:
+            # Si el perfil no existe, crear uno por defecto
+            supabase.table("profiles").insert({"id": user_id, "plan": "essence", "tts_used": 0}).execute()
             return {"plan": "essence", "tts_limit": 500, "tts_used": 0, "model": "gemini"}
         plan = profile.data[0].get("plan", "essence")
         used = profile.data[0].get("tts_used", 0)
@@ -212,6 +215,9 @@ def stripe_webhook():
 @app.route('/chat', methods=['POST'])
 def chat():
     user_id = request.form.get('user_id')
+    if not user_id or not is_valid_uuid(user_id):
+        return jsonify({"error": "Usuario no autenticado"}), 401
+
     plan_info = get_user_plan(user_id)
 
     history_json = request.form.get('history', '[]')
@@ -227,7 +233,9 @@ def chat():
     parts_for_model = conversation_history
     full_user_message_text = f"{user_message}"
     if persistent_instruction:
-        full_user_message_text = f"{persistent_instruction}\n\n{full_user_message_text}"
+        full_user_message_text = f"{persistent_instruction}
+
+{full_user_message_text}"
     if full_user_message_text:
         parts_for_model.append({'role': 'user', 'parts': [{'text': full_user_message_text}]})
 
@@ -267,31 +275,25 @@ def generate_audio():
         return jsonify({"error": f"Error al generar el audio: {str(e)}"}), 500
 
 
-# === GUARDAR CHAT ===
+# --- GUARDAR CHAT ---
 @app.route('/save_chat', methods=['POST'])
 def save_chat():
     user_id = request.form.get('user_id')
     chat_data = request.form.get('chat_data')
 
-    if not user_id or not is_valid_uuid(user_id) or not chat_data:
-        return jsonify({"error": "Usuario no autenticado o faltan parámetros"}), 400
+    if not user_id or not is_valid_uuid(user_id):
+        return jsonify({"error": "Usuario no autenticado"}), 401
+    if not chat_data:
+        return jsonify({"error": "Faltan parámetros"}), 400
 
     plan_info = get_user_plan(user_id)
-    max_chats = (
-        1 if plan_info["plan"] == "essence" else
-        5 if plan_info["plan"] == "plus" else
-        12 if plan_info["plan"] == "legacy" else
-        1
-    )
+    max_chats = 1 if plan_info["plan"] == "essence" else 5 if plan_info["plan"] == "plus" else 12
 
     try:
         current = supabase.table("saved_chats").select("id").eq("user_id", user_id).execute()
         if current.data and len(current.data) >= max_chats:
             return jsonify({"error": f"Límite alcanzado ({max_chats} chats). Borra uno para guardar otro."}), 403
-    except Exception as e:
-        print("Error verificando chats:", e)
 
-    try:
         supabase.table("saved_chats").insert({
             "user_id": user_id,
             "chat_data": chat_data
@@ -302,41 +304,5 @@ def save_chat():
         return jsonify({"error": "No se pudo guardar el chat"}), 500
 
 
-# === LISTAR CHATS ===
-@app.route('/get_chats', methods=['GET'])
-def get_chats():
-    user_id = request.args.get('user_id')
-    if not user_id or not is_valid_uuid(user_id):
-        return jsonify([])
-
-    try:
-        chats = supabase.table("saved_chats")\
-            .select("id, created_at, chat_data")\
-            .eq("user_id", user_id)\
-            .order("created_at", desc=True)\
-            .execute()
-        return jsonify(chats.data), 200
-    except Exception as e:
-        print("Error obteniendo chats:", e)
-        return jsonify([]), 500
-
-
-# === BORRAR CHAT ===
-@app.route('/delete_chat', methods=['POST'])
-def delete_chat():
-    chat_id = request.form.get('chat_id')
-    if not chat_id:
-        return jsonify({"error": "Falta el chat_id"}), 400
-
-    try:
-        supabase.table("saved_chats").delete().eq("id", chat_id).execute()
-        return jsonify({"message": "Chat eliminado"}), 200
-    except Exception as e:
-        print("Error borrando chat:", e)
-        return jsonify({"error": "No se pudo borrar el chat"}), 500
-
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
-
-        
