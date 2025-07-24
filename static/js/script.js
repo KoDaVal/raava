@@ -565,14 +565,7 @@ playAudioButton.addEventListener('click', async () => {
         playAudioButton.classList.remove('playing');
 
         // Solicita el audio al backend
-        const { data: { user } } = await supabaseClient.auth.getUser();
-if (!user) {
-    alert("Inicia sesión para generar audio");
-    playAudioButton.classList.remove('loading');
-    return;
-}
-
-const response = await fetch('/generate_audio', {
+        const response = await fetch('/generate_audio', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -733,15 +726,7 @@ messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 formData.append('file', selectedFile);
             }
 
-            const { data: { user } } = await supabaseClient.auth.getUser();
-if (!user) {
-    hideTypingIndicator();
-    alert("Inicia sesión para chatear");
-    return;
-}
-formData.append('user_id', user.id);
-
-const response = await fetch('/chat', {
+            const response = await fetch('/chat', {
                 method: 'POST',
                 body: formData
             });
@@ -762,8 +747,6 @@ conversationHistory.push({
     role: 'model',
     parts: [{ text: data.response }]
 });
-          // === Guardar automáticamente el chat ===
-await autoSaveChat();
             // Limpiar selectedFile y fileInput después de enviar el mensaje
             selectedFile = null;
             fileInput.value = ''; // Asegura que el input principal también se limpie
@@ -816,84 +799,6 @@ document.getElementById('sidebar-backdrop').addEventListener('click', () => {
         document.getElementById('sidebar-backdrop').classList.add('active');
     });
 }
-// === GUARDAR CHAT AUTOMÁTICAMENTE DESPUÉS DE RESPUESTA ===
-async function autoSaveChat() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) return;
-    const res = await fetch('/save_chat', {
-        method: 'POST',
-        body: new URLSearchParams({
-            user_id: user.id, // <-- Siempre manda el UUID correcto
-            chat_data: JSON.stringify(conversationHistory)
-        })
-    });
-    if (!res.ok) {
-        const error = await res.json();
-        console.warn(error.error);
-        alert(error.error);
-    }
-}
 
-// === OVERLAY PARA VER Y BUSCAR CHATS GUARDADOS ===
-const overlay = document.createElement('div');
-overlay.classList.add('saved-chats-overlay');
-overlay.innerHTML = `
-  <div class="saved-chats-modal">
-    <h3>Chats guardados</h3>
-    <input type="text" id="search-chat" placeholder="Buscar chat..." />
-    <ul id="saved-chats-list"></ul>
-    <button id="close-chats-overlay">Cerrar</button>
-  </div>`;
-document.body.appendChild(overlay);
 
-const searchChatInput = overlay.querySelector('#search-chat');
-searchChatInput.addEventListener('input', () => {
-    const term = searchChatInput.value.toLowerCase();
-    const chats = overlay.querySelectorAll('#saved-chats-list li');
-    chats.forEach(chat => {
-        chat.style.display = chat.textContent.toLowerCase().includes(term) ? 'block' : 'none';
-    });
-});
-
-document.getElementById('search-chat-btn').addEventListener('click', async () => {
-    const user = (await supabaseClient.auth.getUser()).data.user;
-    if (!user) return alert("Inicia sesión");
-    const res = await fetch(`/get_chats?user_id=${user.id}`);
-    const chats = await res.json();
-    const list = document.getElementById('saved-chats-list');
-    list.innerHTML = '';
-    chats.forEach(chat => {
-        const li = document.createElement('li');
-        li.textContent = `Chat del ${new Date(chat.created_at).toLocaleString()}`;
-        li.addEventListener('click', () => loadChat(chat.chat_data));
-        const delBtn = document.createElement('button');
-        delBtn.textContent = "X";
-        delBtn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            await fetch('/delete_chat', {method:'POST', body:new URLSearchParams({chat_id: chat.id})});
-            li.remove();
-        });
-        li.appendChild(delBtn);
-        list.appendChild(li);
-    });
-    overlay.style.display = 'flex';
-});
-
-document.getElementById('close-chats-overlay').addEventListener('click', () => {
-    overlay.style.display = 'none';
-});
-
-function loadChat(chatData) {
-    conversationHistory = JSON.parse(chatData);
-    messagesContainer.innerHTML = '';
-    conversationHistory.forEach(m => addMessage(m.role === 'user' ? 'user' : 'bot', m.parts.map(p => p.text).join(' ')));
-    overlay.style.display = 'none';
-}
-  // === NUEVO CHAT (recarga total) ===
-const newChatBtn = document.getElementById('new-chat-btn');
-if (newChatBtn) {
-    newChatBtn.addEventListener('click', () => {
-        location.reload(); // Recarga toda la página para volver al estado inicial
-    });
-}
 });
