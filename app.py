@@ -64,7 +64,6 @@ def index():
     return render_template('index.html')
 # --- FIN RUTA DEL FRONTEND ---
 
-
 # --- WEBHOOK STRIPE: ACTUALIZA PLANES EN SUPABASE ---
 @app.route("/stripe_webhook", methods=["POST"])
 def stripe_webhook():
@@ -93,13 +92,7 @@ def stripe_webhook():
 
         expiry = datetime.utcnow() + (timedelta(days=365) if "YEARLY" in price_id.upper() else timedelta(days=30))
 
-        # Validar que el correo existe en Supabase Auth
-        user_exists = supabase.table("auth.users").select("id").eq("email", user_email).execute()
-        if not user_exists.data:
-            print(f"Webhook: correo {user_email} no encontrado en Supabase Auth.")
-            return jsonify({"error": "El correo no está registrado en Raavax."}), 400
-
-        # Actualizar o crear perfil en Supabase
+        # Buscar perfil existente
         existing = supabase.table("profiles").select("id").eq("email", user_email).execute()
         if existing.data:
             # Actualizar plan
@@ -123,7 +116,6 @@ def stripe_webhook():
 
     return jsonify({"status": "success"}), 200
 # --- FIN WEBHOOK STRIPE ---
-
 
 # --- RUTA PARA CLONAR VOZ (Eleven Labs) ---
 @app.route('/clone_voice', methods=['POST'])
