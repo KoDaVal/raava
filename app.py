@@ -314,9 +314,22 @@ def get_usage():
     user_email = request.args.get("email")
     if not user_email:
         return jsonify({"error": "Falta email"}), 400
+
     profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
+
     if not profile.data:
-        return jsonify({"error": "Usuario no encontrado"}), 404
+        # Crear perfil por defecto
+        supabase.table("profiles").insert({
+            "email": user_email,
+            "plan": "essence",
+            "plan_expiry": None,
+            "gemini_tokens_used": 0,
+            "gpt_tokens_used": 0,
+            "tts_tokens_used": 0
+        }).execute()
+        # Vuelve a cargarlo
+        profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
+
     plan = profile.data.get("plan", "essence")
     usage = {
         "plan": plan,
@@ -325,4 +338,5 @@ def get_usage():
         "tts_tokens_limit": PLAN_LIMITS[plan]["tts_tokens"]
     }
     return jsonify(usage)
+
 # --- FIN CONSULTAR USO ---
