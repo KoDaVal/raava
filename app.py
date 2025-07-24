@@ -308,21 +308,13 @@ def ensure_profile_exists(user_email):
     Si no existe, lo crea con plan 'essence'.
     """
     try:
-        # Buscar usuario en auth.users
-        user = supabase.table("auth.users").select("id").eq("email", user_email).execute()
-        if not user.data:
-            print(f"[ensure_profile_exists] ERROR: No existe usuario en auth.users con email {user_email}")
-            return None
-        user_id = user.data[0]["id"]
-
-        # Buscar perfil existente
-        profiles = supabase.table("profiles").select("*").eq("id", user_id).limit(1).execute()
+        profiles = supabase.table("profiles").select("*").eq("email", user_email).limit(1).execute()
         profile = profiles.data[0] if profiles.data else None
 
         if not profile:
             print(f"[ensure_profile_exists] Perfil no encontrado para {user_email}, creando...")
             supabase.table("profiles").insert({
-                "id": user_id,
+                "id": "gen_random_uuid()",  # lo genera el servidor
                 "email": user_email,
                 "plan": "essence",
                 "plan_expiry": None,
@@ -330,7 +322,7 @@ def ensure_profile_exists(user_email):
                 "gpt_tokens_used": 0,
                 "tts_tokens_used": 0
             }).execute()
-            profiles = supabase.table("profiles").select("*").eq("id", user_id).limit(1).execute()
+            profiles = supabase.table("profiles").select("*").eq("email", user_email).limit(1).execute()
             profile = profiles.data[0] if profiles.data else None
 
         return profile
@@ -338,6 +330,7 @@ def ensure_profile_exists(user_email):
         print(f"[ensure_profile_exists] Error al asegurar perfil para {user_email}: {e}")
         return None
 # --- FIN HELPER ---
+
 
 # --- CONSULTAR USO DE TOKENS ---
 @app.route("/get_usage", methods=["GET"])
