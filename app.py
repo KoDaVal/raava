@@ -314,7 +314,6 @@ def ensure_profile_exists(user_email):
         if not profile:
             print(f"[ensure_profile_exists] Perfil no encontrado para {user_email}, creando...")
             supabase.table("profiles").insert({
-                "id": "gen_random_uuid()",  # lo genera el servidor
                 "email": user_email,
                 "plan": "essence",
                 "plan_expiry": None,
@@ -329,6 +328,7 @@ def ensure_profile_exists(user_email):
     except Exception as e:
         print(f"[ensure_profile_exists] Error al asegurar perfil para {user_email}: {e}")
         return None
+
 # --- FIN HELPER ---
 
 
