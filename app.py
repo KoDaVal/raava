@@ -300,8 +300,6 @@ def generate_audio():
         print(f"Error al generar audio: {e.response.status_code} - {e.response.text}")
         return jsonify({"error": f"Error al generar el audio: {e.response.text}"}), e.response.status
 # --- FIN GENERAR AUDIO ---
-
-
 # --- HELPER PARA CREAR PERFIL SI NO EXISTE ---
 def ensure_profile_exists(user_email):
     """
@@ -309,8 +307,12 @@ def ensure_profile_exists(user_email):
     Si no existe, lo crea con plan 'essence'.
     """
     try:
-        profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
-        if not profile.data:
+        # Buscar el primer perfil
+        profiles = supabase.table("profiles").select("*").eq("email", user_email).limit(1).execute()
+        profile = profiles.data[0] if profiles.data else None
+
+        # Si no existe, crear
+        if not profile:
             print(f"[ensure_profile_exists] Perfil no encontrado para {user_email}, creando...")
             supabase.table("profiles").insert({
                 "email": user_email,
@@ -320,7 +322,9 @@ def ensure_profile_exists(user_email):
                 "gpt_tokens_used": 0,
                 "tts_tokens_used": 0
             }).execute()
-            profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
+            profiles = supabase.table("profiles").select("*").eq("email", user_email).limit(1).execute()
+            profile = profiles.data[0] if profiles.data else None
+
         return profile
     except Exception as e:
         print(f"[ensure_profile_exists] Error al asegurar perfil para {user_email}: {e}")
@@ -338,15 +342,15 @@ def get_usage():
         print(f"[get_usage] Consultando perfil para: {user_email}")
         profile = ensure_profile_exists(user_email)
 
-        if not profile or not profile.data:
+        if not profile:
             print(f"[get_usage] ERROR: No se pudo crear/recuperar el perfil para {user_email}")
             return jsonify({"error": "No se pudo crear el perfil"}), 500
 
-        plan = profile.data.get("plan", "essence")
+        plan = profile.get("plan", "essence")
         usage = {
             "plan": plan,
-            "plan_expiry": profile.data.get("plan_expiry"),
-            "tts_tokens_used": profile.data.get("tts_tokens_used", 0),
+            "plan_expiry": profile.get("plan_expiry"),
+            "tts_tokens_used": profile.get("tts_tokens_used", 0),
             "tts_tokens_limit": PLAN_LIMITS.get(plan, PLAN_LIMITS["essence"])["tts_tokens"]
         }
         return jsonify(usage)
