@@ -7,6 +7,7 @@ import json
 import requests  # Para Eleven Labs
 import stripe
 from supabase import create_client
+from uuid import UUID
 
 # --- CONFIGURACIÓN STRIPE + SUPABASE ---
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
@@ -26,16 +27,31 @@ gemini_model = genai.GenerativeModel('gemini-1.5-flash')
 
 # --- CONFIGURACIÓN DE ELEVEN LABS ---
 eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_try_only")
-default_eleven_labs_voice_id = "21m00Tcm4TlvDq8ikWAM"
+default_eleven_labs_voice_id = "21m00Tcm4TlvDq8ikWAM"  # Voz por defecto
 cloned_voice_id = None
 # --- FIN CONFIGURACIÓN DE ELEVEN LABS ---
 
+
+# --- FUNCIONES AUXILIARES ---
+def is_valid_uuid(value):
+    try:
+        UUID(str(value))
+        return True
+    except Exception:
+        return False
+
+
 # --- FUNCIÓN PARA OBTENER PLAN Y TOKENS ---
 def get_user_plan(user_id):
+    if not user_id or not is_valid_uuid(user_id):
+        print("Error: user_id inválido")
+        return {"plan": "essence", "tts_limit": 500, "tts_used": 0, "model": "gemini"}
     try:
-        profile = supabase.table("profiles").select("plan, tts_used").eq("id", user_id).single().execute()
-        plan = profile.data["plan"] if profile.data else "essence"
-        used = profile.data["tts_used"] if profile.data and profile.data.get("tts_used") is not None else 0
+        profile = supabase.table("profiles").select("plan, tts_used").eq("id", user_id).execute()
+        if not profile.data or len(profile.data) == 0:
+            return {"plan": "essence", "tts_limit": 500, "tts_used": 0, "model": "gemini"}
+        plan = profile.data[0].get("plan", "essence")
+        used = profile.data[0].get("tts_used", 0)
     except Exception as e:
         print(f"Error al obtener plan: {e}")
         plan, used = "essence", 0
@@ -48,12 +64,15 @@ def get_user_plan(user_id):
         return {"plan": plan, "tts_limit": 999999, "tts_used": used, "model": "gpt"}
     return {"plan": "essence", "tts_limit": 500, "tts_used": used, "model": "gemini"}
 
+
 # --- FUNCIÓN PARA DESCONTAR TOKENS ---
 def add_tts_usage(user_id, tokens):
+    if not user_id or not is_valid_uuid(user_id):
+        print("Error: user_id inválido en add_tts_usage")
+        return
     try:
         profile = supabase.table("profiles").select("tts_used").eq("id", user_id).execute()
         if not profile.data or len(profile.data) == 0:
-            current = 0
             # Si no existe el perfil, créalo
             supabase.table("profiles").insert({"id": user_id, "tts_used": tokens}).execute()
         else:
@@ -63,11 +82,11 @@ def add_tts_usage(user_id, tokens):
         print(f"Error al actualizar tokens: {e}")
 
 
-
 # --- RUTA PARA SERVIR FRONTEND ---
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 # --- RUTA PARA CLONAR VOZ ---
 @app.route('/clone_voice', methods=['POST'])
@@ -95,6 +114,7 @@ def clone_voice():
     except Exception as e:
         return jsonify({'error': f"Error al clonar voz: {str(e)}"}), 500
 
+
 # --- RUTA: INICIAR MENTE ---
 @app.route('/start_mind', methods=['POST'])
 def start_mind():
@@ -115,6 +135,7 @@ def start_mind():
     except Exception as e:
         return jsonify({'error': f"Error: {str(e)}"}), 500
 
+
 # --- WEBHOOK STRIPE ---
 @app.route("/stripe-webhook", methods=["POST"])
 def stripe_webhook():
@@ -129,13 +150,11 @@ def stripe_webhook():
         try:
             chats = supabase.table("saved_chats").select("id").eq("user_id", user_id).order("created_at", desc=True).execute()
             if chats.data and len(chats.data) > max_chats:
-                # Borra los más antiguos
                 for chat in chats.data[max_chats:]:
                     supabase.table("saved_chats").delete().eq("id", chat["id"]).execute()
         except Exception as e:
             print("Error limpiando chats:", e)
 
-    # --- Pago completado ---
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         customer_id = session["customer"]
@@ -157,7 +176,6 @@ def stripe_webhook():
         ).eq("stripe_customer_id", customer_id).execute()
         enforce_chat_limit(customer_id, max_chats)
 
-    # --- Suscripción actualizada ---
     elif event["type"] == "customer.subscription.updated":
         subscription = event["data"]["object"]
         customer_id = subscription["customer"]
@@ -178,7 +196,6 @@ def stripe_webhook():
         ).eq("stripe_customer_id", customer_id).execute()
         enforce_chat_limit(customer_id, max_chats)
 
-    # --- Suscripción cancelada ---
     elif event["type"] == "customer.subscription.deleted":
         subscription = event["data"]["object"]
         customer_id = subscription["customer"]
@@ -189,6 +206,7 @@ def stripe_webhook():
         enforce_chat_limit(customer_id, 1)
 
     return "", 200
+
 
 # --- CHAT ---
 @app.route('/chat', methods=['POST'])
@@ -220,6 +238,7 @@ def chat():
     except Exception as e:
         return jsonify({"response": f"Error: {str(e)}", "audio": None})
 
+
 # --- GENERAR AUDIO ---
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
@@ -247,26 +266,24 @@ def generate_audio():
     except Exception as e:
         return jsonify({"error": f"Error al generar el audio: {str(e)}"}), 500
 
+
 # === GUARDAR CHAT ===
 @app.route('/save_chat', methods=['POST'])
 def save_chat():
     user_id = request.form.get('user_id')
     chat_data = request.form.get('chat_data')
 
-    # Validar usuario y datos
-    if not user_id or user_id == "None" or not chat_data:
+    if not user_id or not is_valid_uuid(user_id) or not chat_data:
         return jsonify({"error": "Usuario no autenticado o faltan parámetros"}), 400
 
-    # Obtener plan y límite según tipo
     plan_info = get_user_plan(user_id)
     max_chats = (
-        1 if plan_info["plan"] == "free" else
+        1 if plan_info["plan"] == "essence" else
         5 if plan_info["plan"] == "plus" else
         12 if plan_info["plan"] == "legacy" else
-        1  # Valor por defecto si el plan no es reconocido
+        1
     )
 
-    # Verificar cantidad de chats existentes
     try:
         current = supabase.table("saved_chats").select("id").eq("user_id", user_id).execute()
         if current.data and len(current.data) >= max_chats:
@@ -274,7 +291,6 @@ def save_chat():
     except Exception as e:
         print("Error verificando chats:", e)
 
-    # Intentar guardar el chat
     try:
         supabase.table("saved_chats").insert({
             "user_id": user_id,
@@ -285,11 +301,12 @@ def save_chat():
         print("Error guardando chat:", e)
         return jsonify({"error": "No se pudo guardar el chat"}), 500
 
+
 # === LISTAR CHATS ===
 @app.route('/get_chats', methods=['GET'])
 def get_chats():
     user_id = request.args.get('user_id')
-    if not user_id:
+    if not user_id or not is_valid_uuid(user_id):
         return jsonify([])
 
     try:
@@ -303,6 +320,7 @@ def get_chats():
         print("Error obteniendo chats:", e)
         return jsonify([]), 500
 
+
 # === BORRAR CHAT ===
 @app.route('/delete_chat', methods=['POST'])
 def delete_chat():
@@ -315,5 +333,11 @@ def delete_chat():
         return jsonify({"message": "Chat eliminado"}), 200
     except Exception as e:
         print("Error borrando chat:", e)
+        return jsonify({"error": "No se pudo borrar el chat"}), 500
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+
         return jsonify({"error": "No se pudo borrar el chat"}), 500
 
