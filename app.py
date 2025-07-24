@@ -50,12 +50,18 @@ def get_user_plan(user_id):
 
 # --- FUNCIÓN PARA DESCONTAR TOKENS ---
 def add_tts_usage(user_id, tokens):
-    try:
-        profile = supabase.table("profiles").select("tts_used").eq("id", user_id).single().execute()
-        current = profile.data["tts_used"] if profile.data and profile.data.get("tts_used") is not None else 0
+try:
+    profile = supabase.table("profiles").select("tts_used").eq("id", user_id).execute()
+    if not profile.data or len(profile.data) == 0:
+        current = 0
+        # Si no existe el perfil, créalo
+        supabase.table("profiles").insert({"id": user_id, "tts_used": tokens}).execute()
+    else:
+        current = profile.data[0].get("tts_used", 0)
         supabase.table("profiles").update({"tts_used": current + tokens}).eq("id", user_id).execute()
-    except Exception as e:
-        print(f"Error al actualizar tokens: {e}")
+except Exception as e:
+    print(f"Error al actualizar tokens: {e}")
+
 
 # --- RUTA PARA SERVIR FRONTEND ---
 @app.route('/')
@@ -245,12 +251,21 @@ def generate_audio():
 def save_chat():
     user_id = request.form.get('user_id')
     chat_data = request.form.get('chat_data')
-    if not user_id or not chat_data:
-        return jsonify({"error": "Faltan parámetros"}), 400
 
+    # Validar usuario y datos
+    if not user_id or user_id == "None" or not chat_data:
+        return jsonify({"error": "Usuario no autenticado o faltan parámetros"}), 400
+
+    # Obtener plan y límite según tipo
     plan_info = get_user_plan(user_id)
-    max_chats = 1 if plan_info["plan"] == "essence" else 5 if plan_info["plan"] == "plus" else 12
+    max_chats = (
+        1 if plan_info["plan"] == "free" else
+        5 if plan_info["plan"] == "plus" else
+        12 if plan_info["plan"] == "legacy" else
+        1  # Valor por defecto si el plan no es reconocido
+    )
 
+    # Verificar cantidad de chats existentes
     try:
         current = supabase.table("saved_chats").select("id").eq("user_id", user_id).execute()
         if current.data and len(current.data) >= max_chats:
@@ -258,6 +273,7 @@ def save_chat():
     except Exception as e:
         print("Error verificando chats:", e)
 
+    # Intentar guardar el chat
     try:
         supabase.table("saved_chats").insert({
             "user_id": user_id,
