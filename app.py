@@ -183,3 +183,34 @@ if __name__ == '__main__':
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+
+
+# === LISTAR CHATS ===
+@app.route('/get_chats', methods=['GET'])
+def get_chats():
+    user_id = request.args.get('user_id')
+    if not user_id or not is_valid_uuid(user_id):
+        return jsonify([]), 400
+    try:
+        chats = supabase.table("saved_chats")\
+            .select("id, created_at, chat_data")\
+            .eq("user_id", user_id)\
+            .order("created_at", desc=True)\
+            .execute()
+        return jsonify(chats.data), 200
+    except Exception as e:
+        print("Error obteniendo chats:", e)
+        return jsonify([]), 500
+
+# === BORRAR CHAT ===
+@app.route('/delete_chat', methods=['POST'])
+def delete_chat():
+    chat_id = request.form.get('chat_id')
+    if not chat_id:
+        return jsonify({"error": "Falta el chat_id"}), 400
+    try:
+        supabase.table("saved_chats").delete().eq("id", chat_id).execute()
+        return jsonify({"message": "Chat eliminado"}), 200
+    except Exception as e:
+        print("Error borrando chat:", e)
+        return jsonify({"error": "No se pudo borrar el chat"}), 500
