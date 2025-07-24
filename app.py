@@ -92,27 +92,22 @@ def stripe_webhook():
 
         expiry = datetime.utcnow() + (timedelta(days=365) if "YEARLY" in price_id.upper() else timedelta(days=30))
 
-        # Buscar perfil existente
-        existing = supabase.table("profiles").select("id").eq("email", user_email).execute()
-        if existing.data:
-            # Actualizar plan
-            supabase.table("profiles").update({
-                "plan": plan,
-                "plan_expiry": expiry.isoformat(),
-                "gemini_tokens_used": 0,
-                "gpt_tokens_used": 0,
-                "tts_tokens_used": 0
-            }).eq("email", user_email).execute()
-        else:
-            # Crear perfil nuevo
-            supabase.table("profiles").insert({
-                "email": user_email,
-                "plan": plan,
-                "plan_expiry": expiry.isoformat(),
-                "gemini_tokens_used": 0,
-                "gpt_tokens_used": 0,
-                "tts_tokens_used": 0
-            }).execute()
+        # Asegurar que el perfil exista
+        profile = ensure_profile_exists(user_email)
+        if not profile or not profile.data:
+            print(f"[stripe_webhook] ERROR: No se pudo asegurar el perfil para {user_email}")
+            return jsonify({"error": "No se pudo crear el perfil"}), 500
+
+        # Actualizar plan y reiniciar contadores
+        supabase.table("profiles").update({
+            "plan": plan,
+            "plan_expiry": expiry.isoformat(),
+            "gemini_tokens_used": 0,
+            "gpt_tokens_used": 0,
+            "tts_tokens_used": 0
+        }).eq("email", user_email).execute()
+
+        print(f"[stripe_webhook] Plan actualizado para {user_email}: {plan}")
 
     return jsonify({"status": "success"}), 200
 # --- FIN WEBHOOK STRIPE ---
@@ -254,21 +249,23 @@ def chat():
 
 # --- MIDDLEWARE PARA VERIFICAR TOKENS ---
 def check_and_update_tokens(user_email, token_type, tokens_to_add):
-    profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
-    if not profile.data:
-        return False, "Usuario no encontrado."
+    profile = ensure_profile_exists(user_email)
+    if not profile or not profile.data:
+        return False, "No se pudo acceder al perfil."
+    
     plan = profile.data.get("plan", "essence")
     expiry = profile.data.get("plan_expiry")
     used = profile.data.get(f"{token_type}_tokens_used", 0)
-    limit = PLAN_LIMITS[plan][f"{token_type}_tokens"]
+    limit = PLAN_LIMITS.get(plan, PLAN_LIMITS["essence"]).get(f"{token_type}_tokens", 0)
+
     if expiry and datetime.fromisoformat(expiry) < datetime.utcnow():
         return False, "Tu plan ha expirado."
     if used + tokens_to_add > limit:
         return False, "Has alcanzado tu límite. Actualiza tu plan."
+    
     supabase.table("profiles").update({f"{token_type}_tokens_used": used + tokens_to_add}).eq("email", user_email).execute()
     return True, ""
 # --- FIN MIDDLEWARE ---
-
 
 # --- GENERAR AUDIO ---
 @app.route('/generate_audio', methods=['POST'])
@@ -277,6 +274,11 @@ def generate_audio():
     user_email = request.form.get('user_email')  # el frontend debe mandarlo
     if not user_email:
         return jsonify({"error": "Falta email de usuario."}), 400
+
+    profile = ensure_profile_exists(user_email)
+    if not profile or not profile.data:
+        return jsonify({"error": "No se pudo crear el perfil"}), 500
+
     ok, msg = check_and_update_tokens(user_email, "tts", len(text)//4)  # 1 token ≈ 4 caracteres
     if not ok:
         return jsonify({"error": msg}), 403
@@ -299,6 +301,32 @@ def generate_audio():
         return jsonify({"error": f"Error al generar el audio: {e.response.text}"}), e.response.status
 # --- FIN GENERAR AUDIO ---
 
+
+# --- HELPER PARA CREAR PERFIL SI NO EXISTE ---
+def ensure_profile_exists(user_email):
+    """
+    Asegura que el usuario tenga un perfil en la tabla profiles.
+    Si no existe, lo crea con plan 'essence'.
+    """
+    try:
+        profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
+        if not profile.data:
+            print(f"[ensure_profile_exists] Perfil no encontrado para {user_email}, creando...")
+            supabase.table("profiles").insert({
+                "email": user_email,
+                "plan": "essence",
+                "plan_expiry": None,
+                "gemini_tokens_used": 0,
+                "gpt_tokens_used": 0,
+                "tts_tokens_used": 0
+            }).execute()
+            profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
+        return profile
+    except Exception as e:
+        print(f"[ensure_profile_exists] Error al asegurar perfil para {user_email}: {e}")
+        return None
+# --- FIN HELPER ---
+
 # --- CONSULTAR USO DE TOKENS ---
 @app.route("/get_usage", methods=["GET"])
 def get_usage():
@@ -308,28 +336,10 @@ def get_usage():
             return jsonify({"error": "Falta email"}), 400
 
         print(f"[get_usage] Consultando perfil para: {user_email}")
-
-        # Intentar cargar perfil
-        profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
-        print(f"[get_usage] Resultado inicial: {profile.data}")
+        profile = ensure_profile_exists(user_email)
 
         if not profile or not profile.data:
-            print(f"[get_usage] Perfil no encontrado, creando perfil por defecto...")
-            insert_res = supabase.table("profiles").insert({
-                "email": user_email,
-                "plan": "essence",
-                "plan_expiry": None,
-                "gemini_tokens_used": 0,
-                "gpt_tokens_used": 0,
-                "tts_tokens_used": 0
-            }).execute()
-            print(f"[get_usage] Resultado insert: {insert_res.data}")
-            # Volvemos a cargarlo
-            profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
-            print(f"[get_usage] Perfil recargado: {profile.data}")
-
-        if not profile or not profile.data:
-            print("[get_usage] ERROR: No se pudo crear el perfil.")
+            print(f"[get_usage] ERROR: No se pudo crear/recuperar el perfil para {user_email}")
             return jsonify({"error": "No se pudo crear el perfil"}), 500
 
         plan = profile.data.get("plan", "essence")
@@ -344,4 +354,5 @@ def get_usage():
         print(f"[get_usage] Error inesperado: {e}")
         return jsonify({"error": f"Error interno al obtener el plan: {str(e)}"}), 500
 # --- FIN CONSULTAR USO ---
+
 
