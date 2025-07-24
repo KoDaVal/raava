@@ -50,17 +50,18 @@ def get_user_plan(user_id):
 
 # --- FUNCIÓN PARA DESCONTAR TOKENS ---
 def add_tts_usage(user_id, tokens):
-try:
-    profile = supabase.table("profiles").select("tts_used").eq("id", user_id).execute()
-    if not profile.data or len(profile.data) == 0:
-        current = 0
-        # Si no existe el perfil, créalo
-        supabase.table("profiles").insert({"id": user_id, "tts_used": tokens}).execute()
-    else:
-        current = profile.data[0].get("tts_used", 0)
-        supabase.table("profiles").update({"tts_used": current + tokens}).eq("id", user_id).execute()
-except Exception as e:
-    print(f"Error al actualizar tokens: {e}")
+    try:
+        profile = supabase.table("profiles").select("tts_used").eq("id", user_id).execute()
+        if not profile.data or len(profile.data) == 0:
+            current = 0
+            # Si no existe el perfil, créalo
+            supabase.table("profiles").insert({"id": user_id, "tts_used": tokens}).execute()
+        else:
+            current = profile.data[0].get("tts_used", 0)
+            supabase.table("profiles").update({"tts_used": current + tokens}).eq("id", user_id).execute()
+    except Exception as e:
+        print(f"Error al actualizar tokens: {e}")
+
 
 
 # --- RUTA PARA SERVIR FRONTEND ---
