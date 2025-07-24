@@ -1368,3 +1368,13 @@ input:checked + .slider:before {
   cursor:pointer;
 }
 #saved-chats-list li:hover { background: var(--hover-color); }
+.menu-plan {
+    font-size: 0.9rem;
+    color: #bbb;
+    padding: 8px 12px;
+    cursor: default;
+}
+.menu-plan:hover {
+    background: none;
+}
+
