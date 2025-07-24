@@ -307,7 +307,6 @@ def generate_audio():
         return jsonify({"error": f"Error al generar el audio: {e.response.text}"}), e.response.status
 # --- FIN GENERAR AUDIO ---
 
-
 # --- CONSULTAR USO DE TOKENS ---
 @app.route("/get_usage", methods=["GET"])
 def get_usage():
@@ -316,12 +315,19 @@ def get_usage():
         if not user_email:
             return jsonify({"error": "Falta email"}), 400
 
+        # Buscar el usuario en auth.users para obtener su id
+        auth_user = supabase.table("auth.users").select("id").eq("email", user_email).single().execute()
+        if not auth_user or not auth_user.data:
+            return jsonify({"error": "Usuario no encontrado en Auth"}), 404
+        user_id = auth_user.data.get("id")
+
         # Intentar cargar perfil
         profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
 
         if not profile or not profile.data:
             # Crear perfil por defecto si no existe
             supabase.table("profiles").insert({
+                "id": user_id,  # mismo id que en auth.users
                 "email": user_email,
                 "plan": "essence",
                 "plan_expiry": None,
@@ -346,7 +352,4 @@ def get_usage():
     except Exception as e:
         print(f"Error en get_usage: {e}")
         return jsonify({"error": "Error interno al obtener el plan"}), 500
-# --- FIN CONSULTAR USO ---
-
-
 # --- FIN CONSULTAR USO ---
