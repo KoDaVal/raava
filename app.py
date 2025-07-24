@@ -311,32 +311,42 @@ def generate_audio():
 # --- CONSULTAR USO DE TOKENS ---
 @app.route("/get_usage", methods=["GET"])
 def get_usage():
-    user_email = request.args.get("email")
-    if not user_email:
-        return jsonify({"error": "Falta email"}), 400
+    try:
+        user_email = request.args.get("email")
+        if not user_email:
+            return jsonify({"error": "Falta email"}), 400
 
-    profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
-
-    if not profile.data:
-        # Crear perfil por defecto
-        supabase.table("profiles").insert({
-            "email": user_email,
-            "plan": "essence",
-            "plan_expiry": None,
-            "gemini_tokens_used": 0,
-            "gpt_tokens_used": 0,
-            "tts_tokens_used": 0
-        }).execute()
-        # Vuelve a cargarlo
+        # Intentar cargar perfil
         profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
 
-    plan = profile.data.get("plan", "essence")
-    usage = {
-        "plan": plan,
-        "plan_expiry": profile.data.get("plan_expiry"),
-        "tts_tokens_used": profile.data.get("tts_tokens_used", 0),
-        "tts_tokens_limit": PLAN_LIMITS[plan]["tts_tokens"]
-    }
-    return jsonify(usage)
+        if not profile or not profile.data:
+            # Crear perfil por defecto si no existe
+            supabase.table("profiles").insert({
+                "email": user_email,
+                "plan": "essence",
+                "plan_expiry": None,
+                "gemini_tokens_used": 0,
+                "gpt_tokens_used": 0,
+                "tts_tokens_used": 0
+            }).execute()
+            # Volvemos a cargarlo
+            profile = supabase.table("profiles").select("*").eq("email", user_email).single().execute()
+
+        if not profile or not profile.data:
+            return jsonify({"error": "No se pudo crear el perfil"}), 500
+
+        plan = profile.data.get("plan", "essence")
+        usage = {
+            "plan": plan,
+            "plan_expiry": profile.data.get("plan_expiry"),
+            "tts_tokens_used": profile.data.get("tts_tokens_used", 0),
+            "tts_tokens_limit": PLAN_LIMITS.get(plan, PLAN_LIMITS["essence"])["tts_tokens"]
+        }
+        return jsonify(usage)
+    except Exception as e:
+        print(f"Error en get_usage: {e}")
+        return jsonify({"error": "Error interno al obtener el plan"}), 500
+# --- FIN CONSULTAR USO ---
+
 
 # --- FIN CONSULTAR USO ---
