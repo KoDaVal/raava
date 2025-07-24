@@ -300,6 +300,7 @@ def generate_audio():
         print(f"Error al generar audio: {e.response.status_code} - {e.response.text}")
         return jsonify({"error": f"Error al generar el audio: {e.response.text}"}), e.response.status
 # --- FIN GENERAR AUDIO ---
+
 # --- HELPER PARA CREAR PERFIL SI NO EXISTE ---
 def ensure_profile_exists(user_email):
     """
@@ -307,11 +308,9 @@ def ensure_profile_exists(user_email):
     Si no existe, lo crea con plan 'essence'.
     """
     try:
-        # Buscar el primer perfil
         profiles = supabase.table("profiles").select("*").eq("email", user_email).limit(1).execute()
         profile = profiles.data[0] if profiles.data else None
 
-        # Si no existe, crear
         if not profile:
             print(f"[ensure_profile_exists] Perfil no encontrado para {user_email}, creando...")
             supabase.table("profiles").insert({
@@ -358,5 +357,6 @@ def get_usage():
         print(f"[get_usage] Error inesperado: {e}")
         return jsonify({"error": f"Error interno al obtener el plan: {str(e)}"}), 500
 # --- FIN CONSULTAR USO ---
+
 
 
