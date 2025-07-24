@@ -889,5 +889,11 @@ function loadChat(chatData) {
     conversationHistory.forEach(m => addMessage(m.role === 'user' ? 'user' : 'bot', m.parts.map(p => p.text).join(' ')));
     overlay.style.display = 'none';
 }
-
+  // === NUEVO CHAT (recarga total) ===
+const newChatBtn = document.getElementById('new-chat-btn');
+if (newChatBtn) {
+    newChatBtn.addEventListener('click', () => {
+        location.reload(); // Recarga toda la página para volver al estado inicial
+    });
+}
 });
