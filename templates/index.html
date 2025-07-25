@@ -54,7 +54,17 @@
         ¿No tienes cuenta?
         <a href="#" id="auth-toggle-link">Regístrate</a>
         </p>
+      <p class="auth-toggle">
+  <a href="#" id="forgot-password-link">¿Olvidaste tu contraseña?</a>
+</p>
 
+<!-- Pantalla de recuperación de contraseña -->
+<div id="forgot-password-container" style="display:none; text-align:center;">
+  <p style="margin-bottom:10px;">Recuperar contraseña</p>
+  <input type="email" id="forgot-password-email" placeholder="Tu correo electrónico" style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid #ccc;">
+  <button id="forgot-password-submit" class="auth-btn">Enviar enlace</button>
+  <button id="forgot-password-cancel" class="auth-btn cancel-btn">Cancelar</button>
+</div>
         <div class="auth-social">
        <button type="button" id="google-signin" class="social-btn">
          <i class="fab fa-google"></i> Google
@@ -180,7 +190,7 @@
       <div id="user-plan-label" class="menu-plan">Plan: ...</div> <!-- NUEVO -->
       <div class="settings-menu-item" id="settings-option">Ajustes</div>
       <div class="settings-menu-item">Ayuda</div>
-      <div class="settings-menu-item">Cerrar sesión</div>
+      <div class="settings-menu-item" id="logout-option">Cerrar sesión</div>
     </div>
   </div>
 </div>
