@@ -117,7 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (data?.session) {
           loadUserProfile(data.user);
-          actualizarPlanUsuario();
         } else {
           alert('Inicio de sesión fallido. Verifica tus credenciales.');
         }
@@ -152,44 +151,25 @@ document.addEventListener('DOMContentLoaded', () => {
   googleBtn.addEventListener('click',  () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
   githubBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
 
-  // Actualizar plan
-  async function actualizarPlanUsuario() {
-    try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session?.user?.email) return;
-        const response = await fetch(`/get_usage?email=${encodeURIComponent(session.user.email)}`);
-        if (!response.ok) throw new Error("No se pudo obtener el plan");
-        const data = await response.json();
-        const label = document.getElementById("user-plan-label");
-        if (label) label.textContent = `Plan: ${data.plan}`;
-    } catch (err) {
-        console.error("Error al cargar plan:", err);
-    }
-  }
-
   // Manejo de sesión activa
   supabaseClient.auth.onAuthStateChange((_, session) => {
-    if (session?.user) {
-      loadUserProfile(session.user);
-      actualizarPlanUsuario();
-    } else {
-      showOverlay();
-    }
+    if (session?.user) loadUserProfile(session.user);
+    else showOverlay();
   });
 
   (async () => {
     const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session?.user) {
-      loadUserProfile(session.user);
-      actualizarPlanUsuario();
-    } else showOverlay();
+    if (session?.user) loadUserProfile(session.user);
+    else showOverlay();
   })();
 
   // Cargar avatar y ocultar login
   function loadUserProfile(user) {
     hideOverlay();
     const avatar = document.getElementById('header-profile-pic');
-    if (user.user_metadata?.avatar_url && avatar) avatar.src = user.user_metadata.avatar_url;
+    if (user.user_metadata?.avatar_url && avatar) {
+      avatar.src = user.user_metadata.avatar_url;
+    }
   }
 });
 // ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════
