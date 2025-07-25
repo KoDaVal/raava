@@ -227,17 +227,23 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const newChatBtn = document.getElementById('new-chat-btn');
-const welcomeScreen = document.getElementById('welcome-screen');
+    const welcomeScreen = document.getElementById('welcome-screen');
 if (newChatBtn) {
     newChatBtn.addEventListener('click', (e) => {
         e.preventDefault();
+
+        // Limpia el historial de mensajes
         messagesContainer.innerHTML = '';
 
         if (welcomeScreen) {
-            welcomeScreen.classList.remove('hidden'); // lo mostramos
-            void welcomeScreen.offsetWidth; // <- fuerza reflow (resetea animación)
-            welcomeScreen.classList.add('hidden'); // <- vuelve a aplicar la animación desde cero
-            welcomeScreen.classList.remove('hidden'); // <- reaparece animando
+            // Asegura que esté visible
+            welcomeScreen.classList.remove('hidden');
+            welcomeScreen.style.display = 'flex';
+
+            // Reinicia la animación (truco: quitarla y volverla a poner)
+            welcomeScreen.style.animation = 'none';
+            void welcomeScreen.offsetWidth; // fuerza reflow
+            welcomeScreen.style.animation = ''; // vuelve a aplicar la animación original
         }
     });
 }
