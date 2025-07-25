@@ -232,7 +232,9 @@ if (newChatBtn) {
     newChatBtn.addEventListener('click', (e) => {
         e.preventDefault();
         messagesContainer.innerHTML = '';
-        if (welcomeScreen) welcomeScreen.style.display = 'flex';
+        if (welcomeScreen) {
+            welcomeScreen.classList.remove('hidden'); // vuelve a mostrar la animación inicial
+        }
     });
 }
     const sendButton = document.getElementById('send-button');
