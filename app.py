@@ -4,42 +4,7 @@ import google.generativeai as genai
 import os
 import base64
 import json
-import requests  # Necesario para Eleven Labs
-import stripe
-from datetime import datetime, timedelta
-from supabase import create_client
-
-# === STRIPE CONFIG ===
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
-STRIPE_PRICE_PLUS_MONTHLY = os.getenv("STRIPE_PRICE_PLUS_MONTHLY")
-STRIPE_PRICE_PLUS_YEARLY = os.getenv("STRIPE_PRICE_PLUS_YEARLY")
-STRIPE_PRICE_LEGACY_MONTHLY = os.getenv("STRIPE_PRICE_LEGACY_MONTHLY")
-STRIPE_PRICE_LEGACY_YEARLY = os.getenv("STRIPE_PRICE_LEGACY_YEARLY")
-
-# === SUPABASE CONFIG ===
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
-supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
-
-# === PLANES Y LÍMITES (tokens/mes) ===
-PLAN_LIMITS = {
-    "essence": {
-        "gemini_tokens": float("inf"),  # ilimitado siempre
-        "gpt_tokens": 0,               # reservado para futuro
-        "tts_tokens": 500
-    },
-    "plus": {
-        "gemini_tokens": float("inf"),
-        "gpt_tokens": 0,
-        "tts_tokens": 10000
-    },
-    "legacy": {
-        "gemini_tokens": float("inf"),
-        "gpt_tokens": 0,
-        "tts_tokens": 90000
-    }
-}
+import requests # Necesario para Eleven Labs
 
 app = Flask(__name__)
 CORS(app)
@@ -64,54 +29,6 @@ def index():
     return render_template('index.html')
 # --- FIN RUTA DEL FRONTEND ---
 
-# --- WEBHOOK STRIPE: ACTUALIZA PLANES EN SUPABASE ---
-@app.route("/stripe_webhook", methods=["POST"])
-def stripe_webhook():
-    payload = request.data
-    sig_header = request.headers.get("Stripe-Signature")
-    try:
-        event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
-    except stripe.error.SignatureVerificationError:
-        return jsonify({"error": "Invalid signature"}), 400
-
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
-        user_email = session.get("customer_email")
-        if not user_email:
-            return jsonify({"error": "No email found"}), 400
-
-        # Detectar plan comprado
-        subscription = stripe.Subscription.retrieve(session["subscription"])
-        price_id = subscription["items"]["data"][0]["price"]["id"]
-        if price_id in [STRIPE_PRICE_PLUS_MONTHLY, STRIPE_PRICE_PLUS_YEARLY]:
-            plan = "plus"
-        elif price_id in [STRIPE_PRICE_LEGACY_MONTHLY, STRIPE_PRICE_LEGACY_YEARLY]:
-            plan = "legacy"
-        else:
-            plan = "essence"
-
-        expiry = datetime.utcnow() + (timedelta(days=365) if "YEARLY" in price_id.upper() else timedelta(days=30))
-
-        # Asegurar que el perfil exista
-        profile = ensure_profile_exists(user_email)
-        if not profile or not profile.data:
-            print(f"[stripe_webhook] ERROR: No se pudo asegurar el perfil para {user_email}")
-            return jsonify({"error": "No se pudo crear el perfil"}), 500
-
-        # Actualizar plan y reiniciar contadores
-        supabase.table("profiles").update({
-            "plan": plan,
-            "plan_expiry": expiry.isoformat(),
-            "gemini_tokens_used": 0,
-            "gpt_tokens_used": 0,
-            "tts_tokens_used": 0
-        }).eq("email", user_email).execute()
-
-        print(f"[stripe_webhook] Plan actualizado para {user_email}: {plan}")
-
-    return jsonify({"status": "success"}), 200
-# --- FIN WEBHOOK STRIPE ---
-
 # --- RUTA PARA CLONAR VOZ (Eleven Labs) ---
 @app.route('/clone_voice', methods=['POST'])
 def clone_voice():
@@ -128,9 +45,16 @@ def clone_voice():
         return jsonify({'error': 'Clave API de Eleven Labs no configurada o inválida.'}), 500
 
     url = "https://api.elevenlabs.io/v1/voices/add"
-    headers = {"xi-api-key": eleven_labs_api_key}
-    data = {"name": "Cloned Voice", "description": "Voice cloned from user sample"}
-    files = {'files': (audio_file.filename, audio_file.read(), audio_file.content_type)}
+    headers = {
+        "xi-api-key": eleven_labs_api_key
+    }
+    data = {
+        "name": "Cloned Voice",
+        "description": "Voice cloned from user sample"
+    }
+    files = {
+        'files': (audio_file.filename, audio_file.read(), audio_file.content_type)
+    }
 
     try:
         response = requests.post(url, headers=headers, data=data, files=files)
@@ -146,12 +70,11 @@ def clone_voice():
         print(f"Error inesperado al clonar voz: {e}")
         return jsonify({'error': f"Error inesperado al clonar la voz: {str(e)}"}), 500
 # --- FIN RUTA PARA CLONAR VOZ ---
-
-
-# --- RUTA PARA INICIAR MENTE ---
+# --- NUEVA RUTA: INICIAR MENTE ---
 @app.route('/start_mind', methods=['POST'])
 def start_mind():
     global cloned_voice_id
+
     instruction = request.form.get('instruction', '')
     audio_file = request.files.get('audio_file')
 
@@ -162,27 +85,33 @@ def start_mind():
         return jsonify({'error': 'Clave API de Eleven Labs no configurada o inválida.'}), 500
 
     try:
+        # Subir el archivo a ElevenLabs para clonar voz
         url = "https://api.elevenlabs.io/v1/voices/add"
         headers = {"xi-api-key": eleven_labs_api_key}
-        data = {"name": "User Cloned Voice", "description": "Clonada desde muestra de usuario"}
-        files = {'files': (audio_file.filename, audio_file.read(), audio_file.content_type)}
+        data = {
+            "name": "User Cloned Voice",
+            "description": "Clonada desde muestra de usuario"
+        }
+        files = {
+            'files': (audio_file.filename, audio_file.read(), audio_file.content_type)
+        }
 
         response = requests.post(url, headers=headers, data=data, files=files)
         response.raise_for_status()
         voice_data = response.json()
         cloned_voice_id = voice_data.get('voice_id')
 
-        return jsonify({'message': 'Mente iniciada correctamente.', 'voice_id': cloned_voice_id}), 200
+        return jsonify({
+            'message': 'Mente iniciada correctamente.',
+            'voice_id': cloned_voice_id
+        }), 200
     except requests.exceptions.RequestException as e:
         print(f"Error al conectar con Eleven Labs: {e}")
         return jsonify({'error': 'Error al procesar la voz.'}), 500
     except Exception as e:
         print(f"Error inesperado: {e}")
         return jsonify({'error': 'Error interno al iniciar la mente.'}), 500
-# --- FIN RUTA INICIAR MENTE ---
 
-
-# --- CHAT CON GEMINI ---
 @app.route('/chat', methods=['POST'])
 def chat():
     history_json = request.form.get('history', '[]')
@@ -201,7 +130,12 @@ def chat():
 
     base_instruction = (
         "Responde como Raavax, un asistente conversacional inteligente, claro y cercano. "
-        "Por defecto, mantén respuestas breves, útiles y al grano..."
+        "Por defecto, mantén respuestas breves, útiles y al grano, como si platicaras con alguien de confianza, evitando sonar formal o excesivamente emocional. "
+        "No te extiendas con mensajes largos a menos que el usuario explícitamente lo pida (por ejemplo: 'explícate más', 'aconsejame', 'háblame largo') o comparta algo que requiera apoyo emocional profundo. "
+        "En esos casos, adapta tu respuesta para ser empático, desarrollada y comprensiva, ajustando tu tono al contexto. "
+        "Si el usuario sube un archivo con instrucciones o personalidad, adopta ese estilo, pero siempre mantén coherencia y naturalidad. "
+        "Evita tecnicismos innecesarios, repeticiones o parecer robótico. "
+        "Sé humano, adaptable y auténtico, con el objetivo de ser un buen acompañante cuando se necesite, y un asistente práctico cuando no."
     )
 
     full_user_message_text = f"{base_instruction} {user_message}"
@@ -215,20 +149,35 @@ def chat():
     if uploaded_file:
         file_name = uploaded_file.filename
         file_type = uploaded_file.content_type
+
         try:
             if file_type.startswith('image/'):
                 image_bytes = uploaded_file.read()
                 base64_image = base64.b64encode(image_bytes).decode('utf-8')
-                current_user_parts.append({"inlineData": {"mimeType": file_type, "data": base64_image}})
-                current_user_parts.append({'text': f"Imagen adjunta: '{file_name}'."})
+                current_user_parts.append({
+                    "inlineData": {
+                        "mimeType": file_type,
+                        "data": base64_image
+                    }
+                })
+                if not user_message:
+                    current_user_parts.append({'text': f"Adjuntaste la imagen '{file_name}'. ¿Qué quieres saber sobre ella?"})
+                else:
+                    current_user_parts.append({'text': f"Imagen adjunta: '{file_name}'."})
+
             elif file_type.startswith('text/'):
                 text_content = uploaded_file.read().decode('utf-8')
                 current_user_parts.append({'text': f"Contenido del archivo de texto '{file_name}':\n{text_content}"})
+                if not user_message:
+                    current_user_parts.append({'text': f"Adjuntaste el archivo de texto '{file_name}'. ¿Qué quieres que analice?"})
+                else:
+                    current_user_parts.append({'text': f"Archivo de texto adjunto: '{file_name}'."})
             else:
-                current_user_parts.append({'text': f"Se adjuntó un archivo de tipo {file_type} ('{file_name}')."})
+                current_user_parts.append({'text': f"Se adjuntó un archivo de tipo {file_type} ('{file_name}'). Actualmente, solo puedo procesar imágenes y texto simple directamente. ¿Hay algo más en lo que pueda ayudarte?"})
+
         except Exception as e:
             print(f"Error al procesar el archivo adjunto: {e}")
-            return jsonify({"response": "Error al procesar el archivo adjunto."}), 500
+            return jsonify({"response": "Lo siento, hubo un error al procesar el archivo adjunto."}), 500
 
     if not current_user_parts:
         return jsonify({"response": "Por favor, envía un mensaje o un archivo válido para que pueda responderte."}), 400
@@ -239,125 +188,53 @@ def chat():
         gemini_response = model.generate_content(parts_for_gemini)
         response_message = gemini_response.text
         parts_for_gemini.append({'role': 'model', 'parts': [{'text': response_message}]})
+
+        # --- AUDIO SE GENERA POR SEPARADO ---
         audio_base64 = None
+        # --- FIN CAMBIO ---
+
         return jsonify({"response": response_message, "audio": audio_base64})
+
+    except requests.exceptions.HTTPError as e:
+        print(f"Error de conexión o API con Eleven Labs al generar audio: {e.response.status_code} - {e.response.text}")
+        response_message = f"Lo siento, hubo un problema al generar el audio: {e.response.text}. Por favor, revisa tu clave API de Eleven Labs o los límites de tu cuenta."
+        return jsonify({"response": response_message, "audio": None})
     except Exception as e:
-        print(f"Error inesperado: {e}")
-        return jsonify({"response": "Hubo un problema al procesar tu solicitud."}), 500
-# --- FIN CHAT ---
+        print(f"Error inesperado al conectar con la API de Gemini o generar audio: {e}")
+        response_message = "Lo siento, hubo un problema al procesar tu solicitud con la IA o generar audio. Por favor, intenta de nuevo."
+        return jsonify({"response": response_message, "audio": None})
 
-
-# --- MIDDLEWARE PARA VERIFICAR TOKENS ---
-def check_and_update_tokens(user_email, token_type, tokens_to_add):
-    profile = ensure_profile_exists(user_email)
-    if not profile or not profile.data:
-        return False, "No se pudo acceder al perfil."
-    
-    plan = profile.data.get("plan", "essence")
-    expiry = profile.data.get("plan_expiry")
-    used = profile.data.get(f"{token_type}_tokens_used", 0)
-    limit = PLAN_LIMITS.get(plan, PLAN_LIMITS["essence"]).get(f"{token_type}_tokens", 0)
-
-    if expiry and datetime.fromisoformat(expiry) < datetime.utcnow():
-        return False, "Tu plan ha expirado."
-    if used + tokens_to_add > limit:
-        return False, "Has alcanzado tu límite. Actualiza tu plan."
-    
-    supabase.table("profiles").update({f"{token_type}_tokens_used": used + tokens_to_add}).eq("email", user_email).execute()
-    return True, ""
-# --- FIN MIDDLEWARE ---
-
-# --- GENERAR AUDIO ---
+# --- NUEVO ENDPOINT PARA GENERAR AUDIO BAJO DEMANDA ---
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
     text = request.form.get('text', '')
-    user_email = request.form.get('user_email')  # el frontend debe mandarlo
-    if not user_email:
-        return jsonify({"error": "Falta email de usuario."}), 400
-
-    profile = ensure_profile_exists(user_email)
-    if not profile or not profile.data:
-        return jsonify({"error": "No se pudo crear el perfil"}), 500
-
-    ok, msg = check_and_update_tokens(user_email, "tts", len(text)//4)  # 1 token ≈ 4 caracteres
-    if not ok:
-        return jsonify({"error": msg}), 403
     if not text:
         return jsonify({"error": "Texto vacío para generar audio."}), 400
 
     current_voice_id = cloned_voice_id if cloned_voice_id else default_eleven_labs_voice_id
     tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{current_voice_id}/stream"
-    tts_headers = {"xi-api-key": eleven_labs_api_key, "Content-Type": "application/json", "accept": "audio/mpeg"}
-    tts_data = {"text": text, "model_id": "eleven_multilingual_v2", "voice_settings": {"stability": 0.5, "similarity_boost": 0.75}}
+    tts_headers = {
+        "xi-api-key": eleven_labs_api_key,
+        "Content-Type": "application/json",
+        "accept": "audio/mpeg"
+    }
+    tts_data = {
+        "text": text,
+        "model_id": "eleven_multilingual_v2",
+        "voice_settings": {
+            "stability": 0.5,
+            "similarity_boost": 0.75
+        }
+    }
 
     try:
         tts_response = requests.post(tts_url, headers=tts_headers, json=tts_data, stream=True)
         tts_response.raise_for_status()
-        audio_content = b''.join(tts_response.iter_content(chunk_size=4096))
+        audio_content = b''
+        for chunk in tts_response.iter_content(chunk_size=4096):
+            audio_content += chunk
         audio_base64 = base64.b64encode(audio_content).decode('utf-8')
         return jsonify({"audio": audio_base64})
     except requests.exceptions.HTTPError as e:
-        print(f"Error al generar audio: {e.response.status_code} - {e.response.text}")
+        print(f"Error de conexión o API con Eleven Labs al generar audio: {e.response.status_code} - {e.response.text}")
         return jsonify({"error": f"Error al generar el audio: {e.response.text}"}), e.response.status
-# --- FIN GENERAR AUDIO ---
-
-# --- HELPER PARA CREAR PERFIL SI NO EXISTE ---
-def ensure_profile_exists(user_email):
-    """
-    Asegura que el usuario tenga un perfil en la tabla profiles.
-    Si no existe, lo crea con plan 'essence'.
-    """
-    try:
-        profiles = supabase.table("profiles").select("*").eq("email", user_email).limit(1).execute()
-        profile = profiles.data[0] if profiles.data else None
-
-        if not profile:
-            print(f"[ensure_profile_exists] Perfil no encontrado para {user_email}, creando...")
-            supabase.table("profiles").insert({
-                "email": user_email,
-                "plan": "essence",
-                "plan_expiry": None,
-                "gemini_tokens_used": 0,
-                "gpt_tokens_used": 0,
-                "tts_tokens_used": 0
-            }).execute()
-            profiles = supabase.table("profiles").select("*").eq("email", user_email).limit(1).execute()
-            profile = profiles.data[0] if profiles.data else None
-
-        return profile
-    except Exception as e:
-        print(f"[ensure_profile_exists] Error al asegurar perfil para {user_email}: {e}")
-        return None
-# --- FIN HELPER ---
-
-
-# --- CONSULTAR USO DE TOKENS ---
-@app.route("/get_usage", methods=["GET"])
-def get_usage():
-    try:
-        user_email = request.args.get("email")
-        if not user_email:
-            return jsonify({"error": "Falta email"}), 400
-
-        print(f"[get_usage] Consultando perfil para: {user_email}")
-        profile = ensure_profile_exists(user_email)
-
-        if not profile:
-            print(f"[get_usage] ERROR: No se pudo crear/recuperar el perfil para {user_email}")
-            return jsonify({"error": "No se pudo crear el perfil"}), 500
-
-        plan = profile.get("plan", "essence")
-        usage = {
-            "plan": plan,
-            "plan_expiry": profile.get("plan_expiry"),
-            "tts_tokens_used": profile.get("tts_tokens_used", 0),
-            "tts_tokens_limit": PLAN_LIMITS.get(plan, PLAN_LIMITS["essence"])["tts_tokens"]
-        }
-        return jsonify(usage)
-    except Exception as e:
-        print(f"[get_usage] Error inesperado: {e}")
-        return jsonify({"error": f"Error interno al obtener el plan: {str(e)}"}), 500
-# --- FIN CONSULTAR USO ---
-
-
-
