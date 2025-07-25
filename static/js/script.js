@@ -22,47 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const githubBtn          = document.getElementById('github-signin');
   const successContainer   = document.getElementById('auth-success');
   const successBtn         = document.getElementById('auth-success-btn');
-  const forgotPasswordLink = document.getElementById('forgot-password-link');
-const forgotPasswordContainer = document.getElementById('forgot-password-container');
-const forgotPasswordEmail = document.getElementById('forgot-password-email');
-const forgotPasswordSubmit = document.getElementById('forgot-password-submit');
-const forgotPasswordCancel = document.getElementById('forgot-password-cancel');
-
-if (forgotPasswordLink) {
-    forgotPasswordLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        authForm.style.display = 'none';
-        successContainer.style.display = 'none';
-        forgotPasswordContainer.style.display = 'block';
-    });
-}
-
-if (forgotPasswordCancel) {
-    forgotPasswordCancel.addEventListener('click', () => {
-        forgotPasswordContainer.style.display = 'none';
-        authForm.style.display = 'block';
-    });
-}
-
-if (forgotPasswordSubmit) {
-    forgotPasswordSubmit.addEventListener('click', async () => {
-        const email = forgotPasswordEmail.value.trim();
-        if (!email) {
-            alert("Ingresa tu correo.");
-            return;
-        }
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin + '/reset-password',
-        });
-        if (error) {
-            alert("Error: " + error.message);
-        } else {
-            alert("Te enviamos un enlace para restablecer tu contraseña.");
-            forgotPasswordContainer.style.display = 'none';
-            authForm.style.display = 'block';
-        }
-    });
-}
   const passwordStrength   = document.getElementById('password-strength');
   const eyeToggle          = document.getElementById('toggle-password');
   const confirmEyeToggle   = document.getElementById('toggle-confirm-password');
@@ -219,17 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
-    const newChatBtn = document.getElementById('new-chat-btn');
-const messagesContainer = document.querySelector('.messages');
-const welcomeScreen = document.getElementById('welcome-screen');
-
-if (newChatBtn) {
-    newChatBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        messagesContainer.innerHTML = '';
-        if (welcomeScreen) welcomeScreen.style.display = 'flex';
-    });
-}
     const sendButton = document.getElementById('send-button');
     const messagesContainer = document.querySelector('.messages');
     const fileInput = document.getElementById('file-upload'); // Botón de adjuntar general
@@ -253,13 +201,6 @@ if (newChatBtn) {
     const headerProfilePic = document.getElementById('header-profile-pic');
     const settingsMenu = document.getElementById('settings-menu');
     const settingsOption = document.getElementById('settings-option');
-    const logoutOption = document.getElementById('logout-option');
-if (logoutOption) {
-    logoutOption.addEventListener('click', async () => {
-        await supabaseClient.auth.signOut();
-        location.reload();
-    });
-}
     const settingsModal = document.getElementById('settings-modal');
     const closeSettingsBtn = document.getElementById('close-settings-btn');
     const themeSelect = document.getElementById('theme-select'); // Nuevo selector de tema en ajustes
@@ -748,10 +689,8 @@ messagesContainer.scrollTop = messagesContainer.scrollHeight;
             console.warn("Intento de envío vacío: no hay mensaje ni archivo adjunto.");
             return;
         }
-        let displayMessage = message;
-      // Oculta la pantalla de bienvenida al enviar el primer mensaje
-    if (welcomeScreen) welcomeScreen.style.display = 'none';
 
+        let displayMessage = message;
         if (selectedFile) {
             displayMessage += (message ? ' ' : '') + `📎 Archivo adjunto: ${selectedFile.name}`;
         }
