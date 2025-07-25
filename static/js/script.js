@@ -232,8 +232,12 @@ if (newChatBtn) {
     newChatBtn.addEventListener('click', (e) => {
         e.preventDefault();
         messagesContainer.innerHTML = '';
+
         if (welcomeScreen) {
-            welcomeScreen.classList.remove('hidden'); // vuelve a mostrar la animación inicial
+            welcomeScreen.classList.remove('hidden'); // lo mostramos
+            void welcomeScreen.offsetWidth; // <- fuerza reflow (resetea animación)
+            welcomeScreen.classList.add('hidden'); // <- vuelve a aplicar la animación desde cero
+            welcomeScreen.classList.remove('hidden'); // <- reaparece animando
         }
     });
 }
