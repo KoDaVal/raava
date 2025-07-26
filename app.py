@@ -133,7 +133,6 @@ def truncate_history(history, max_messages=20):
     # Mantener el resumen + los últimos mensajes
     return [summarized_entry] + history[-max_messages:]
 
-# --- ENDPOINT DE CHAT ---
 @app.route('/chat', methods=['POST'])
 def chat():
     try:
@@ -197,10 +196,26 @@ def chat():
         # --- TRUNCAR HISTORIAL ---
         conversation_history = truncate_history(conversation_history, max_messages=20)
 
+        # --- Validar roles y estructura antes de enviar a Gemini ---
+        for msg in conversation_history:
+            # Convertir 'assistant' a 'model' (Gemini lo espera así)
+            if msg.get("role") == "assistant":
+                msg["role"] = "model"
+            # Asegurar que cada part tenga contenido válido
+            if "parts" not in msg or not isinstance(msg["parts"], list) or not msg["parts"]:
+                msg["parts"] = [{"text": ""}]
+            for part in msg["parts"]:
+                if "text" not in part and "inlineData" not in part:
+                    part["text"] = ""
+
+        # --- DEBUG: imprimir historial final antes de llamar a Gemini ---
+        print("Historial enviado a Gemini:")
+        print(json.dumps(conversation_history, indent=2, ensure_ascii=False))
+
         # --- GENERAR RESPUESTA ---
         gemini_response = model.generate_content(conversation_history)
         response_message = gemini_response.text
-        conversation_history.append({'role': 'assistant', 'parts': [{'text': response_message}]})
+        conversation_history.append({'role': 'model', 'parts': [{'text': response_message}]})
 
         return jsonify({"response": response_message, "updated_history": conversation_history})
 
