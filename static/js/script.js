@@ -191,30 +191,44 @@ document.addEventListener('DOMContentLoaded', () => {
     else showOverlay();
   })();
 
-  // --- Cargar perfil ---
-  function loadUserProfile(user) {
-    hideOverlay();
-    const avatar = document.getElementById('header-profile-pic');
-    if (user.user_metadata?.avatar_url && avatar) avatar.src = user.user_metadata.avatar_url;
+ // --- Cargar perfil ---
+function loadUserProfile(user) {
+  hideOverlay();
+  const avatar = document.getElementById('header-profile-pic');
+  if (user.user_metadata?.avatar_url && avatar) avatar.src = user.user_metadata.avatar_url;
 
-    // Mostrar plan
-    const userPlanLabel = document.getElementById('user-plan-label');
-    if (userPlanLabel) {
+  const userPlanLabel = document.getElementById('user-plan-label');
+  if (userPlanLabel) {
+    // Obtener el token de sesión del usuario autenticado
+    supabaseClient.auth.getSession().then(({ data }) => {
+      const token = data.session?.access_token;
+
       fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`, {
-        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${token}`  // <-- ahora sí existe
+        }
       })
       .then(res => res.json())
-      .then(data => { if (data.length > 0) userPlanLabel.textContent = `Plan: ${data[0].plan || 'essence'}`; });
+      .then(data => { 
+        if (data.length > 0) {
+          userPlanLabel.textContent = `Plan: ${data[0].plan || 'essence'}`;
+        } else {
+          userPlanLabel.textContent = `Plan: essence`; // Fallback si no hay datos
+        }
+      })
+      .catch(err => console.error("Error al cargar el plan:", err));
+    });
 
-      supabaseClient
-        .channel('public:profiles')
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, payload => {
-          if (payload.new?.plan) userPlanLabel.textContent = `Plan: ${payload.new.plan}`;
-        })
-        .subscribe();
-    }
+    // --- Canal Realtime para actualizar el plan en vivo ---
+    supabaseClient
+      .channel('public:profiles')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, payload => {
+        if (payload.new?.plan) userPlanLabel.textContent = `Plan: ${payload.new.plan}`;
+      })
+      .subscribe();
   }
-}); 
+}
 // ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════
 document.addEventListener('DOMContentLoaded', () => {
   // ... tu código original de chat, sidebar, etc.
