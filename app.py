@@ -112,97 +112,101 @@ def start_mind():
         print(f"Error inesperado: {e}")
         return jsonify({'error': 'Error interno al iniciar la mente.'}), 500
 
+# --- HELPER PARA ERRORES ---
+def api_error(message, status=400):
+    return jsonify({"error": message}), status
+
+# --- FUNCIÓN PARA TRUNCAR HISTORIAL ---
+def truncate_history(history, max_messages=20):
+    """
+    Mantiene solo los últimos 'max_messages' del historial.
+    Si excede, resume los anteriores.
+    """
+    if len(history) <= max_messages:
+        return history
+
+    # Resumen rápido: concatenar los mensajes viejos en uno solo
+    old_msgs = [msg['parts'][0].get('text', '') for msg in history[:-max_messages]]
+    summary_text = f"Resumen de la conversación anterior:\n{ ' '.join(old_msgs)[:1000] }..."
+    summarized_entry = {"role": "system", "parts": [{"text": summary_text}]}
+
+    # Mantener el resumen + los últimos mensajes
+    return [summarized_entry] + history[-max_messages:]
+
+# --- ENDPOINT DE CHAT ---
 @app.route('/chat', methods=['POST'])
 def chat():
-    history_json = request.form.get('history', '[]')
-    user_message = request.form.get('message', '')
-    uploaded_file = request.files.get('file')
-    persistent_instruction = request.form.get('persistent_instruction', '')
-
     try:
-        conversation_history = json.loads(history_json)
-    except json.JSONDecodeError:
-        return jsonify({"response": "Error: Formato de historial inválido."}), 400
-
-    parts_for_gemini = conversation_history
-    response_message = "Lo siento, hubo un error desconocido."
-    audio_base64 = None
-
-    base_instruction = (
-        "Responde como Raavax, un asistente conversacional inteligente, claro y cercano. "
-        "Por defecto, mantén respuestas breves, útiles y al grano, como si platicaras con alguien de confianza, evitando sonar formal o excesivamente emocional. "
-        "No te extiendas con mensajes largos a menos que el usuario explícitamente lo pida (por ejemplo: 'explícate más', 'aconsejame', 'háblame largo') o comparta algo que requiera apoyo emocional profundo. "
-        "En esos casos, adapta tu respuesta para ser empático, desarrollada y comprensiva, ajustando tu tono al contexto. "
-        "Si el usuario sube un archivo con instrucciones o personalidad, adopta ese estilo, pero siempre mantén coherencia y naturalidad. "
-        "Evita tecnicismos innecesarios, repeticiones o parecer robótico. "
-        "Sé humano, adaptable y auténtico, con el objetivo de ser un buen acompañante cuando se necesite, y un asistente práctico cuando no."
-    )
-
-    full_user_message_text = f"{base_instruction} {user_message}"
-    if persistent_instruction:
-        full_user_message_text = f"{persistent_instruction}\n\n{full_user_message_text}"
-
-    current_user_parts = []
-    if full_user_message_text:
-        current_user_parts.append({'text': full_user_message_text})
-
-    if uploaded_file:
-        file_name = uploaded_file.filename
-        file_type = uploaded_file.content_type
+        history_json = request.form.get('history', '[]')
+        user_message = request.form.get('message', '')
+        uploaded_file = request.files.get('file')
+        persistent_instruction = request.form.get('persistent_instruction', '')
 
         try:
-            if file_type.startswith('image/'):
-                image_bytes = uploaded_file.read()
-                base64_image = base64.b64encode(image_bytes).decode('utf-8')
-                current_user_parts.append({
-                    "inlineData": {
-                        "mimeType": file_type,
-                        "data": base64_image
-                    }
-                })
-                if not user_message:
-                    current_user_parts.append({'text': f"Adjuntaste la imagen '{file_name}'. ¿Qué quieres saber sobre ella?"})
+            conversation_history = json.loads(history_json)
+        except json.JSONDecodeError:
+            return api_error("Historial en formato inválido.", 400)
+
+        # --- BASE INSTRUCTION COMO SYSTEM ---
+        base_instruction = (
+            "Eres Raavax, un asistente conversacional inteligente, claro y cercano. "
+            "Por defecto, mantén respuestas breves, útiles y al grano, como si platicaras con alguien de confianza. "
+            "No te extiendas salvo que el usuario lo pida o comparta algo que requiera apoyo profundo. "
+            "Adapta tu tono al contexto y evita tecnicismos innecesarios. Sé humano, adaptable y auténtico."
+        )
+
+        system_prompt = base_instruction
+        if persistent_instruction:
+            system_prompt += f"\n\nInstrucciones adicionales del usuario:\n{persistent_instruction}"
+
+        # Si el historial no tiene un mensaje system, lo agregamos al inicio
+        if not conversation_history or conversation_history[0].get('role') != 'system':
+            conversation_history.insert(0, {"role": "system", "parts": [{"text": system_prompt}]})
+        else:
+            conversation_history[0]["parts"][0]["text"] = system_prompt
+
+        # --- AGREGAR MENSAJE DEL USUARIO ---
+        current_user_parts = []
+        if user_message:
+            current_user_parts.append({'text': user_message})
+
+        if uploaded_file:
+            file_name = uploaded_file.filename
+            file_type = uploaded_file.content_type
+            try:
+                if file_type.startswith('image/'):
+                    image_bytes = uploaded_file.read()
+                    base64_image = base64.b64encode(image_bytes).decode('utf-8')
+                    current_user_parts.append({
+                        "inlineData": {"mimeType": file_type, "data": base64_image}
+                    })
+                elif file_type.startswith('text/'):
+                    text_content = uploaded_file.read().decode('utf-8')
+                    current_user_parts.append({'text': f"Contenido del archivo '{file_name}':\n{text_content}"})
                 else:
-                    current_user_parts.append({'text': f"Imagen adjunta: '{file_name}'."})
+                    current_user_parts.append({'text': f"Archivo adjunto '{file_name}' de tipo {file_type}. No se puede procesar directamente."})
+            except Exception as e:
+                print(f"Error al procesar archivo: {e}")
+                return api_error("Error al procesar el archivo adjunto.", 500)
 
-            elif file_type.startswith('text/'):
-                text_content = uploaded_file.read().decode('utf-8')
-                current_user_parts.append({'text': f"Contenido del archivo de texto '{file_name}':\n{text_content}"})
-                if not user_message:
-                    current_user_parts.append({'text': f"Adjuntaste el archivo de texto '{file_name}'. ¿Qué quieres que analice?"})
-                else:
-                    current_user_parts.append({'text': f"Archivo de texto adjunto: '{file_name}'."})
-            else:
-                current_user_parts.append({'text': f"Se adjuntó un archivo de tipo {file_type} ('{file_name}'). Actualmente, solo puedo procesar imágenes y texto simple directamente. ¿Hay algo más en lo que pueda ayudarte?"})
+        if current_user_parts:
+            conversation_history.append({'role': 'user', 'parts': current_user_parts})
+        else:
+            return api_error("Debes enviar un mensaje o archivo.", 400)
 
-        except Exception as e:
-            print(f"Error al procesar el archivo adjunto: {e}")
-            return jsonify({"response": "Lo siento, hubo un error al procesar el archivo adjunto."}), 500
+        # --- TRUNCAR HISTORIAL ---
+        conversation_history = truncate_history(conversation_history, max_messages=20)
 
-    if not current_user_parts:
-        return jsonify({"response": "Por favor, envía un mensaje o un archivo válido para que pueda responderte."}), 400
-
-    parts_for_gemini.append({'role': 'user', 'parts': current_user_parts})
-
-    try:
-        gemini_response = model.generate_content(parts_for_gemini)
+        # --- GENERAR RESPUESTA ---
+        gemini_response = model.generate_content(conversation_history)
         response_message = gemini_response.text
-        parts_for_gemini.append({'role': 'model', 'parts': [{'text': response_message}]})
+        conversation_history.append({'role': 'assistant', 'parts': [{'text': response_message}]})
 
-        # --- AUDIO SE GENERA POR SEPARADO ---
-        audio_base64 = None
-        # --- FIN CAMBIO ---
+        return jsonify({"response": response_message, "updated_history": conversation_history})
 
-        return jsonify({"response": response_message, "audio": audio_base64})
-
-    except requests.exceptions.HTTPError as e:
-        print(f"Error de conexión o API con Eleven Labs al generar audio: {e.response.status_code} - {e.response.text}")
-        response_message = f"Lo siento, hubo un problema al generar el audio: {e.response.text}. Por favor, revisa tu clave API de Eleven Labs o los límites de tu cuenta."
-        return jsonify({"response": response_message, "audio": None})
     except Exception as e:
-        print(f"Error inesperado al conectar con la API de Gemini o generar audio: {e}")
-        response_message = "Lo siento, hubo un problema al procesar tu solicitud con la IA o generar audio. Por favor, intenta de nuevo."
-        return jsonify({"response": response_message, "audio": None})
+        print(f"Error inesperado en /chat: {e}")
+        return api_error("Error interno al procesar el chat.", 500)
 
 # --- NUEVO ENDPOINT PARA GENERAR AUDIO BAJO DEMANDA ---
 @app.route('/generate_audio', methods=['POST'])
