@@ -23,64 +23,64 @@ document.addEventListener('DOMContentLoaded', () => {
   const successContainer   = document.getElementById('auth-success');
   const successBtn         = document.getElementById('auth-success-btn');
   const forgotPasswordLink = document.getElementById('forgot-password-link');
-const forgotPasswordContainer = document.getElementById('forgot-password-container');
-const forgotPasswordEmail = document.getElementById('forgot-password-email');
-const forgotPasswordSubmit = document.getElementById('forgot-password-submit');
-const forgotPasswordCancel = document.getElementById('forgot-password-cancel');
-
-if (forgotPasswordLink) {
-    forgotPasswordLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        authForm.style.display = 'none';
-        successContainer.style.display = 'none';
-        forgotPasswordContainer.style.display = 'block';
-    });
-}
-
-if (forgotPasswordCancel) {
-    forgotPasswordCancel.addEventListener('click', () => {
-        forgotPasswordContainer.style.display = 'none';
-        authForm.style.display = 'block';
-    });
-}
-
-if (forgotPasswordSubmit) {
-    forgotPasswordSubmit.addEventListener('click', async () => {
-        const email = forgotPasswordEmail.value.trim();
-        if (!email) {
-            alert("Ingresa tu correo.");
-            return;
-        }
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin + '/reset-password',
-        });
-        if (error) {
-            alert("Error: " + error.message);
-        } else {
-            alert("Te enviamos un enlace para restablecer tu contraseña.");
-            forgotPasswordContainer.style.display = 'none';
-            authForm.style.display = 'block';
-        }
-    });
-}
+  const forgotPasswordContainer = document.getElementById('forgot-password-container');
+  const forgotPasswordEmail = document.getElementById('forgot-password-email');
+  const forgotPasswordSubmit = document.getElementById('forgot-password-submit');
+  const forgotPasswordCancel = document.getElementById('forgot-password-cancel');
   const logoutOption = document.getElementById('logout-option');
-if (logoutOption) {
-    logoutOption.addEventListener('click', async () => {
-        await supabaseClient.auth.signOut();
-        location.reload();
-    });
-}
   const passwordStrength   = document.getElementById('password-strength');
   const eyeToggle          = document.getElementById('toggle-password');
   const confirmEyeToggle   = document.getElementById('toggle-confirm-password');
 
-  // Inicializar estado de confirmación
+  // --- Eventos de recuperación de contraseña ---
+  if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      authForm.style.display = 'none';
+      successContainer.style.display = 'none';
+      forgotPasswordContainer.style.display = 'block';
+    });
+  }
+  if (forgotPasswordCancel) {
+    forgotPasswordCancel.addEventListener('click', () => {
+      forgotPasswordContainer.style.display = 'none';
+      authForm.style.display = 'block';
+    });
+  }
+  if (forgotPasswordSubmit) {
+    forgotPasswordSubmit.addEventListener('click', async () => {
+      const email = forgotPasswordEmail.value.trim();
+      if (!email) {
+        alert("Ingresa tu correo.");
+        return;
+      }
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+      if (error) alert("Error: " + error.message);
+      else {
+        alert("Te enviamos un enlace para restablecer tu contraseña.");
+        forgotPasswordContainer.style.display = 'none';
+        authForm.style.display = 'block';
+      }
+    });
+  }
+
+  // --- Logout ---
+  if (logoutOption) {
+    logoutOption.addEventListener('click', async () => {
+      await supabaseClient.auth.signOut();
+      location.reload();
+    });
+  }
+
+  // --- Inicializar estado ---
   confirmWrapper.style.display = 'none';
   confirmInput.disabled = true;
   confirmInput.required = false;
   passwordStrength.style.display = 'none';
 
-  // Mostrar/ocultar contraseña
+  // --- Mostrar/ocultar contraseña ---
   eyeToggle.addEventListener('click', () => {
     const type = passwordInput.type === 'password' ? 'text' : 'password';
     passwordInput.type = type;
@@ -94,7 +94,7 @@ if (logoutOption) {
     confirmEyeToggle.querySelector('i').classList.toggle('fa-eye');
   });
 
-  // Fuerza de contraseña
+  // --- Fuerza de contraseña ---
   passwordInput.addEventListener('input', () => {
     const val = passwordInput.value;
     const strong = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_\-+=])(?=.{8,})/.test(val);
@@ -104,72 +104,55 @@ if (logoutOption) {
     passwordStrength.style.color = strong ? 'lightgreen' : 'salmon';
   });
 
-  // Cambiar entre login y registro
+  // --- Cambiar entre login y registro ---
   toggleLink.addEventListener('click', e => {
     e.preventDefault();
     isLoginMode = !isLoginMode;
-
     if (isLoginMode) {
-      // MODO LOGIN
-      submitBtn.textContent       = 'Iniciar sesión';
-      toggleText.textContent      = '¿No tienes cuenta? ';
-      toggleLink.textContent      = 'Regístrate';
+      submitBtn.textContent = 'Iniciar sesión';
+      toggleText.textContent = '¿No tienes cuenta? ';
+      toggleLink.textContent = 'Regístrate';
       confirmWrapper.style.display= 'none';
-      confirmInput.disabled       = true;
-      confirmInput.required       = false;
+      confirmInput.disabled = true;
+      confirmInput.required = false;
       passwordStrength.style.display = 'none';
     } else {
-      // MODO REGISTRO
-      submitBtn.textContent       = 'Registrarse';
-      toggleText.textContent      = '¿Ya tienes cuenta? ';
-      toggleLink.textContent      = 'Inicia sesión';
+      submitBtn.textContent = 'Registrarse';
+      toggleText.textContent = '¿Ya tienes cuenta? ';
+      toggleLink.textContent = 'Inicia sesión';
       confirmWrapper.style.display= 'flex';
-      confirmInput.disabled       = false;
-      confirmInput.required       = true;
+      confirmInput.disabled = false;
+      confirmInput.required = true;
       passwordStrength.style.display = 'inline-block';
     }
-
-    // Reanexar el link al texto
     toggleText.appendChild(toggleLink);
   });
 
-  // Envío del formulario
+  // --- Envío del formulario ---
   authForm.addEventListener('submit', async e => {
     e.preventDefault();
     const email    = emailInput.value.trim();
     const password = passwordInput.value;
-
     if (!email || !password || (!isLoginMode && !confirmInput.value)) {
       alert('Por favor, ingresa tu correo y contraseña.');
       return;
     }
-
     submitBtn.disabled = true;
     submitBtn.textContent = isLoginMode ? 'Iniciando sesión...' : 'Registrando...';
-
     try {
       if (isLoginMode) {
-        // LOGIN
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) {
           const msg = error.message;
-          if (msg.includes('Invalid login credentials')) {
-            alert('Correo o contraseña incorrectos.');
-          } else if (msg.includes('Email not confirmed')) {
-            alert('Tu correo aún no ha sido confirmado.');
-          } else {
-            alert(`Error al iniciar sesión: ${msg}`);
-          }
+          if (msg.includes('Invalid login credentials')) alert('Correo o contraseña incorrectos.');
+          else if (msg.includes('Email not confirmed')) alert('Tu correo aún no ha sido confirmado.');
+          else alert(`Error al iniciar sesión: ${msg}`);
           console.error(error);
           return;
         }
-        if (data?.session) {
-          loadUserProfile(data.user);
-        } else {
-          alert('Inicio de sesión fallido. Verifica tus credenciales.');
-        }
+        if (data?.session) loadUserProfile(data.user);
+        else alert('Inicio de sesión fallido. Verifica tus credenciales.');
       } else {
-        // REGISTRO
         if (password !== confirmInput.value) {
           alert('Las contraseñas no coinciden.');
           return;
@@ -180,7 +163,7 @@ if (logoutOption) {
           console.error(error);
           return;
         }
-        authForm.style.display     = 'none';
+        authForm.style.display = 'none';
         successContainer.style.display = 'block';
       }
     } catch (err) {
@@ -191,61 +174,47 @@ if (logoutOption) {
       submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
     }
   });
-// Botón "Ir a iniciar sesión"
-successBtn.addEventListener('click', () => location.reload());
 
-// Login con Google / GitHub
-googleBtn.addEventListener('click',  () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
-githubBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
+  // --- Botones sociales ---
+  successBtn.addEventListener('click', () => location.reload());
+  googleBtn.addEventListener('click',  () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
+  githubBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
 
-// Manejo de sesión activa
-supabaseClient.auth.onAuthStateChange((_, session) => {
-  if (session?.user) loadUserProfile(session.user);
-  else showOverlay();
-});
+  // --- Manejo de sesión ---
+  supabaseClient.auth.onAuthStateChange((_, session) => {
+    if (session?.user) loadUserProfile(session.user);
+    else showOverlay();
+  });
+  (async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session?.user) loadUserProfile(session.user);
+    else showOverlay();
+  })();
 
-(async () => {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session?.user) loadUserProfile(session.user);
-  else showOverlay();
-})();
+  // --- Cargar perfil ---
+  function loadUserProfile(user) {
+    hideOverlay();
+    const avatar = document.getElementById('header-profile-pic');
+    if (user.user_metadata?.avatar_url && avatar) avatar.src = user.user_metadata.avatar_url;
 
-// Cargar avatar y ocultar login
-function loadUserProfile(user) {
-  hideOverlay();
-  const avatar = document.getElementById('header-profile-pic');
-  if (user.user_metadata?.avatar_url && avatar) {
-    avatar.src = user.user_metadata.avatar_url;
-  }
-  
-  // --- Mostrar el plan actual del usuario ---
-  const userPlanLabel = document.getElementById('user-plan-label');
-  if (userPlanLabel) {
-    fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`, {
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`
-      }
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.length > 0) {
-        userPlanLabel.textContent = `Plan: ${data[0].plan || 'essence'}`;
-      }
-    })
-    .catch(err => console.error("Error al cargar el plan:", err));
-
-    // --- Canal Realtime para actualizar el plan en vivo ---
-    supabaseClient
-      .channel('public:profiles')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, payload => {
-        if (payload.new?.plan) {
-          userPlanLabel.textContent = `Plan: ${payload.new.plan}`;
-        }
+    // Mostrar plan
+    const userPlanLabel = document.getElementById('user-plan-label');
+    if (userPlanLabel) {
+      fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`, {
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
       })
-      .subscribe();
+      .then(res => res.json())
+      .then(data => { if (data.length > 0) userPlanLabel.textContent = `Plan: ${data[0].plan || 'essence'}`; });
+
+      supabaseClient
+        .channel('public:profiles')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, payload => {
+          if (payload.new?.plan) userPlanLabel.textContent = `Plan: ${payload.new.plan}`;
+        })
+        .subscribe();
+    }
   }
-} 
+}); 
 // ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════
 document.addEventListener('DOMContentLoaded', () => {
   // ... tu código original de chat, sidebar, etc.
