@@ -218,6 +218,33 @@ if (logoutOption) {
     if (user.user_metadata?.avatar_url && avatar) {
       avatar.src = user.user_metadata.avatar_url;
     }
+    // --- Mostrar el plan actual del usuario ---
+const userPlanLabel = document.getElementById('user-plan-label');
+if (userPlanLabel) {
+  fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`, {
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+    }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.length > 0) {
+      userPlanLabel.textContent = `Plan: ${data[0].plan || 'essence'}`;
+    }
+  })
+  .catch(err => console.error("Error al cargar el plan:", err));
+
+  // --- Canal Realtime para actualizar el plan en vivo ---
+  supabaseClient
+    .channel('public:profiles')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, payload => {
+      if (payload.new?.plan) {
+        userPlanLabel.textContent = `Plan: ${payload.new.plan}`;
+      }
+    })
+    .subscribe();
+}
   }
 });
 // ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════
