@@ -5,6 +5,61 @@ import os
 import base64
 import json
 import requests # Necesario para Eleven Labs
+from datetime import date
+from supabase import create_client
+
+# Conexión Supabase
+supabase_url = os.getenv("SUPABASE_URL")
+supabase_key = os.getenv("SUPABASE_SERVICE_KEY")
+supabase = create_client(supabase_url, supabase_key)
+
+# Límites por plan
+PLAN_LIMITS = {
+    "essence": {"tokens": 30000, "voice_tokens": 500},
+    "plus": {"tokens": None, "voice_tokens": None},      # Ilimitado
+    "legacy": {"tokens": None, "voice_tokens": None}     # Ilimitado
+}
+
+# Helpers
+def get_user_profile(user_id):
+    res = supabase.table("profiles").select("*").eq("id", user_id).single().execute()
+    if not res.data:
+        raise Exception("Usuario no encontrado.")
+    profile = res.data
+    if not profile.get("plan"):  # Si el plan está vacío, asignamos essence
+        supabase.table("profiles").update({"plan": "essence"}).eq("id", user_id).execute()
+        profile["plan"] = "essence"
+    return profile
+
+def reset_monthly_usage(profile, user_id):
+    if profile["tokens_reset_date"] < date.today().replace(day=1):
+        supabase.table("profiles").update({
+            "tokens_used": 0,
+            "voice_tokens_used": 0,
+            "tokens_reset_date": date.today()
+        }).eq("id", user_id).execute()
+        profile["tokens_used"] = 0
+        profile["voice_tokens_used"] = 0
+    return profile
+
+def check_plan_limits(profile):
+    plan = profile["plan"]
+    limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["essence"])
+    if limits["tokens"] is not None and profile["tokens_used"] >= limits["tokens"]:
+        raise Exception("Has alcanzado el límite de tokens de tu plan.")
+    if limits["voice_tokens"] is not None and profile["voice_tokens_used"] >= limits["voice_tokens"]:
+        raise Exception("Has alcanzado el límite de voz de tu plan.")
+    return limits
+
+def update_usage(user_id, tokens=0, voice_tokens=0):
+    supabase.table("profiles").update({
+        "tokens_used": supabase.sql("tokens_used + {}".format(tokens)),
+        "voice_tokens_used": supabase.sql("voice_tokens_used + {}".format(voice_tokens))
+    }).eq("id", user_id).execute()
+
+def estimate_text_tokens(text):
+    return max(1, len(text) // 4)  # Aproximación: 4 caracteres ≈ 1 token
+
 
 app = Flask(__name__)
 CORS(app)
@@ -136,41 +191,30 @@ def truncate_history(history, max_messages=20):
 @app.route('/chat', methods=['POST'])
 def chat():
     try:
+        # 1. Identificar usuario
+        user_id = request.headers.get("X-User-Id")
+        if not user_id:
+            return api_error("Falta el ID del usuario.", 401)
+
+        # 2. Validar plan y consumo
+        profile = get_user_profile(user_id)
+        profile = reset_monthly_usage(profile, user_id)
+        limits = check_plan_limits(profile)
+
+        # 3. Datos del request
         history_json = request.form.get('history', '[]')
         user_message = request.form.get('message', '')
         uploaded_file = request.files.get('file')
         persistent_instruction = request.form.get('persistent_instruction', '')
-
         try:
             conversation_history = json.loads(history_json)
         except json.JSONDecodeError:
             return api_error("Historial en formato inválido.", 400)
 
-        # --- BASE INSTRUCTION ---
-        base_instruction = (
-            "Eres Raavax, un asistente conversacional inteligente, claro y cercano. "
-            "Por defecto, mantén respuestas breves, útiles y al grano, como si platicaras con alguien de confianza. "
-            "No te extiendas salvo que el usuario lo pida o comparta algo que requiera apoyo profundo. "
-            "Adapta tu tono al contexto y evita tecnicismos innecesarios. Sé humano, adaptable y auténtico."
-        )
-        if persistent_instruction:
-            base_instruction += f"\n\nInstrucciones adicionales del usuario:\n{persistent_instruction}"
-
-        # Si es la primera interacción, inyectamos el prompt en el primer mensaje como contexto
-        if not conversation_history:
-            conversation_history = [{"role": "user", "parts": [{"text": base_instruction}]}]
-        else:
-            # Prependemos el prompt al primer mensaje del usuario
-            if conversation_history[0].get("role") == "user" and conversation_history[0].get("parts"):
-                conversation_history[0]["parts"][0]["text"] = base_instruction + "\n\n" + conversation_history[0]["parts"][0]["text"]
-            else:
-                conversation_history.insert(0, {"role": "user", "parts": [{"text": base_instruction}]})
-
-        # --- AGREGAR MENSAJE DEL USUARIO ---
+        # 4. Agregar el mensaje del usuario
         current_user_parts = []
         if user_message:
             current_user_parts.append({'text': user_message})
-
         if uploaded_file:
             file_name = uploaded_file.filename
             file_type = uploaded_file.content_type
@@ -195,40 +239,40 @@ def chat():
         else:
             return api_error("Debes enviar un mensaje o archivo.", 400)
 
-        # --- TRUNCAR HISTORIAL ---
-        conversation_history = truncate_history(conversation_history, max_messages=20)
-
-        # --- Validar roles y estructura antes de enviar a Gemini ---
-        for msg in conversation_history:
-            if msg.get("role") == "assistant":
-                msg["role"] = "model"  # Gemini usa 'model'
-            if "parts" not in msg or not isinstance(msg["parts"], list) or not msg["parts"]:
-                msg["parts"] = [{"text": ""}]
-            for part in msg["parts"]:
-                if "text" not in part and "inlineData" not in part:
-                    part["text"] = ""
-
-        # --- DEBUG: imprimir historial final antes de llamar a Gemini ---
-        print("Historial enviado a Gemini:")
-        print(json.dumps(conversation_history, indent=2, ensure_ascii=False))
-
-        # --- GENERAR RESPUESTA ---
+        # 5. Generar respuesta con Gemini
         gemini_response = model.generate_content(conversation_history)
         response_message = gemini_response.text
         conversation_history.append({'role': 'model', 'parts': [{'text': response_message}]})
+
+        # 6. Calcular tokens usados
+        input_tokens = sum(estimate_text_tokens(p['parts'][0].get('text', '')) for p in conversation_history if p['role'] == 'user')
+        output_tokens = estimate_text_tokens(response_message)
+        total_tokens = input_tokens + output_tokens
+
+        # 7. Actualizar consumo si tiene límite
+        if limits["tokens"] is not None:
+            update_usage(user_id, tokens=total_tokens)
 
         return jsonify({"response": response_message, "updated_history": conversation_history})
 
     except Exception as e:
         print(f"Error inesperado en /chat: {e}")
-        return api_error("Error interno al procesar el chat.", 500)
+        return api_error(str(e), 500)
 
 # --- NUEVO ENDPOINT PARA GENERAR AUDIO BAJO DEMANDA ---
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
     text = request.form.get('text', '')
+    user_id = request.headers.get("X-User-Id")
+    if not user_id:
+        return jsonify({"error": "Falta el ID del usuario."}), 401
     if not text:
         return jsonify({"error": "Texto vacío para generar audio."}), 400
+
+    # Validar plan y límites
+    profile = get_user_profile(user_id)
+    profile = reset_monthly_usage(profile, user_id)
+    limits = check_plan_limits(profile)
 
     current_voice_id = cloned_voice_id if cloned_voice_id else default_eleven_labs_voice_id
     tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{current_voice_id}/stream"
@@ -253,6 +297,12 @@ def generate_audio():
         for chunk in tts_response.iter_content(chunk_size=4096):
             audio_content += chunk
         audio_base64 = base64.b64encode(audio_content).decode('utf-8')
+
+        # Contar tokens de voz y actualizar consumo si aplica
+        voice_tokens = estimate_text_tokens(text)
+        if limits["voice_tokens"] is not None:
+            update_usage(user_id, voice_tokens=voice_tokens)
+
         return jsonify({"audio": audio_base64})
     except requests.exceptions.HTTPError as e:
         print(f"Error de conexión o API con Eleven Labs al generar audio: {e.response.status_code} - {e.response.text}")
