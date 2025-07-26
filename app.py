@@ -146,23 +146,25 @@ def chat():
         except json.JSONDecodeError:
             return api_error("Historial en formato inválido.", 400)
 
-        # --- BASE INSTRUCTION COMO SYSTEM ---
+        # --- BASE INSTRUCTION ---
         base_instruction = (
             "Eres Raavax, un asistente conversacional inteligente, claro y cercano. "
             "Por defecto, mantén respuestas breves, útiles y al grano, como si platicaras con alguien de confianza. "
             "No te extiendas salvo que el usuario lo pida o comparta algo que requiera apoyo profundo. "
             "Adapta tu tono al contexto y evita tecnicismos innecesarios. Sé humano, adaptable y auténtico."
         )
-
-        system_prompt = base_instruction
         if persistent_instruction:
-            system_prompt += f"\n\nInstrucciones adicionales del usuario:\n{persistent_instruction}"
+            base_instruction += f"\n\nInstrucciones adicionales del usuario:\n{persistent_instruction}"
 
-        # Si el historial no tiene un mensaje system, lo agregamos al inicio
-        if not conversation_history or conversation_history[0].get('role') != 'system':
-            conversation_history.insert(0, {"role": "system", "parts": [{"text": system_prompt}]})
+        # Si es la primera interacción, inyectamos el prompt en el primer mensaje como contexto
+        if not conversation_history:
+            conversation_history = [{"role": "user", "parts": [{"text": base_instruction}]}]
         else:
-            conversation_history[0]["parts"][0]["text"] = system_prompt
+            # Prependemos el prompt al primer mensaje del usuario
+            if conversation_history[0].get("role") == "user" and conversation_history[0].get("parts"):
+                conversation_history[0]["parts"][0]["text"] = base_instruction + "\n\n" + conversation_history[0]["parts"][0]["text"]
+            else:
+                conversation_history.insert(0, {"role": "user", "parts": [{"text": base_instruction}]})
 
         # --- AGREGAR MENSAJE DEL USUARIO ---
         current_user_parts = []
@@ -198,10 +200,8 @@ def chat():
 
         # --- Validar roles y estructura antes de enviar a Gemini ---
         for msg in conversation_history:
-            # Convertir 'assistant' a 'model' (Gemini lo espera así)
             if msg.get("role") == "assistant":
-                msg["role"] = "model"
-            # Asegurar que cada part tenga contenido válido
+                msg["role"] = "model"  # Gemini usa 'model'
             if "parts" not in msg or not isinstance(msg["parts"], list) or not msg["parts"]:
                 msg["parts"] = [{"text": ""}]
             for part in msg["parts"]:
