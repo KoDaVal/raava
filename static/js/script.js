@@ -191,62 +191,61 @@ if (logoutOption) {
       submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
     }
   });
+// Botón "Ir a iniciar sesión"
+successBtn.addEventListener('click', () => location.reload());
 
-  // Botón "Ir a iniciar sesión"
-  successBtn.addEventListener('click', () => location.reload());
+// Login con Google / GitHub
+googleBtn.addEventListener('click',  () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
+githubBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
 
-  // Login con Google / GitHub
-  googleBtn.addEventListener('click',  () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
-  githubBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
+// Manejo de sesión activa
+supabaseClient.auth.onAuthStateChange((_, session) => {
+  if (session?.user) loadUserProfile(session.user);
+  else showOverlay();
+});
 
-  // Manejo de sesión activa
-  supabaseClient.auth.onAuthStateChange((_, session) => {
-    if (session?.user) loadUserProfile(session.user);
-    else showOverlay();
-  });
+(async () => {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session?.user) loadUserProfile(session.user);
+  else showOverlay();
+})();
 
-  (async () => {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session?.user) loadUserProfile(session.user);
-    else showOverlay();
-  })();
-
-  // Cargar avatar y ocultar login
-  function loadUserProfile(user) {
-    hideOverlay();
-    const avatar = document.getElementById('header-profile-pic');
-    if (user.user_metadata?.avatar_url && avatar) {
-      avatar.src = user.user_metadata.avatar_url;
-    }
-    // --- Mostrar el plan actual del usuario ---
-const userPlanLabel = document.getElementById('user-plan-label');
-if (userPlanLabel) {
-  fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`, {
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`
-    }
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.length > 0) {
-      userPlanLabel.textContent = `Plan: ${data[0].plan || 'essence'}`;
-    }
-  })
-  .catch(err => console.error("Error al cargar el plan:", err));
-
-  // --- Canal Realtime para actualizar el plan en vivo ---
-  supabaseClient
-    .channel('public:profiles')
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, payload => {
-      if (payload.new?.plan) {
-        userPlanLabel.textContent = `Plan: ${payload.new.plan}`;
+// Cargar avatar y ocultar login
+function loadUserProfile(user) {
+  hideOverlay();
+  const avatar = document.getElementById('header-profile-pic');
+  if (user.user_metadata?.avatar_url && avatar) {
+    avatar.src = user.user_metadata.avatar_url;
+  }
+  
+  // --- Mostrar el plan actual del usuario ---
+  const userPlanLabel = document.getElementById('user-plan-label');
+  if (userPlanLabel) {
+    fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`
       }
     })
-    .subscribe();
-}
+    .then(res => res.json())
+    .then(data => {
+      if (data.length > 0) {
+        userPlanLabel.textContent = `Plan: ${data[0].plan || 'essence'}`;
+      }
+    })
+    .catch(err => console.error("Error al cargar el plan:", err));
+
+    // --- Canal Realtime para actualizar el plan en vivo ---
+    supabaseClient
+      .channel('public:profiles')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, payload => {
+        if (payload.new?.plan) {
+          userPlanLabel.textContent = `Plan: ${payload.new.plan}`;
+        }
+      })
+      .subscribe();
   }
-});
+} 
 // ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════
 document.addEventListener('DOMContentLoaded', () => {
   // ... tu código original de chat, sidebar, etc.
