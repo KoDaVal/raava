@@ -234,7 +234,8 @@ if (newChatBtn) {
 
         // Limpia el historial de mensajes
         messagesContainer.innerHTML = '';
-
+        conversationHistory = [];
+      
         if (welcomeScreen) {
             // Asegura que esté visible
             welcomeScreen.classList.remove('hidden');
@@ -808,14 +809,8 @@ messagesContainer.scrollTop = messagesContainer.scrollHeight;
             hideTypingIndicator();
             // Pasa el audio (data.audio) a addMessage si existe
             await addMessage('bot', data.response, data.audio);
-          conversationHistory.push({
-    role: 'user',
-    parts: [{ text: message }]
-});
-conversationHistory.push({
-    role: 'model',
-    parts: [{ text: data.response }]
-});
+          conversationHistory = data.updated_history;
+
             // Limpiar selectedFile y fileInput después de enviar el mensaje
             selectedFile = null;
             fileInput.value = ''; // Asegura que el input principal también se limpie
