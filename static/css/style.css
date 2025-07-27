@@ -1433,6 +1433,23 @@ input:checked + .slider:before {
     transform: scale(0.85);  /* ajusta escala */
     transform-origin: center;
 }
+#forgot-password-container {
+  min-height: 250px; /* Mantiene altura parecida al login */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+#forgot-password-container p {
+  text-align: center;
+  color: #fff;
+}
+#forgot-password-container .auth-btn {
+  width: 100%;
+  max-width: 250px;
+  margin-top: 10px;
+}
+
 
 
 
