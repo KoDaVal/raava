@@ -22,48 +22,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const githubBtn          = document.getElementById('github-signin');
   const successContainer   = document.getElementById('auth-success');
   const successBtn         = document.getElementById('auth-success-btn');
-
-  // --- NUEVO flujo de recuperación de contraseña por código ---
   const forgotPasswordLink = document.getElementById('forgot-password-link');
   const forgotPasswordContainer = document.getElementById('forgot-password-container');
-  const forgotStep1 = document.getElementById('forgot-step1');
-  const forgotStep2 = document.getElementById('forgot-step2');
-  const forgotStep3 = document.getElementById('forgot-step3');
-  const forgotSendCode = document.getElementById('forgot-send-code');
-  const forgotVerifyCode = document.getElementById('forgot-verify-code');
-  // Timers y estados para el flujo de recuperación
-let resendTimer = null;
-let resendCountdown = 60;
-let codeExpireTimer = null;
-let codeExpireCountdown = 600; // 10 minutos
-const resendBtn = document.createElement('button');
-resendBtn.id = 'forgot-resend-code';
-resendBtn.textContent = 'Reenviar código';
-resendBtn.classList.add('auth-btn');
-resendBtn.style.marginTop = '8px';
-resendBtn.disabled = true;
-
-const codeExpireLabel = document.createElement('p');
-codeExpireLabel.id = 'code-expire-timer';
-codeExpireLabel.style.fontSize = '0.9em';
-codeExpireLabel.style.color = '#888';
-codeExpireLabel.style.marginTop = '5px';
-
-forgotStep2.appendChild(resendBtn);
-forgotStep2.appendChild(codeExpireLabel);
-  const forgotChangePassword = document.getElementById('forgot-change-password');
-  const forgotEmail = document.getElementById('forgot-email');
-  const forgotCode = document.getElementById('forgot-code');
-  const forgotNewPassword = document.getElementById('forgot-new-password');
-  const forgotConfirmPassword = document.getElementById('forgot-confirm-password');
+  const forgotPasswordEmail = document.getElementById('forgot-password-email');
+  const forgotPasswordSubmit = document.getElementById('forgot-password-submit');
   const forgotPasswordCancel = document.getElementById('forgot-password-cancel');
-
   const logoutOption = document.getElementById('logout-option');
   const passwordStrength   = document.getElementById('password-strength');
   const eyeToggle          = document.getElementById('toggle-password');
   const confirmEyeToggle   = document.getElementById('toggle-confirm-password');
 
-  // --- Abrir recuperación ---
+  // --- Eventos de recuperación de contraseña ---
   if (forgotPasswordLink) {
     forgotPasswordLink.addEventListener('click', (e) => {
       e.preventDefault();
@@ -72,131 +41,30 @@ forgotStep2.appendChild(codeExpireLabel);
       forgotPasswordContainer.style.display = 'block';
     });
   }
-
-  // --- Cancelar recuperación ---
   if (forgotPasswordCancel) {
     forgotPasswordCancel.addEventListener('click', () => {
-        forgotPasswordContainer.style.display = 'none';
-        authForm.style.display = 'block';
-        // Resetear pasos
-        forgotStep1.style.display = 'block';
-        forgotStep2.style.display = 'none';
-        forgotStep3.style.display = 'none';
-        // Limpiar campos
-        forgotEmail.value = '';
-        forgotCode.value = '';
-        forgotNewPassword.value = '';
-        forgotConfirmPassword.value = '';
-      clearInterval(resendTimer);
-clearInterval(codeExpireTimer);
-codeExpireLabel.textContent = '';
-    });
-  }
-
-  function startResendTimer() {
-  resendCountdown = 60;
-  resendBtn.disabled = true;
-  resendBtn.textContent = `Reenviar código (${resendCountdown}s)`;
-  resendTimer = setInterval(() => {
-    resendCountdown--;
-    resendBtn.textContent = `Reenviar código (${resendCountdown}s)`;
-    if (resendCountdown <= 0) {
-      clearInterval(resendTimer);
-      resendBtn.disabled = false;
-      resendBtn.textContent = 'Reenviar código';
-    }
-  }, 1000);
-}
-
-function startCodeExpireTimer() {
-  codeExpireCountdown = 600;
-  updateExpireLabel();
-  codeExpireTimer = setInterval(() => {
-    codeExpireCountdown--;
-    updateExpireLabel();
-    if (codeExpireCountdown <= 0) {
-      clearInterval(codeExpireTimer);
-      alert("El código ha expirado. Solicita uno nuevo.");
-      forgotStep2.style.display = 'none';
-      forgotStep1.style.display = 'block';
-    }
-  }, 1000);
-}
-
-function updateExpireLabel() {
-  const mins = Math.floor(codeExpireCountdown / 60);
-  const secs = codeExpireCountdown % 60;
-  codeExpireLabel.textContent = `El código expira en: ${mins}:${secs < 10 ? '0'+secs : secs}`;
-}
-  // Paso 1: Enviar código
-  forgotSendCode.addEventListener('click', async () => {
-    const email = forgotEmail.value.trim();
-    if (!email) return alert("Ingresa tu correo");
-    const res = await fetch('/forgot_password', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({email})
-    });
-    const data = await res.json();
-    if (res.ok) {
-      alert("Te enviamos un código por correo");
-      forgotStep1.style.display = 'none';
-      forgotStep2.style.display = 'block';
-      startResendTimer();
-startCodeExpireTimer();
-    } else {
-      alert(data.error || "Error al enviar el código");
-    }
-  });
-// Reenviar código
-resendBtn.addEventListener('click', async () => {
-  const email = forgotEmail.value.trim();
-  if (!email) return alert("Ingresa tu correo");
-  const res = await fetch('/forgot_password', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({email})
-  });
-  const data = await res.json();
-  if (res.ok) {
-    alert("Te reenviamos un nuevo código.");
-    startResendTimer();
-    startCodeExpireTimer();
-  } else {
-    alert(data.error || "Error al reenviar el código");
-  }
-});
-
-  // Paso 2: Verificar código
-  forgotVerifyCode.addEventListener('click', () => {
-    if (!forgotCode.value.trim()) return alert("Ingresa el código");
-    forgotStep2.style.display = 'none';
-    forgotStep3.style.display = 'block';
-  });
-
-  // Paso 3: Cambiar contraseña
-  forgotChangePassword.addEventListener('click', async () => {
-    const newPass = forgotNewPassword.value.trim();
-    const confirmPass = forgotConfirmPassword.value.trim();
-    if (newPass !== confirmPass) return alert("Las contraseñas no coinciden");
-    const res = await fetch('/reset_password', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        email: forgotEmail.value.trim(),
-        code: forgotCode.value.trim(),
-        new_password: newPass
-      })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      alert("Contraseña actualizada. Ahora inicia sesión.");
       forgotPasswordContainer.style.display = 'none';
       authForm.style.display = 'block';
-    } else {
-      alert(data.error || "Error al cambiar la contraseña");
-    }
-  });
+    });
+  }
+  if (forgotPasswordSubmit) {
+    forgotPasswordSubmit.addEventListener('click', async () => {
+      const email = forgotPasswordEmail.value.trim();
+      if (!email) {
+        alert("Ingresa tu correo.");
+        return;
+      }
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+      if (error) alert("Error: " + error.message);
+      else {
+        alert("Te enviamos un enlace para restablecer tu contraseña.");
+        forgotPasswordContainer.style.display = 'none';
+        authForm.style.display = 'block';
+      }
+    });
+  }
 
   // --- Logout ---
   if (logoutOption) {
@@ -264,21 +132,21 @@ resendBtn.addEventListener('click', async () => {
   authForm.addEventListener('submit', async e => {
     e.preventDefault();
     const recaptchaResponse = grecaptcha.getResponse();
-    if (!recaptchaResponse) {
-        alert('Por favor, confirma el reCAPTCHA.');
-        return;
-    }
+if (!recaptchaResponse) {
+    alert('Por favor, confirma el reCAPTCHA.');
+    return;
+}
     // Verificar reCAPTCHA en el backend
-    const captchaCheck = await fetch('/verify_captcha', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ token: recaptchaResponse })
-    });
-    const captchaResult = await captchaCheck.json();
-    if (!captchaResult.success) {
-        alert('Error al verificar el reCAPTCHA. Inténtalo de nuevo.');
-        return;
-    }
+const captchaCheck = await fetch('/verify_captcha', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ token: recaptchaResponse })
+});
+const captchaResult = await captchaCheck.json();
+if (!captchaResult.success) {
+    alert('Error al verificar el reCAPTCHA. Inténtalo de nuevo.');
+    return;
+}
     const email    = emailInput.value.trim();
     const password = passwordInput.value;
     if (!email || !password || (!isLoginMode && !confirmInput.value)) {
@@ -372,6 +240,7 @@ resendBtn.addEventListener('click', async () => {
   }
 }); 
 // ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════
+document.addEventListener('DOMContentLoaded', () => {
   // ... tu código original de chat, sidebar, etc.
 });
 document.addEventListener('DOMContentLoaded', () => {
