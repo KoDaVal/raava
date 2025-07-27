@@ -48,24 +48,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   if (forgotPasswordSubmit) {
-    forgotPasswordSubmit.addEventListener('click', async () => {
-      const email = forgotPasswordEmail.value.trim();
-      if (!email) {
-        alert("Ingresa tu correo.");
-        return;
-      }
-      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/reset-password',
-      });
-      if (error) alert("Error: " + error.message);
-      else {
-        alert("Te enviamos un enlace para restablecer tu contraseña.");
+  forgotPasswordSubmit.addEventListener('click', async () => {
+    const email = forgotPasswordEmail.value.trim();
+    if (!email) {
+      alert("Ingresa tu correo.");
+      return;
+    }
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+    if (error) {
+      alert("Error: " + error.message);
+    } else {
+      // Mostramos mensaje dentro del overlay
+      forgotPasswordContainer.innerHTML = `
+        <p style="margin: 20px 0; color: #fff;">
+          Si el correo existe, te enviamos un enlace para restablecer tu contraseña.
+        </p>
+        <button id="forgot-password-back" class="auth-btn">Volver</button>
+      `;
+
+      // Botón para volver al login
+      document.getElementById('forgot-password-back').addEventListener('click', () => {
         forgotPasswordContainer.style.display = 'none';
         authForm.style.display = 'block';
-      }
-    });
-  }
-
+      });
+    }
+  });
+}
   // --- Logout ---
   if (logoutOption) {
     logoutOption.addEventListener('click', async () => {
