@@ -1433,18 +1433,6 @@ input:checked + .slider:before {
     transform: scale(0.85);  /* ajusta escala */
     transform-origin: center;
 }
-.auth-card {
-  min-height: 420px; /* mantiene el modal estable */
-}
-#resend-code-btn:disabled {
-  background: #666;
-  cursor: not-allowed;
-}
-
-
-
-
-
 
 
 
