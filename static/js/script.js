@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
       authForm.style.display = 'block';
     });
   }
+  
 if (forgotPasswordSubmit) {
   forgotPasswordSubmit.addEventListener('click', async () => {
     const email = forgotPasswordEmail.value.trim();
@@ -58,38 +59,35 @@ if (forgotPasswordSubmit) {
     if (error) {
       alert("Error: " + error.message);
     } else {
-      // Ocultar inputs y botones
-      document.querySelector('#forgot-password-container input').style.display = 'none';
+      // Ocultar el contenido original
+      forgotPasswordEmail.style.display = 'none';
       forgotPasswordSubmit.style.display = 'none';
       forgotPasswordCancel.style.display = 'none';
 
-      // Mostrar mensaje de éxito
+      // Crear mensaje y botón
       const successMsg = document.createElement('p');
       successMsg.textContent = "Si el correo existe, te enviamos un enlace para restablecer tu contraseña.";
-      successMsg.style.margin = "20px 0";
-      successMsg.style.color = "#fff";
-      successMsg.style.textAlign = "center";
-
       const backBtn = document.createElement('button');
       backBtn.textContent = "Volver";
       backBtn.className = "auth-btn";
-      backBtn.style.marginTop = "15px";
       backBtn.addEventListener('click', () => {
-        forgotPasswordContainer.style.display = 'none';
-        authForm.style.display = 'block';
-        // Restaurar el formulario
-        document.querySelector('#forgot-password-container input').style.display = 'block';
-        forgotPasswordSubmit.style.display = 'inline-block';
-        forgotPasswordCancel.style.display = 'inline-block';
+        // Restaurar vista
         successMsg.remove();
         backBtn.remove();
+        forgotPasswordEmail.style.display = 'block';
+        forgotPasswordSubmit.style.display = 'inline-block';
+        forgotPasswordCancel.style.display = 'inline-block';
+        forgotPasswordContainer.style.display = 'none';
+        authForm.style.display = 'block';
       });
 
+      // Agregar al contenedor
       forgotPasswordContainer.appendChild(successMsg);
       forgotPasswordContainer.appendChild(backBtn);
     }
   });
 }
+
   // --- Logout ---
   if (logoutOption) {
     logoutOption.addEventListener('click', async () => {
