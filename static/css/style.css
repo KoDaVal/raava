@@ -1449,6 +1449,36 @@ input:checked + .slider:before {
   max-width: 250px;
   margin-top: 10px;
 }
+.auth-card {
+  min-height: 400px; /* Mantén el mismo alto del modal siempre */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 20px;
+}
+
+#forgot-password-container {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#forgot-password-container p {
+  text-align: center;
+  color: #fff;
+  margin: 15px 0;
+}
+
+#forgot-password-container .auth-btn {
+  width: 100%;
+  max-width: 250px;
+  margin-top: 10px;
+}
+
 
 
 
