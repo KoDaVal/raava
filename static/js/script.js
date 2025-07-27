@@ -31,6 +31,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const forgotStep3 = document.getElementById('forgot-step3');
   const forgotSendCode = document.getElementById('forgot-send-code');
   const forgotVerifyCode = document.getElementById('forgot-verify-code');
+  // Timers y estados para el flujo de recuperación
+let resendTimer = null;
+let resendCountdown = 60;
+let codeExpireTimer = null;
+let codeExpireCountdown = 600; // 10 minutos
+const resendBtn = document.createElement('button');
+resendBtn.id = 'forgot-resend-code';
+resendBtn.textContent = 'Reenviar código';
+resendBtn.classList.add('auth-btn');
+resendBtn.style.marginTop = '8px';
+resendBtn.disabled = true;
+
+const codeExpireLabel = document.createElement('p');
+codeExpireLabel.id = 'code-expire-timer';
+codeExpireLabel.style.fontSize = '0.9em';
+codeExpireLabel.style.color = '#888';
+codeExpireLabel.style.marginTop = '5px';
+
+forgotStep2.appendChild(resendBtn);
+forgotStep2.appendChild(codeExpireLabel);
   const forgotChangePassword = document.getElementById('forgot-change-password');
   const forgotEmail = document.getElementById('forgot-email');
   const forgotCode = document.getElementById('forgot-code');
@@ -67,9 +87,47 @@ document.addEventListener('DOMContentLoaded', () => {
         forgotCode.value = '';
         forgotNewPassword.value = '';
         forgotConfirmPassword.value = '';
+      clearInterval(resendTimer);
+clearInterval(codeExpireTimer);
+codeExpireLabel.textContent = '';
     });
   }
 
+  function startResendTimer() {
+  resendCountdown = 60;
+  resendBtn.disabled = true;
+  resendBtn.textContent = `Reenviar código (${resendCountdown}s)`;
+  resendTimer = setInterval(() => {
+    resendCountdown--;
+    resendBtn.textContent = `Reenviar código (${resendCountdown}s)`;
+    if (resendCountdown <= 0) {
+      clearInterval(resendTimer);
+      resendBtn.disabled = false;
+      resendBtn.textContent = 'Reenviar código';
+    }
+  }, 1000);
+}
+
+function startCodeExpireTimer() {
+  codeExpireCountdown = 600;
+  updateExpireLabel();
+  codeExpireTimer = setInterval(() => {
+    codeExpireCountdown--;
+    updateExpireLabel();
+    if (codeExpireCountdown <= 0) {
+      clearInterval(codeExpireTimer);
+      alert("El código ha expirado. Solicita uno nuevo.");
+      forgotStep2.style.display = 'none';
+      forgotStep1.style.display = 'block';
+    }
+  }, 1000);
+}
+
+function updateExpireLabel() {
+  const mins = Math.floor(codeExpireCountdown / 60);
+  const secs = codeExpireCountdown % 60;
+  codeExpireLabel.textContent = `El código expira en: ${mins}:${secs < 10 ? '0'+secs : secs}`;
+}
   // Paso 1: Enviar código
   forgotSendCode.addEventListener('click', async () => {
     const email = forgotEmail.value.trim();
@@ -84,10 +142,30 @@ document.addEventListener('DOMContentLoaded', () => {
       alert("Te enviamos un código por correo");
       forgotStep1.style.display = 'none';
       forgotStep2.style.display = 'block';
+      startResendTimer();
+startCodeExpireTimer();
     } else {
       alert(data.error || "Error al enviar el código");
     }
   });
+// Reenviar código
+resendBtn.addEventListener('click', async () => {
+  const email = forgotEmail.value.trim();
+  if (!email) return alert("Ingresa tu correo");
+  const res = await fetch('/forgot_password', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({email})
+  });
+  const data = await res.json();
+  if (res.ok) {
+    alert("Te reenviamos un nuevo código.");
+    startResendTimer();
+    startCodeExpireTimer();
+  } else {
+    alert(data.error || "Error al reenviar el código");
+  }
+});
 
   // Paso 2: Verificar código
   forgotVerifyCode.addEventListener('click', () => {
@@ -294,7 +372,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 }); 
 // ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════
-document.addEventListener('DOMContentLoaded', () => {
   // ... tu código original de chat, sidebar, etc.
 });
 document.addEventListener('DOMContentLoaded', () => {
