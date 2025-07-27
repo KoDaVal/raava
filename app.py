@@ -258,6 +258,71 @@ def chat():
     except Exception as e:
         print(f"Error inesperado en /chat: {e}")
         return api_error(str(e), 500)
+# --- NUEVAS RUTAS PARA RECUPERAR CONTRASEÑA CON CÓDIGO ---
+from datetime import datetime, timedelta
+import random
+import smtplib
+from email.mime.text import MIMEText
+
+@app.route('/forgot_password', methods=['POST'])
+def forgot_password():
+    email = request.json.get('email')
+    if not email:
+        return jsonify({"error": "Correo requerido"}), 400
+    
+    # Generar código y expiración
+    code = str(random.randint(100000, 999999))
+    expires_at = datetime.utcnow() + timedelta(minutes=10)
+    
+    # Guardar en Supabase
+    supabase.table("password_resets").insert({
+        "email": email,
+        "code": code,
+        "expires_at": expires_at.isoformat()
+    }).execute()
+
+    # Enviar correo con el código
+    msg = MIMEText(f"Tu código de recuperación es: {code}")
+    msg['Subject'] = 'Recupera tu contraseña'
+    msg['From'] = 'no-reply@tusitio.com'
+    msg['To'] = email
+    with smtplib.SMTP('smtp.tuservidor.com', 587) as server:
+        server.starttls()
+        server.login("usuario_smtp", "password_smtp")
+        server.sendmail(msg['From'], [msg['To']], msg.as_string())
+
+    return jsonify({"message": "Código enviado a tu correo"})
+
+@app.route('/reset_password', methods=['POST'])
+def reset_password():
+    email = request.json.get('email')
+    code = request.json.get('code')
+    new_password = request.json.get('new_password')
+    if not all([email, code, new_password]):
+        return jsonify({"error": "Datos incompletos"}), 400
+    
+    # Verificar código válido y no usado
+    result = supabase.table("password_resets")\
+        .select("*")\
+        .eq("email", email)\
+        .eq("code", code)\
+        .eq("used", False)\
+        .execute()
+    
+    if not result.data:
+        return jsonify({"error": "Código inválido o expirado"}), 400
+    
+    reset_entry = result.data[0]
+    if datetime.fromisoformat(reset_entry['expires_at']) < datetime.utcnow():
+        return jsonify({"error": "Código expirado"}), 400
+    
+    # Marcar como usado
+    supabase.table("password_resets").update({"used": True}).eq("email", email).eq("code", code).execute()
+
+    # Cambiar contraseña (requiere service key)
+    supabase.auth.admin.update_user_by_email(email, {"password": new_password})
+
+    return jsonify({"message": "Contraseña actualizada exitosamente"})
 
 # --- NUEVO ENDPOINT PARA GENERAR AUDIO BAJO DEMANDA ---
 @app.route('/generate_audio', methods=['POST'])
