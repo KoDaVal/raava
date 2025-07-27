@@ -1,4 +1,6 @@
 from flask import Flask, request, jsonify, render_template
+from datetime import datetime, timedelta
+import random
 from flask_cors import CORS
 import google.generativeai as genai
 import os
@@ -83,6 +85,53 @@ cloned_voice_id = None
 def index():
     return render_template('index.html')
 # --- FIN RUTA DEL FRONTEND ---
+
+@app.route('/forgot_password', methods=['POST'])
+def forgot_password():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        if not email:
+            return jsonify({"error": "Correo requerido"}), 400
+
+        code = str(random.randint(100000, 999999))
+        expires_at = (datetime.utcnow() + timedelta(minutes=10)).isoformat()
+
+        supabase_client.table('password_resets').insert({
+            "email": email,
+            "code": code,
+            "expires_at": expires_at,
+            "used": False
+        }).execute()
+
+        # TODO: enviar email con el código
+        return jsonify({"message": "Código enviado"}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Error interno"}), 500
+
+@app.route('/reset_password', methods=['POST'])
+def reset_password():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        code = data.get('code')
+        new_password = data.get('new_password')
+
+        res = supabase_client.table('password_resets').select("*").eq('email', email).eq('code', code).eq('used', False).execute()
+        if not res.data:
+            return jsonify({"error": "Código inválido o expirado"}), 400
+
+        record = res.data[0]
+        if datetime.fromisoformat(record['expires_at']) < datetime.utcnow():
+            return jsonify({"error": "El código ha expirado"}), 400
+
+        supabase_client.table('password_resets').update({"used": True}).eq('id', record['id']).execute()
+        supabase_client.auth.admin.update_user_by_email(email, {"password": new_password})
+        return jsonify({"message": "Contraseña actualizada"}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Error interno"}), 500
 
 # --- RUTA PARA CLONAR VOZ (Eleven Labs) ---
 @app.route('/clone_voice', methods=['POST'])
