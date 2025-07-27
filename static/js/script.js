@@ -47,47 +47,24 @@ document.addEventListener('DOMContentLoaded', () => {
       authForm.style.display = 'block';
     });
   }
-  
   if (forgotPasswordSubmit) {
-  forgotPasswordSubmit.addEventListener('click', async () => {
-    const email = forgotPasswordEmail.value.trim();
-    if (!email) {
-      alert("Ingresa tu correo.");
-      return;
-    }
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
-    if (error) {
-      alert("Error: " + error.message);
-    } else {
-      // Ocultar los elementos originales
-      forgotPasswordEmail.style.display = 'none';
-      forgotPasswordSubmit.style.display = 'none';
-      forgotPasswordCancel.style.display = 'none';
-
-      // Crear mensaje de éxito
-      const successMsg = document.createElement('p');
-      successMsg.textContent = "Si el correo existe, te enviamos un enlace para restablecer tu contraseña.";
-
-      // Botón para volver
-      const backBtn = document.createElement('button');
-      backBtn.textContent = "Volver al inicio de sesión";
-      backBtn.className = "auth-btn";
-      backBtn.addEventListener('click', () => {
-        // Restaurar formulario
-        successMsg.remove();
-        backBtn.remove();
-        forgotPasswordEmail.style.display = 'block';
-        forgotPasswordSubmit.style.display = 'inline-block';
-        forgotPasswordCancel.style.display = 'inline-block';
+    forgotPasswordSubmit.addEventListener('click', async () => {
+      const email = forgotPasswordEmail.value.trim();
+      if (!email) {
+        alert("Ingresa tu correo.");
+        return;
+      }
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+      if (error) alert("Error: " + error.message);
+      else {
+        alert("Te enviamos un enlace para restablecer tu contraseña.");
         forgotPasswordContainer.style.display = 'none';
         authForm.style.display = 'block';
-      });
-
-      forgotPasswordContainer.appendChild(successMsg);
-      forgotPasswordContainer.appendChild(backBtn);
-    }
-  });
-}
+      }
+    });
+  }
 
   // --- Logout ---
   if (logoutOption) {
