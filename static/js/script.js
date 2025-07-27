@@ -136,6 +136,17 @@ if (!recaptchaResponse) {
     alert('Por favor, confirma el reCAPTCHA.');
     return;
 }
+    // Verificar reCAPTCHA en el backend
+const captchaCheck = await fetch('/verify_captcha', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ token: recaptchaResponse })
+});
+const captchaResult = await captchaCheck.json();
+if (!captchaResult.success) {
+    alert('Error al verificar el reCAPTCHA. Inténtalo de nuevo.');
+    return;
+}
     const email    = emailInput.value.trim();
     const password = passwordInput.value;
     if (!email || !password || (!isLoginMode && !confirmInput.value)) {
