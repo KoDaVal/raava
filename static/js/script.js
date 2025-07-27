@@ -131,6 +131,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Envío del formulario ---
   authForm.addEventListener('submit', async e => {
     e.preventDefault();
+    const recaptchaResponse = grecaptcha.getResponse();
+if (!recaptchaResponse) {
+    alert('Por favor, confirma el reCAPTCHA.');
+    return;
+}
     const email    = emailInput.value.trim();
     const password = passwordInput.value;
     if (!email || !password || (!isLoginMode && !confirmInput.value)) {
