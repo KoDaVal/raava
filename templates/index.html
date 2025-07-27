@@ -56,27 +56,35 @@
         </p>
       </form>
 
-      <!-- PANTALLA RECUPERAR CONTRASEÑA -->
-      <div id="forgot-password-container" style="display:none; text-align:center; margin-top:20px;">
-        <p style="margin-bottom:10px;">Recuperar contraseña</p>
-        <!-- Paso 1: Email -->
-        <div id="forgot-step1">
-          <input type="email" id="forgot-email" placeholder="Tu correo electrónico" style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid #ccc;">
-          <button id="forgot-send-code" class="auth-btn">Enviar código</button>
-        </div>
-        <!-- Paso 2: Código -->
-        <div id="forgot-step2" style="display:none;">
-          <input type="text" id="forgot-code" placeholder="Código de 6 dígitos" style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid #ccc;">
-          <button id="forgot-verify-code" class="auth-btn">Verificar código</button>
-        </div>
-        <!-- Paso 3: Nueva contraseña -->
-        <div id="forgot-step3" style="display:none;">
-          <input type="password" id="forgot-new-password" placeholder="Nueva contraseña" style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid #ccc;">
-          <input type="password" id="forgot-confirm-password" placeholder="Confirmar contraseña" style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid #ccc;">
-          <button id="forgot-change-password" class="auth-btn">Cambiar contraseña</button>
-        </div>
-        <button id="forgot-password-cancel" class="auth-btn cancel-btn">Cancelar</button>
-      </div>
+      <!-- Pantalla de recuperación de contraseña -->
+<div id="forgot-password-container" style="display:none; text-align:center; margin-top:20px;">
+  <p style="margin-bottom:10px;">Recuperar contraseña</p>
+
+  <!-- Paso 1: Email -->
+  <div id="forgot-step1">
+    <input type="email" id="forgot-email" placeholder="Tu correo electrónico" style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid #ccc;">
+    <button id="forgot-send-code" class="auth-btn">Enviar código</button>
+  </div>
+
+  <!-- Paso 2: Código -->
+  <div id="forgot-step2" style="display:none;">
+    <input type="text" id="forgot-code" placeholder="Código de 6 dígitos" style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid #ccc;">
+    <button id="forgot-verify-code" class="auth-btn">Verificar código</button>
+  </div>
+
+  <!-- Paso 3: Nueva contraseña -->
+  <div id="forgot-step3" style="display:none;">
+    <input type="password" id="forgot-new-password" placeholder="Nueva contraseña" style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid #ccc;">
+    <input type="password" id="forgot-confirm-password" placeholder="Confirmar contraseña" style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid #ccc;">
+    <button id="forgot-change-password" class="auth-btn">Cambiar contraseña</button>
+  </div>
+
+  <!-- Flecha cancelar -->
+  <button id="forgot-password-cancel" class="cancel-back-btn">
+    <i class="fas fa-arrow-left"></i>
+  </button>
+</div>
+
 
       <!-- MENSAJE DE VERIFICACIÓN -->
       <div id="auth-success" style="display:none; text-align:center; margin:16px 0;">
