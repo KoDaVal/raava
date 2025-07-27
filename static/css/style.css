@@ -1400,6 +1400,42 @@ input:checked + .slider:before {
 #forgot-password-container .cancel-btn:hover {
   background: #bbb;
 }
+/* Contenedor del captcha */
+.g-recaptcha {
+    display: flex;
+    justify-content: center;
+    margin: 12px 0;
+    transform: scale(0.95); /* Reduce un poco el tamaño */
+    transform-origin: center;
+}
+
+/* Ajuste en tarjetas pequeñas */
+@media (max-width: 480px) {
+    .g-recaptcha {
+        transform: scale(0.85);
+    }
+}
+/* Contenedor personalizado del captcha */
+.captcha-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 100%;
+    height: 50px; /* igual que el botón */
+    margin: 10px 0;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+/* Escalar el widget */
+.captcha-wrapper .g-recaptcha {
+    transform: scale(0.85);  /* ajusta escala */
+    transform-origin: center;
+}
+
+
+
 
 
 
