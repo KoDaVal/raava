@@ -1400,5 +1400,21 @@ input:checked + .slider:before {
 #forgot-password-container .cancel-btn:hover {
   background: #bbb;
 }
+/* Contenedor del captcha */
+.g-recaptcha {
+    display: flex;
+    justify-content: center;
+    margin: 12px 0;
+    transform: scale(0.95); /* Reduce un poco el tamaño */
+    transform-origin: center;
+}
+
+/* Ajuste en tarjetas pequeñas */
+@media (max-width: 480px) {
+    .g-recaptcha {
+        transform: scale(0.85);
+    }
+}
+
 
 
