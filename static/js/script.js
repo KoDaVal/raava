@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-if (forgotPasswordSubmit) {
+  if (forgotPasswordSubmit) {
   forgotPasswordSubmit.addEventListener('click', async () => {
     const email = forgotPasswordEmail.value.trim();
     if (!email) {
@@ -59,19 +59,21 @@ if (forgotPasswordSubmit) {
     if (error) {
       alert("Error: " + error.message);
     } else {
-      // Ocultar el contenido original
+      // Ocultar los elementos originales
       forgotPasswordEmail.style.display = 'none';
       forgotPasswordSubmit.style.display = 'none';
       forgotPasswordCancel.style.display = 'none';
 
-      // Crear mensaje y botón
+      // Crear mensaje de éxito
       const successMsg = document.createElement('p');
       successMsg.textContent = "Si el correo existe, te enviamos un enlace para restablecer tu contraseña.";
+
+      // Botón para volver
       const backBtn = document.createElement('button');
-      backBtn.textContent = "Volver";
+      backBtn.textContent = "Volver al inicio de sesión";
       backBtn.className = "auth-btn";
       backBtn.addEventListener('click', () => {
-        // Restaurar vista
+        // Restaurar formulario
         successMsg.remove();
         backBtn.remove();
         forgotPasswordEmail.style.display = 'block';
@@ -81,7 +83,6 @@ if (forgotPasswordSubmit) {
         authForm.style.display = 'block';
       });
 
-      // Agregar al contenedor
       forgotPasswordContainer.appendChild(successMsg);
       forgotPasswordContainer.appendChild(backBtn);
     }
