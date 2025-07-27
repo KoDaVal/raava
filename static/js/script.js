@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
       authForm.style.display = 'block';
     });
   }
-  if (forgotPasswordSubmit) {
+if (forgotPasswordSubmit) {
   forgotPasswordSubmit.addEventListener('click', async () => {
     const email = forgotPasswordEmail.value.trim();
     if (!email) {
@@ -58,19 +58,35 @@ document.addEventListener('DOMContentLoaded', () => {
     if (error) {
       alert("Error: " + error.message);
     } else {
-      // Mostramos mensaje dentro del overlay
-      forgotPasswordContainer.innerHTML = `
-        <p style="margin: 20px 0; color: #fff;">
-          Si el correo existe, te enviamos un enlace para restablecer tu contraseña.
-        </p>
-        <button id="forgot-password-back" class="auth-btn">Volver</button>
-      `;
+      // Ocultar inputs y botones
+      document.querySelector('#forgot-password-container input').style.display = 'none';
+      forgotPasswordSubmit.style.display = 'none';
+      forgotPasswordCancel.style.display = 'none';
 
-      // Botón para volver al login
-      document.getElementById('forgot-password-back').addEventListener('click', () => {
+      // Mostrar mensaje de éxito
+      const successMsg = document.createElement('p');
+      successMsg.textContent = "Si el correo existe, te enviamos un enlace para restablecer tu contraseña.";
+      successMsg.style.margin = "20px 0";
+      successMsg.style.color = "#fff";
+      successMsg.style.textAlign = "center";
+
+      const backBtn = document.createElement('button');
+      backBtn.textContent = "Volver";
+      backBtn.className = "auth-btn";
+      backBtn.style.marginTop = "15px";
+      backBtn.addEventListener('click', () => {
         forgotPasswordContainer.style.display = 'none';
         authForm.style.display = 'block';
+        // Restaurar el formulario
+        document.querySelector('#forgot-password-container input').style.display = 'block';
+        forgotPasswordSubmit.style.display = 'inline-block';
+        forgotPasswordCancel.style.display = 'inline-block';
+        successMsg.remove();
+        backBtn.remove();
       });
+
+      forgotPasswordContainer.appendChild(successMsg);
+      forgotPasswordContainer.appendChild(backBtn);
     }
   });
 }
