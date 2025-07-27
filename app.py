@@ -307,3 +307,19 @@ def generate_audio():
     except requests.exceptions.HTTPError as e:
         print(f"Error de conexión o API con Eleven Labs al generar audio: {e.response.status_code} - {e.response.text}")
         return jsonify({"error": f"Error al generar el audio: {e.response.text}"}), e.response.status
+import requests
+import os
+
+@app.route('/verify_captcha', methods=['POST'])
+def verify_captcha():
+    token = request.form.get('token')
+    secret = os.getenv("RECAPTCHA_SECRET_KEY")  # Guarda tu clave secreta en Render
+    if not token or not secret:
+        return jsonify({"success": False, "error": "Missing token or secret"}), 400
+
+    response = requests.post(
+        "https://www.google.com/recaptcha/api/siteverify",
+        data={"secret": secret, "response": token}
+    )
+    result = response.json()
+    return jsonify(result)
