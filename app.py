@@ -235,14 +235,27 @@ def chat():
         print(f"Error inesperado en /chat: {e}")
         return jsonify({"error": str(e)}), 500
 
+from supabase.lib.client import SupabaseClient
+from supabase.auth import User
+
+def get_user_from_token(auth_header):
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return None
+    token = auth_header.split(" ")[1]
+    # Validar el token con Supabase
+    user_data = supabase.auth.get_user(token)
+    if user_data.user:
+        return user_data.user.id
+    return None
+
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
     text = request.form.get('text', '')
-    user_id = request.headers.get("X-User-Id")
+    auth_header = request.headers.get("Authorization")
+    user_id = get_user_from_token(auth_header)
     if not user_id:
-        return jsonify({"error": "Falta el ID del usuario."}), 401
-    if not text:
-        return jsonify({"error": "Texto vacío para generar audio."}), 400
+        return jsonify({"error": "Usuario no autenticado."}), 401
+
 
     profile = get_user_profile(user_id)
     profile = reset_monthly_usage(profile, user_id)
