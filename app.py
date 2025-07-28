@@ -245,6 +245,41 @@ def get_user_from_token(auth_header):
         return user_data.user.id
     return None
 
+@app.route('/start_mind', methods=['POST'])
+def start_mind():
+    auth_header = request.headers.get("Authorization")
+    user_id = get_user_from_token(auth_header)
+    if not user_id:
+        return jsonify({"error": "Usuario no autenticado."}), 401
+
+    # Obtener la instrucción y el archivo de voz
+    instruction = request.form.get('instruction', '')
+    audio_file = request.files.get('audio_file')
+    if not audio_file:
+        return jsonify({"error": "Falta el archivo de voz."}), 400
+
+    try:
+        # Subir el archivo a Eleven Labs para crear una voz clonada
+        voice_clone_url = "https://api.elevenlabs.io/v1/voices/add"
+        files = {"files": (audio_file.filename, audio_file.stream, audio_file.content_type)}
+        data = {"name": f"voice_{user_id}_{int(datetime.now().timestamp())}"}
+        headers = {"xi-api-key": eleven_labs_api_key}
+        response = requests.post(voice_clone_url, headers=headers, files=files, data=data)
+        response.raise_for_status()
+        voice_data = response.json()
+        voice_id = voice_data.get("voice_id")
+
+        if not voice_id:
+            return jsonify({"error": "No se pudo crear la voz clonada."}), 500
+
+        # Guardar el voice_id en el perfil del usuario
+        supabase.table("profiles").update({"cloned_voice_id": voice_id}).eq("id", user_id).execute()
+
+        return jsonify({"voice_id": voice_id})
+    except Exception as e:
+        print(f"Error en /start_mind: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
     text = request.form.get('text', '')
