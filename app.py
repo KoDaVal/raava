@@ -263,22 +263,16 @@ def start_mind():
         # --- Procesamiento con ElevenLabs ---
         try:
             audio_bytes = audio_file.read()
-            # Aquí va tu código para clonar voz o procesar con Eleven Labs
-            # Ejemplo:
-            # eleven_response = requests.post("https://api.elevenlabs.io/...", headers=..., data=audio_bytes)
-            # if eleven_response.status_code != 200:
-            #     raise Exception("Error en ElevenLabs: " + eleven_response.text)
+            # Aquí iría la llamada real a ElevenLabs
             cloned_voice_id = "simulado_" + user_id  # Simulación
         except Exception as e:
             return jsonify({"error": f"Error procesando audio con ElevenLabs: {str(e)}"}), 500
 
-        # --- Actualización DB (si aplica) ---
-        try:
-            # Ejemplo de update a Supabase
-            # supabase.table("profiles").update({"last_mind_init": datetime.utcnow()}).eq("id", user_id).execute()
-            pass
-        except Exception as e:
-            return jsonify({"error": f"Error actualizando perfil: {str(e)}"}), 500
+        # --- No guardamos nada en DB por ahora ---
+        # (Más adelante se puede descomentar para guardar en profiles)
+        # supabase.table("profiles").update({
+        #     "cloned_voice_id": cloned_voice_id
+        # }).eq("id", user_id).execute()
 
         # --- Respuesta final ---
         return jsonify({
@@ -290,7 +284,6 @@ def start_mind():
         import traceback
         print("Error inesperado en /start_mind:", traceback.format_exc())
         return jsonify({"error": f"Error inesperado: {str(e)}"}), 500
-
 
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
