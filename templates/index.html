@@ -66,6 +66,14 @@
   <p style="margin-bottom:10px;">Recuperar contraseña</p>
   <input type="email" id="forgot-password-email" placeholder="Tu correo electrónico" style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid #ccc;">
   <button id="forgot-password-submit" class="auth-btn">Enviar enlace</button>
+  <!-- Paso 2: Código y nueva contraseña -->
+<div id="otp-step" style="display:none; margin-top:10px;">
+  <input type="text" id="otp-input" placeholder="Código de 6 dígitos" style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid #ccc;">
+  <div id="otp-timer" style="color:#888;margin-bottom:10px;">Expira en 8:00</div>
+  <input type="password" id="new-password" placeholder="Nueva contraseña" style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid #ccc;">
+  <input type="password" id="confirm-new-password" placeholder="Confirmar contraseña" style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid #ccc;">
+  <button onclick="resetPasswordWithCode()" class="auth-btn">Cambiar contraseña</button>
+</div>
   <button id="forgot-password-cancel" class="auth-btn cancel-btn">Cancelar</button>
 </div>
         <div class="auth-social">
