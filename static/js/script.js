@@ -1,11 +1,19 @@
 
-// ═══════════════ Supabase Setup ═══════════════
+// ════════════════════════════════════════════════════════
+// Raavax Frontend Script
+// Archivo completo con toda la lógica JS + comentarios
+// ════════════════════════════════════════════════════════
+
+// === CONFIGURACIÓN SUPABASE ===
 const SUPABASE_URL = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', () => {
-// ═══════════════ Estado y Helpers ═══════════════
+
+// ════════════════════════════════════════════════════════
+// VARIABLES GLOBALES Y ESTADO
+// ════════════════════════════════════════════════════════
 let isLoginMode = true;
 let typingIndicatorElement = null;
 let selectedFile = null;
@@ -17,10 +25,10 @@ let uploadedVoiceFile = null;
 let voiceReady = false;
 let infoReady = false;
 
-function showOverlay() { document.getElementById('auth-overlay').style.display = 'flex'; }
-function hideOverlay() { document.getElementById('auth-overlay').style.display = 'none'; }
-
-// ═══════════════ Auth & UI Elements ═══════════════
+// ════════════════════════════════════════════════════════
+// ELEMENTOS DEL DOM (AUTH, CHAT, UPLOADS, SIDEBAR, ETC.)
+// ════════════════════════════════════════════════════════
+const authOverlay = document.getElementById('auth-overlay');
 const authForm = document.getElementById('auth-form');
 const emailInput = document.getElementById('auth-email');
 const passwordInput = document.getElementById('auth-password');
@@ -45,7 +53,6 @@ const confirmEyeToggle = document.getElementById('toggle-confirm-password');
 const userPlanLabel = document.getElementById('user-plan-label');
 const headerProfilePic = document.getElementById('header-profile-pic');
 
-// ═══════════════ Chat Elements ═══════════════
 const messagesContainer = document.querySelector('.messages');
 const userInput = document.getElementById('user-input');
 const sendButton = document.getElementById('send-button');
@@ -57,7 +64,6 @@ const fileDisplay = document.getElementById('file-display');
 const fileNameSpan = document.getElementById('file-name');
 const clearFileButton = document.getElementById('clear-file');
 
-// ═══════════════ Sidebar y Botones ═══════════════
 const uploadVoiceBtn = document.getElementById('upload-voice-btn');
 const uploadImageBtn = document.getElementById('upload-image-btn');
 const uploadInfoBtn = document.getElementById('upload-info-btn');
@@ -69,7 +75,15 @@ const startMindButtons = [document.getElementById('start-mind-button'), document
 const mobileVoiceLabel = document.querySelector('.mobile-only .voice-button');
 const mobileInfoLabel = document.querySelector('.mobile-only .file-button');
 
-// ═══════════════ Recuperación de contraseña ═══════════════
+// ════════════════════════════════════════════════════════
+// FUNCIONES AUXILIARES
+// ════════════════════════════════════════════════════════
+function showOverlay() { authOverlay.style.display = 'flex'; }
+function hideOverlay() { authOverlay.style.display = 'none'; }
+
+// ════════════════════════════════════════════════════════
+// MANEJO DE RECUPERACIÓN DE CONTRASEÑA
+// ════════════════════════════════════════════════════════
 if (forgotPasswordLink) forgotPasswordLink.addEventListener('click', e => { e.preventDefault(); authForm.style.display='none'; successContainer.style.display='none'; forgotPasswordContainer.style.display='block'; });
 if (forgotPasswordCancel) forgotPasswordCancel.addEventListener('click', () => { forgotPasswordContainer.style.display='none'; authForm.style.display='block'; });
 if (forgotPasswordSubmit) forgotPasswordSubmit.addEventListener('click', async () => {
@@ -80,21 +94,29 @@ if (forgotPasswordSubmit) forgotPasswordSubmit.addEventListener('click', async (
     else { alert("Te enviamos un enlace para restablecer tu contraseña."); forgotPasswordContainer.style.display='none'; authForm.style.display='block'; }
 });
 
-// ═══════════════ Logout ═══════════════
+// ════════════════════════════════════════════════════════
+// LOGOUT
+// ════════════════════════════════════════════════════════
 if (logoutOption) logoutOption.addEventListener('click', async () => { await supabaseClient.auth.signOut(); location.reload(); });
 
-// ═══════════════ Mostrar/Ocultar contraseña ═══════════════
+// ════════════════════════════════════════════════════════
+// MOSTRAR/OCULTAR CONTRASEÑAS
+// ════════════════════════════════════════════════════════
 if (eyeToggle) eyeToggle.addEventListener('click', () => { passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password'; });
 if (confirmEyeToggle) confirmEyeToggle.addEventListener('click', () => { confirmInput.type = confirmInput.type === 'password' ? 'text' : 'password'; });
 
-// ═══════════════ Fuerza de contraseña ═══════════════
+// ════════════════════════════════════════════════════════
+// FUERZA DE CONTRASEÑA EN TIEMPO REAL
+// ════════════════════════════════════════════════════════
 if (passwordInput) passwordInput.addEventListener('input', () => {
     const strong = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_\-+=])(?=.{8,})/.test(passwordInput.value);
     passwordStrength.textContent = strong ? 'Fuerza: ✅ Cumple requisitos' : 'Fuerza: mínimo 8 caracteres, 1 mayúscula, 1 especial';
     passwordStrength.style.color = strong ? 'lightgreen' : 'salmon';
 });
 
-// ═══════════════ Toggle login/registro ═══════════════
+// ════════════════════════════════════════════════════════
+// TOGGLE ENTRE LOGIN Y REGISTRO
+// ════════════════════════════════════════════════════════
 if (toggleLink) toggleLink.addEventListener('click', e => {
     e.preventDefault(); isLoginMode = !isLoginMode;
     submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
@@ -106,7 +128,9 @@ if (toggleLink) toggleLink.addEventListener('click', e => {
     toggleText.appendChild(toggleLink);
 });
 
-// ═══════════════ Envío de formulario ═══════════════
+// ════════════════════════════════════════════════════════
+// ENVÍO DE FORMULARIO DE LOGIN/REGISTRO
+// ════════════════════════════════════════════════════════
 if (authForm) authForm.addEventListener('submit', async e => {
     e.preventDefault();
     if (typeof grecaptcha !== "undefined") {
@@ -137,7 +161,9 @@ if (googleBtn) googleBtn.addEventListener('click', () => supabaseClient.auth.sig
 if (githubBtn) githubBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
 if (successBtn) successBtn.addEventListener('click', () => location.reload());
 
-// ═══════════════ Sesión ═══════════════
+// ════════════════════════════════════════════════════════
+// SESIÓN DE USUARIO Y CARGA DE PERFIL
+// ════════════════════════════════════════════════════════
 supabaseClient.auth.onAuthStateChange((_, session) => { session?.user ? loadUserProfile(session.user) : showOverlay(); });
 (async () => { const { data: { session } } = await supabaseClient.auth.getSession(); session?.user ? loadUserProfile(session.user) : showOverlay(); })();
 
@@ -154,7 +180,9 @@ function loadUserProfile(user) {
     }
 }
 
-// ═══════════════ Chat y mensajes ═══════════════
+// ════════════════════════════════════════════════════════
+// CHAT Y ENVÍO DE MENSAJES
+// ════════════════════════════════════════════════════════
 async function addMessage(sender, text) {
     const el = document.createElement('div'); el.classList.add('message', sender);
     const content = document.createElement('div'); content.classList.add('message-content'); content.textContent = text; el.appendChild(content);
@@ -175,4 +203,5 @@ async function sendMessage() {
         const data = await response.json(); await addMessage('bot', data.response); conversationHistory = data.updated_history;
     } catch { await addMessage('bot', 'Error al conectar con el chatbot.'); }
 }
-});
+
+}); // CIERRE DOMContentLoaded
