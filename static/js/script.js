@@ -815,11 +815,19 @@ messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 formData.append('file', selectedFile);
             }
 
-            const response = await fetch('/chat', {
-                method: 'POST',
-                body: formData
-            });
+           const { data: { session } } = await supabaseClient.auth.getSession();
+if (!session?.user?.id) {
+    alert("No hay sesión activa.");
+    return;
+}
 
+const response = await fetch('/chat', {
+    method: 'POST',
+    headers: {
+        'X-User-Id': session.user.id
+    },
+    body: formData
+});
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. ${errorText}`);
