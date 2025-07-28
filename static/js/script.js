@@ -132,21 +132,21 @@ document.addEventListener('DOMContentLoaded', () => {
   authForm.addEventListener('submit', async e => {
     e.preventDefault();
     const recaptchaResponse = grecaptcha.getResponse();
-if (!recaptchaResponse) {
-    alert('Por favor, confirma el reCAPTCHA.');
-    return;
-}
+    if (!recaptchaResponse) {
+        alert('Por favor, confirma el reCAPTCHA.');
+        return;
+    }
     // Verificar reCAPTCHA en el backend
-const captchaCheck = await fetch('/verify_captcha', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ token: recaptchaResponse })
-});
-const captchaResult = await captchaCheck.json();
-if (!captchaResult.success) {
-    alert('Error al verificar el reCAPTCHA. Inténtalo de nuevo.');
-    return;
-}
+    const captchaCheck = await fetch('/verify_captcha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ token: recaptchaResponse })
+    });
+    const captchaResult = await captchaCheck.json();
+    if (!captchaResult.success) {
+        alert('Error al verificar el reCAPTCHA. Inténtalo de nuevo.');
+        return;
+    }
     const email    = emailInput.value.trim();
     const password = passwordInput.value;
     if (!email || !password || (!isLoginMode && !confirmInput.value)) {
@@ -239,10 +239,8 @@ if (!captchaResult.success) {
     }
   }
 }); 
+
 // ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════
-document.addEventListener('DOMContentLoaded', () => {
-  // ... tu código original de chat, sidebar, etc.
-});
 document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const newChatBtn = document.getElementById('new-chat-btn');
