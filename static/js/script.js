@@ -558,7 +558,7 @@ startMindButtons.forEach(btn => {
         formData.append('instruction', uploadedInfoFileContent);
         formData.append('audio_file', uploadedVoiceFile);
 
-        // 3. Llamar al backend con el token en Authorization
+        // 3. Llamar al backend con el token
         const response = await fetch('/start_mind', { 
           method: 'POST', 
           headers: { Authorization: `Bearer ${token}` },
@@ -569,6 +569,21 @@ startMindButtons.forEach(btn => {
         const dataRes = await response.json();
         clonedVoiceId = dataRes.voice_id || null;
         activePersistentInstruction = uploadedInfoFileContent;
+
+        // Resetear estado visual de botones
+        [uploadVoiceBtn, mobileVoiceLabel, uploadInfoBtn, mobileInfoLabel, ...startMindButtons].forEach(b => b?.classList.remove('ready'));
+        voiceReady = false;
+        infoReady = false;
+        uploadedInfoFileContent = "";
+
+        addMessage('bot', '🧠 ¡Mente iniciada con tu voz e instrucción!');
+      } catch (err) {
+        console.error(err);
+        addMessage('bot', '❌ Hubo un error al iniciar la mente.');
+      }
+    });
+  }
+});
 
     // --- FIN LÓGICA ---
 
