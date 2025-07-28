@@ -235,9 +235,6 @@ def chat():
         print(f"Error inesperado en /chat: {e}")
         return jsonify({"error": str(e)}), 500
 
-from supabase.lib.client import SupabaseClient
-from supabase.auth import User
-
 def get_user_from_token(auth_header):
     if not auth_header or not auth_header.startswith("Bearer "):
         return None
