@@ -87,10 +87,11 @@ def check_plan_limits(profile):
     return limits
 
 def update_usage(user_id, tokens=0, voice_tokens=0):
-    supabase.table("profiles").update({
-        "tokens_used": supabase.sql("tokens_used + {}".format(tokens)),
-        "voice_tokens_used": supabase.sql("voice_tokens_used + {}".format(voice_tokens))
-    }).eq("id", user_id).execute()
+    supabase.rpc("increment_usage", {
+        "uid": user_id,
+        "token_inc": tokens,
+        "voice_inc": voice_tokens
+    }).execute()
 
 # ========== FLASK ==========
 app = Flask(__name__)
