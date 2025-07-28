@@ -536,7 +536,7 @@ if (voiceFileInput) {
         event.target.value = '';
     });
 }
-   // --- Lógica del botón "Iniciar mente" ---
+ // --- Lógica del botón "Iniciar mente" ---
 startMindButtons.forEach(btn => {
   if (btn) {
     btn.addEventListener('click', async () => {
@@ -544,9 +544,11 @@ startMindButtons.forEach(btn => {
         addMessage('bot', 'Carga primero los dos archivos antes de iniciar la mente.');
         return;
       }
+
       try {
         const { data } = await supabaseClient.auth.getSession();
         const token = data.session?.access_token;
+
         if (!token) {
           addMessage('bot', 'Debes iniciar sesión para usar esta función.');
           return;
@@ -559,12 +561,12 @@ startMindButtons.forEach(btn => {
         const response = await fetch('/start_mind', { 
           method: 'POST',
           headers: { "Authorization": `Bearer ${token}` },
-          body: formData
+          body: formData 
         });
 
         if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
-        const data = await response.json();
-        clonedVoiceId = data.voice_id || null;
+        const dataResp = await response.json();
+        clonedVoiceId = dataResp.voice_id || null;
         activePersistentInstruction = uploadedInfoFileContent;
 
         [uploadVoiceBtn, mobileVoiceLabel, uploadInfoBtn, mobileInfoLabel, ...startMindButtons].forEach(b => b?.classList.remove('ready'));
@@ -581,6 +583,21 @@ startMindButtons.forEach(btn => {
   }
 });
 
+
+        [uploadVoiceBtn, mobileVoiceLabel, uploadInfoBtn, mobileInfoLabel, ...startMindButtons].forEach(b => b?.classList.remove('ready'));
+        voiceReady = false;
+        infoReady = false;
+        uploadedInfoFileContent = "";
+
+        addMessage('bot', '🧠 ¡Mente iniciada con tu voz e instrucción!');
+      } catch (err) {
+        console.error(err);
+        addMessage('bot', '❌ Hubo un error al iniciar la mente.');
+      }
+    });
+  }
+});
+    // --- FIN LÓGICA ---
 
     // Función para ajustar la altura del textarea dinámicamente
     function adjustTextareaHeight() {
@@ -912,3 +929,4 @@ document.getElementById('sidebar-backdrop').addEventListener('click', () => {
 
 
 });
+
