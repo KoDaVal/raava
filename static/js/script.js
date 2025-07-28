@@ -545,29 +545,31 @@ startMindButtons.forEach(btn => {
         return;
       }
       try {
+        // 1. Obtener token del usuario autenticado
+        const { data } = await supabaseClient.auth.getSession();
+        const token = data.session?.access_token;
+        if (!token) {
+          alert("Debes iniciar sesión para usar esta función.");
+          return;
+        }
+
+        // 2. Construir FormData
         const formData = new FormData();
         formData.append('instruction', uploadedInfoFileContent);
         formData.append('audio_file', uploadedVoiceFile);
 
-        const response = await fetch('/start_mind', { method: 'POST', body: formData });
+        // 3. Llamar al backend con el token en Authorization
+        const response = await fetch('/start_mind', { 
+          method: 'POST', 
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData 
+        });
+
         if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
-        const data = await response.json();
-        clonedVoiceId = data.voice_id || null;
+        const dataRes = await response.json();
+        clonedVoiceId = dataRes.voice_id || null;
         activePersistentInstruction = uploadedInfoFileContent;
 
-        [uploadVoiceBtn, mobileVoiceLabel, uploadInfoBtn, mobileInfoLabel, ...startMindButtons].forEach(b => b?.classList.remove('ready'));
-        voiceReady = false;
-        infoReady = false;
-        uploadedInfoFileContent = "";
-
-        addMessage('bot', '🧠 ¡Mente iniciada con tu voz e instrucción!');
-      } catch (err) {
-        console.error(err);
-        addMessage('bot', '❌ Hubo un error al iniciar la mente.');
-      }
-    });
-  }
-});
     // --- FIN LÓGICA ---
 
     // Función para ajustar la altura del textarea dinámicamente
