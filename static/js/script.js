@@ -1,16 +1,13 @@
-// ═══════════════ CONFIGURACIÓN DE SUPABASE ═══════════════
 // ═══════════════ Supabase Setup ═══════════════
 const SUPABASE_URL     = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
 const SUPABASE_ANON_KEY= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
 const supabaseClient   = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ═══════════════ VARIABLES GLOBALES Y FUNCIONES AUXILIARES ═══════════════
 // ═══════════════ Estado y Helpers ═══════════════
 let isLoginMode = true;
 function showOverlay() { document.getElementById('auth-overlay').style.display = 'flex'; }
 function hideOverlay() { document.getElementById('auth-overlay').style.display = 'none'; }
 
-// ═══════════════ BLOQUE DE AUTENTICACIÓN Y UI ═══════════════
 // ═══════════════ Auth & UI Logic ═══════════════
 document.addEventListener('DOMContentLoaded', () => {
   const authForm           = document.getElementById('auth-form');
@@ -25,15 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const githubBtn          = document.getElementById('github-signin');
   const successContainer   = document.getElementById('auth-success');
   const successBtn         = document.getElementById('auth-success-btn');
-// === LÓGICA DE RECUPERACIÓN DE CONTRASEÑA ===
   const forgotPasswordLink = document.getElementById('forgot-password-link');
-// === LÓGICA DE RECUPERACIÓN DE CONTRASEÑA ===
   const forgotPasswordContainer = document.getElementById('forgot-password-container');
-// === LÓGICA DE RECUPERACIÓN DE CONTRASEÑA ===
   const forgotPasswordEmail = document.getElementById('forgot-password-email');
-// === LÓGICA DE RECUPERACIÓN DE CONTRASEÑA ===
   const forgotPasswordSubmit = document.getElementById('forgot-password-submit');
-// === LÓGICA DE RECUPERACIÓN DE CONTRASEÑA ===
   const forgotPasswordCancel = document.getElementById('forgot-password-cancel');
   const logoutOption = document.getElementById('logout-option');
   const passwordStrength   = document.getElementById('password-strength');
@@ -41,31 +33,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const confirmEyeToggle   = document.getElementById('toggle-confirm-password');
 
   // --- Eventos de recuperación de contraseña ---
-// === LÓGICA DE RECUPERACIÓN DE CONTRASEÑA ===
   if (forgotPasswordLink) {
-// === LÓGICA DE RECUPERACIÓN DE CONTRASEÑA ===
     forgotPasswordLink.addEventListener('click', (e) => {
       e.preventDefault();
       authForm.style.display = 'none';
       successContainer.style.display = 'none';
-// === LÓGICA DE RECUPERACIÓN DE CONTRASEÑA ===
       forgotPasswordContainer.style.display = 'block';
     });
   }
-// === LÓGICA DE RECUPERACIÓN DE CONTRASEÑA ===
   if (forgotPasswordCancel) {
-// === LÓGICA DE RECUPERACIÓN DE CONTRASEÑA ===
     forgotPasswordCancel.addEventListener('click', () => {
-// === LÓGICA DE RECUPERACIÓN DE CONTRASEÑA ===
       forgotPasswordContainer.style.display = 'none';
       authForm.style.display = 'block';
     });
   }
-// === LÓGICA DE RECUPERACIÓN DE CONTRASEÑA ===
   if (forgotPasswordSubmit) {
-// === LÓGICA DE RECUPERACIÓN DE CONTRASEÑA ===
     forgotPasswordSubmit.addEventListener('click', async () => {
-// === LÓGICA DE RECUPERACIÓN DE CONTRASEÑA ===
       const email = forgotPasswordEmail.value.trim();
       if (!email) {
         alert("Ingresa tu correo.");
@@ -77,14 +60,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (error) alert("Error: " + error.message);
       else {
         alert("Te enviamos un enlace para restablecer tu contraseña.");
-// === LÓGICA DE RECUPERACIÓN DE CONTRASEÑA ===
         forgotPasswordContainer.style.display = 'none';
         authForm.style.display = 'block';
       }
     });
   }
 
-// === CIERRE DE SESIÓN ===
   // --- Logout ---
   if (logoutOption) {
     logoutOption.addEventListener('click', async () => {
@@ -113,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmEyeToggle.querySelector('i').classList.toggle('fa-eye');
   });
 
-// === VALIDACIÓN DE FUERZA DE CONTRASEÑA EN TIEMPO REAL ===
   // --- Fuerza de contraseña ---
   passwordInput.addEventListener('input', () => {
     const val = passwordInput.value;
@@ -124,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
     passwordStrength.style.color = strong ? 'lightgreen' : 'salmon';
   });
 
-// === CAMBIO ENTRE LOGIN Y REGISTRO ===
   // --- Cambiar entre login y registro ---
   toggleLink.addEventListener('click', e => {
     e.preventDefault();
@@ -149,7 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleText.appendChild(toggleLink);
   });
 
-// === ENVÍO DEL FORMULARIO DE LOGIN/REGISTRO ===
   // --- Envío del formulario ---
   authForm.addEventListener('submit', async e => {
     e.preventDefault();
@@ -213,13 +191,11 @@ if (!captchaResult.success) {
     }
   });
 
-// === LOGIN SOCIAL GOOGLE/GITHUB ===
   // --- Botones sociales ---
   successBtn.addEventListener('click', () => location.reload());
   googleBtn.addEventListener('click',  () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
   githubBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
 
-// === MANEJO DE SESIÓN Y CARGA DE PERFIL ===
   // --- Manejo de sesión ---
   supabaseClient.auth.onAuthStateChange((_, session) => {
     if (session?.user) loadUserProfile(session.user);
@@ -231,7 +207,6 @@ if (!captchaResult.success) {
     else showOverlay();
   })();
 
-// === FUNCIÓN PARA CARGAR DATOS DEL PERFIL ===
   // --- Cargar perfil ---
   function loadUserProfile(user) {
     hideOverlay();
@@ -264,7 +239,6 @@ if (!captchaResult.success) {
     }
   }
 }); 
-// ═══════════════ LÓGICA PRINCIPAL DE RAAVAX (CHAT, UI) ═══════════════
 // ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════
 document.addEventListener('DOMContentLoaded', () => {
   // ... tu código original de chat, sidebar, etc.
@@ -571,23 +545,11 @@ startMindButtons.forEach(btn => {
         return;
       }
       try {
-        const { data } = await supabaseClient.auth.getSession();
-        const token = data.session?.access_token;
-        if (!token) {
-          addMessage('bot', 'Debes iniciar sesión para usar esta función.');
-          return;
-        }
-
         const formData = new FormData();
         formData.append('instruction', uploadedInfoFileContent);
         formData.append('audio_file', uploadedVoiceFile);
 
-        const response = await fetch('/start_mind', { 
-          method: 'POST',
-          headers: { "Authorization": `Bearer ${token}` },
-          body: formData
-        });
-
+        const response = await fetch('/start_mind', { method: 'POST', body: formData });
         if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
         const data = await response.json();
         clonedVoiceId = data.voice_id || null;
@@ -606,7 +568,7 @@ startMindButtons.forEach(btn => {
     });
   }
 });
-
+    // --- FIN LÓGICA ---
 
     // Función para ajustar la altura del textarea dinámicamente
     function adjustTextareaHeight() {
@@ -814,7 +776,6 @@ messagesContainer.scrollTop = messagesContainer.scrollHeight;
         });
     }
 
-// === FUNCIÓN PARA ENVIAR MENSAJES AL BACKEND ===
     async function sendMessage() {
         const message = userInput.value.trim();
         // El selectedFile ahora puede venir del input principal o de los inputs de la barra lateral
@@ -939,3 +900,4 @@ document.getElementById('sidebar-backdrop').addEventListener('click', () => {
 
 
 });
+
