@@ -567,7 +567,10 @@ startMindButtons.forEach(btn => {
         clonedVoiceId = data.voice_id || null;
         activePersistentInstruction = uploadedInfoFileContent;
 
-        [uploadVoiceBtn, mobileVoiceLabel, uploadInfoBtn, mobileInfoLabel, ...startMindButtons].forEach(b => b?.classList.remove('ready'));
+        [uploadVoiceBtn, mobileVoiceLabel, uploadInfoBtn, mobileInfoLabel, ...startMindButtons].forEach((b) => {
+        if (b) b.classList.remove('ready');
+        });
+
         voiceReady = false;
         infoReady = false;
         uploadedInfoFileContent = "";
