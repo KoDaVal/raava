@@ -5,7 +5,7 @@ import os
 import base64
 import json
 import requests
-from datetime import date
+from datetime import date, datetime
 from supabase import create_client
 
 # ========== CONFIGURACIÓN SUPABASE ==========
@@ -41,33 +41,37 @@ PLAN_LIMITS = {
 # Helpers Supabase
 def get_user_profile(user_id):
     res = supabase.table("profiles").select("*").eq("id", user_id).execute()
+    today_str = date.today().isoformat()
     if not res.data:
         supabase.table("profiles").insert({
             "id": user_id,
             "plan": "essence",
             "tokens_used": 0,
             "voice_tokens_used": 0,
-            "tokens_reset_date": date.today()
+            "tokens_reset_date": today_str
         }).execute()
         return {
             "id": user_id,
             "plan": "essence",
             "tokens_used": 0,
             "voice_tokens_used": 0,
-            "tokens_reset_date": date.today()
+            "tokens_reset_date": today_str
         }
     profile = res.data[0]
+    # Convertir fecha a string si viene como date
+    if isinstance(profile.get("tokens_reset_date"), (date, datetime)):
+        profile["tokens_reset_date"] = profile["tokens_reset_date"].isoformat()
     if not profile.get("plan"):
         supabase.table("profiles").update({"plan": "essence"}).eq("id", user_id).execute()
         profile["plan"] = "essence"
     return profile
 
 def reset_monthly_usage(profile, user_id):
-    if profile["tokens_reset_date"] < date.today().replace(day=1):
+    if profile["tokens_reset_date"] < date.today().replace(day=1).isoformat():
         supabase.table("profiles").update({
             "tokens_used": 0,
             "voice_tokens_used": 0,
-            "tokens_reset_date": date.today()
+            "tokens_reset_date": date.today().isoformat()
         }).eq("id", user_id).execute()
         profile["tokens_used"] = 0
         profile["voice_tokens_used"] = 0
@@ -228,7 +232,7 @@ def chat():
 
     except Exception as e:
         print(f"Error inesperado en /chat: {e}")
-        return api_error(str(e), 500)
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
@@ -269,6 +273,9 @@ def generate_audio():
         return jsonify({"audio": audio_base64})
     except requests.exceptions.HTTPError as e:
         return jsonify({"error": f"Error al generar el audio: {e.response.text}"}), e.response.status
+    except Exception as e:
+        print(f"Error inesperado en /generate_audio: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/verify_captcha', methods=['POST'])
 def verify_captcha():
@@ -278,3 +285,4 @@ def verify_captcha():
         return jsonify({"success": False, "error": "Missing token or secret"}), 400
     response = requests.post("https://www.google.com/recaptcha/api/siteverify", data={"secret": secret, "response": token})
     return jsonify(response.json())
+
