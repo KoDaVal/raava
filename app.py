@@ -247,6 +247,7 @@ def get_user_from_token(auth_header):
 
 @app.route("/start_mind", methods=["POST"])
 def start_mind():
+    global cloned_voice_id
     try:
         # --- Autenticación ---
         auth_header = request.headers.get("Authorization")
@@ -255,72 +256,92 @@ def start_mind():
             return jsonify({"error": "Usuario no autenticado."}), 401
 
         # --- Lectura de datos ---
-        instruction = request.form.get("instruction")
-        audio_file = request.files.get("audio_file")
+        instruction = request.form.get('instruction', '')
+        audio_file = request.files.get('audio_file')
+
         if not instruction or not audio_file:
-            return jsonify({"error": "Faltan datos: asegúrate de enviar texto y archivo de audio."}), 400
+            return jsonify({'error': 'Se requieren instrucción y archivo de voz.'}), 400
 
-        # --- Procesamiento con ElevenLabs ---
-        try:
-            audio_bytes = audio_file.read()
-            # Aquí iría la llamada real a ElevenLabs
-            cloned_voice_id = "simulado_" + user_id  # Simulación
-        except Exception as e:
-            return jsonify({"error": f"Error procesando audio con ElevenLabs: {str(e)}"}), 500
+        if not eleven_labs_api_key or eleven_labs_api_key == "sk_try_only":
+            return jsonify({'error': 'Clave API de Eleven Labs no configurada o inválida.'}), 500
 
-        # --- No guardamos nada en DB por ahora ---
-        # (Más adelante se puede descomentar para guardar en profiles)
-        # supabase.table("profiles").update({
-        #     "cloned_voice_id": cloned_voice_id
-        # }).eq("id", user_id).execute()
+        # --- Subir archivo a ElevenLabs para clonar voz ---
+        url = "https://api.elevenlabs.io/v1/voices/add"
+        headers = {"xi-api-key": eleven_labs_api_key}
+        data = {
+            "name": f"UserVoice_{user_id}",
+            "description": "Clonada desde muestra de usuario"
+        }
+        files = {
+            'files': (audio_file.filename, audio_file.read(), audio_file.content_type)
+        }
 
-        # --- Respuesta final ---
+        response = requests.post(url, headers=headers, data=data, files=files)
+        response.raise_for_status()
+        voice_data = response.json()
+        cloned_voice_id = voice_data.get('voice_id')
+
+        # --- Respuesta ---
         return jsonify({
-            "message": "Mente iniciada correctamente",
-            "voice_id": cloned_voice_id
-        })
+            'message': 'Mente iniciada correctamente.',
+            'voice_id': cloned_voice_id
+        }), 200
 
+    except requests.exceptions.RequestException as e:
+        print(f"Error al conectar con Eleven Labs: {e}")
+        return jsonify({'error': 'Error al procesar la voz.'}), 500
     except Exception as e:
-        import traceback
-        print("Error inesperado en /start_mind:", traceback.format_exc())
-        return jsonify({"error": f"Error inesperado: {str(e)}"}), 500
+        print(f"Error inesperado en /start_mind: {e}")
+        return jsonify({'error': 'Error interno al iniciar la mente.'}), 500
+
 
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
     text = request.form.get('text', '')
-    voice_id = request.form.get('voice_id')  # <-- NUEVO: recibe voice_id
+    voice_id = request.form.get('voice_id')  # Puede venir del frontend
     auth_header = request.headers.get("Authorization")
     user_id = get_user_from_token(auth_header)
     if not user_id:
         return jsonify({"error": "Usuario no autenticado."}), 401
 
     if not text:
-        return jsonify({"error": "Texto vacío."}), 400
+        return jsonify({"error": "Texto vacío para generar audio."}), 400
 
     try:
-        # Usa la voz clonada si viene del frontend, si no usa la default
-        voice_to_use = voice_id if voice_id else default_eleven_labs_voice_id
+        # Si viene un voice_id explícito, úsalo; si no, usa el clon global; si no, usa el default
+        current_voice_id = voice_id if voice_id else cloned_voice_id if cloned_voice_id else default_eleven_labs_voice_id
 
-        # Llamada real a Eleven Labs
-        response = requests.post(
-            f"https://api.elevenlabs.io/v1/text-to-speech/{voice_to_use}",
-            headers={
-                "xi-api-key": eleven_labs_api_key,
-                "Content-Type": "application/json"
-            },
-            json={"text": text, "voice_settings": {"stability": 0.7, "similarity_boost": 0.7}}
-        )
+        tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{current_voice_id}/stream"
+        tts_headers = {
+            "xi-api-key": eleven_labs_api_key,
+            "Content-Type": "application/json",
+            "accept": "audio/mpeg"
+        }
+        tts_data = {
+            "text": text,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+                "stability": 0.5,
+                "similarity_boost": 0.75
+            }
+        }
 
-        if response.status_code != 200:
-            return jsonify({"error": "Error al generar el audio", "details": response.text}), 500
+        # Streaming para evitar problemas con audios largos
+        tts_response = requests.post(tts_url, headers=tts_headers, json=tts_data, stream=True)
+        tts_response.raise_for_status()
+        audio_content = b''
+        for chunk in tts_response.iter_content(chunk_size=4096):
+            audio_content += chunk
 
-        audio_base64 = base64.b64encode(response.content).decode('utf-8')
+        audio_base64 = base64.b64encode(audio_content).decode('utf-8')
         return jsonify({"audio": audio_base64})
+    except requests.exceptions.HTTPError as e:
+        print(f"Error de conexión o API con Eleven Labs al generar audio: {e.response.status_code} - {e.response.text}")
+        return jsonify({"error": f"Error al generar el audio: {e.response.text}"}), e.response.status_code
     except Exception as e:
         import traceback
-        print("Error en /generate_audio:", traceback.format_exc())
+        print("Error inesperado en /generate_audio:", traceback.format_exc())
         return jsonify({"error": f"Error inesperado: {str(e)}"}), 500
-
 
 @app.route('/verify_captcha', methods=['POST'])
 def verify_captcha():
