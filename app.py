@@ -288,10 +288,38 @@ def start_mind():
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
     text = request.form.get('text', '')
+    voice_id = request.form.get('voice_id')  # <-- NUEVO: recibe voice_id
     auth_header = request.headers.get("Authorization")
     user_id = get_user_from_token(auth_header)
     if not user_id:
         return jsonify({"error": "Usuario no autenticado."}), 401
+
+    if not text:
+        return jsonify({"error": "Texto vacío."}), 400
+
+    try:
+        # Usa la voz clonada si viene del frontend, si no usa la default
+        voice_to_use = voice_id if voice_id else default_eleven_labs_voice_id
+
+        # Llamada real a Eleven Labs
+        response = requests.post(
+            f"https://api.elevenlabs.io/v1/text-to-speech/{voice_to_use}",
+            headers={
+                "xi-api-key": eleven_labs_api_key,
+                "Content-Type": "application/json"
+            },
+            json={"text": text, "voice_settings": {"stability": 0.7, "similarity_boost": 0.7}}
+        )
+
+        if response.status_code != 200:
+            return jsonify({"error": "Error al generar el audio", "details": response.text}), 500
+
+        audio_base64 = base64.b64encode(response.content).decode('utf-8')
+        return jsonify({"audio": audio_base64})
+    except Exception as e:
+        import traceback
+        print("Error en /generate_audio:", traceback.format_exc())
+        return jsonify({"error": f"Error inesperado: {str(e)}"}), 500
 
 
     profile = get_user_profile(user_id)
