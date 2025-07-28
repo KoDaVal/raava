@@ -22,14 +22,34 @@ PLAN_LIMITS = {
 
 # Helpers
 def get_user_profile(user_id):
-    res = supabase.table("profiles").select("*").eq("id", user_id).single().execute()
+    # Intentar obtener el perfil
+    res = supabase.table("profiles").select("*").eq("id", user_id).execute()
+
+    # Si no existe, lo creamos con valores por defecto
     if not res.data:
-        raise Exception("Usuario no encontrado.")
-    profile = res.data
-    if not profile.get("plan"):  # Si el plan está vacío, asignamos essence
+        supabase.table("profiles").insert({
+            "id": user_id,
+            "plan": "essence",
+            "tokens_used": 0,
+            "voice_tokens_used": 0,
+            "tokens_reset_date": date.today()
+        }).execute()
+        return {
+            "id": user_id,
+            "plan": "essence",
+            "tokens_used": 0,
+            "voice_tokens_used": 0,
+            "tokens_reset_date": date.today()
+        }
+
+    profile = res.data[0]
+
+    # Si el plan está vacío, lo actualizamos
+    if not profile.get("plan"):
         supabase.table("profiles").update({"plan": "essence"}).eq("id", user_id).execute()
         profile["plan"] = "essence"
     return profile
+
 
 def reset_monthly_usage(profile, user_id):
     if profile["tokens_reset_date"] < date.today().replace(day=1):
