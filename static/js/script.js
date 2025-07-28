@@ -240,6 +240,8 @@ if (!captchaResult.success) {
   }
 }); 
 // ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════
+document.addEventListener('DOMContentLoaded', () => {
+  // ... tu código original de chat, sidebar, etc.
 });
 document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
