@@ -47,24 +47,86 @@ document.addEventListener('DOMContentLoaded', () => {
       authForm.style.display = 'block';
     });
   }
-  if (forgotPasswordSubmit) {
-    forgotPasswordSubmit.addEventListener('click', async () => {
-      const email = forgotPasswordEmail.value.trim();
-      if (!email) {
-        alert("Ingresa tu correo.");
-        return;
-      }
-      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/reset-password',
-      });
-      if (error) alert("Error: " + error.message);
-      else {
-        alert("Te enviamos un enlace para restablecer tu contraseña.");
-        forgotPasswordContainer.style.display = 'none';
-        authForm.style.display = 'block';
-      }
-    });
-  }
+if (forgotPasswordSubmit) {
+    forgotPasswordSubmit.addEventListener('click', sendOtpCode);
+}
+// === NUEVO: Lógica OTP para recuperación de contraseña ===
+let otpTimer, resendTimer;
+
+async function sendOtpCode() {
+  const email = forgotPasswordEmail.value.trim();
+  if (!email) return alert("Ingresa tu correo");
+
+  forgotPasswordSubmit.disabled = true;
+  forgotPasswordSubmit.textContent = "Enviando...";
+
+  const res = await fetch('/request_password_code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    alert("Código enviado a tu correo.");
+    document.getElementById('otp-step').style.display = 'block';
+    startOtpCountdown(8 * 60);
+    startResendCountdown(60);
+  } else alert(data.error);
+
+  forgotPasswordSubmit.disabled = false;
+  forgotPasswordSubmit.textContent = "Reenviar código";
+}
+
+function startOtpCountdown(seconds) {
+  const timerEl = document.getElementById('otp-timer');
+  clearInterval(otpTimer);
+  otpTimer = setInterval(() => {
+    if (seconds <= 0) { 
+      clearInterval(otpTimer); 
+      timerEl.textContent = "Expirado"; 
+      alert("El código ha expirado. Solicita uno nuevo.");
+      document.getElementById('otp-input').value = ''; 
+      return; 
+    }
+    let min = Math.floor(seconds / 60), sec = seconds % 60;
+    timerEl.textContent = `Expira en ${min}:${sec.toString().padStart(2, '0')}`;
+    seconds--;
+  }, 1000);
+}
+
+function startResendCountdown(seconds) {
+  clearInterval(resendTimer);
+  resendTimer = setInterval(() => {
+    if (seconds <= 0) { 
+      forgotPasswordSubmit.disabled = false; 
+      forgotPasswordSubmit.textContent = "Reenviar código"; 
+      clearInterval(resendTimer); 
+      return; 
+    }
+    forgotPasswordSubmit.textContent = `Reenviar (${seconds}s)`;
+    forgotPasswordSubmit.disabled = true;
+    seconds--;
+  }, 1000);
+}
+
+async function resetPasswordWithCode() {
+  const email = forgotPasswordEmail.value.trim();
+  const otp = document.getElementById('otp-input').value.trim();
+  const pass = document.getElementById('new-password').value.trim();
+  const pass2 = document.getElementById('confirm-new-password').value.trim();
+
+  if (pass !== pass2) return alert("Las contraseñas no coinciden");
+  const res = await fetch('/reset_password_with_code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, otp, new_password: pass })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    alert("Contraseña actualizada. Inicia sesión.");
+    location.reload();
+  } else alert(data.error);
+}
 
   // --- Logout ---
   if (logoutOption) {
