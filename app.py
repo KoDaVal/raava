@@ -5,6 +5,7 @@ import os
 import base64
 import json
 import requests
+import random
 from datetime import date, datetime
 from supabase import create_client
 MAX_AUDIO_SIZE = 2 * 1024 * 1024  # 2 MB
@@ -132,6 +133,69 @@ def truncate_history(history, max_messages=20):
     summary_text = f"Resumen de la conversación anterior:\n{ ' '.join(old_msgs)[:1000] }..."
     summarized_entry = {"role": "system", "parts": [{"text": summary_text}]}
     return [summarized_entry] + history[-max_messages:]
+
+# ========== RUTAS DE RECUPERACIÓN DE CONTRASEÑA ==========
+@app.route('/request_password_code', methods=['POST'])
+def request_password_code():
+    data = request.json
+    email = data.get('email')
+    if not email:
+        return api_error('Correo requerido')
+
+    # Buscar usuario
+    user_res = supabase.table("auth.users").select("id").eq("email", email).execute()
+    if not user_res.data:
+        return api_error("Correo no registrado.", 404)
+    user_id = user_res.data[0]['id']
+
+    # Generar OTP
+    otp = random.randint(100000, 999999)
+    expires_at = (datetime.utcnow() + timedelta(minutes=8)).isoformat()
+
+    # Guardar OTP
+    supabase.table("password_otps").upsert({
+        "user_id": user_id,
+        "otp_code": str(otp),
+        "otp_expires_at": expires_at
+    }).execute()
+
+    # Enviar correo (usa tu servicio real aquí: Resend, Mailgun, etc.)
+    print(f"OTP para {email}: {otp}")  # <-- por ahora, imprime en consola
+
+    return jsonify({'message': 'Código enviado'}), 200
+
+@app.route('/reset_password_with_code', methods=['POST'])
+def reset_password_with_code():
+    data = request.json
+    email = data.get('email')
+    otp = data.get('otp')
+    new_password = data.get('new_password')
+
+    if not all([email, otp, new_password]):
+        return api_error('Datos incompletos')
+
+    # Buscar usuario
+    user_res = supabase.table("auth.users").select("id").eq("email", email).execute()
+    if not user_res.data:
+        return api_error("Correo no registrado.", 404)
+    user_id = user_res.data[0]['id']
+
+    # Validar OTP
+    otp_res = supabase.table("password_otps").select("*").eq("user_id", user_id).eq("otp_code", otp).execute()
+    if not otp_res.data:
+        return api_error("Código inválido.", 400)
+    otp_data = otp_res.data[0]
+    if datetime.fromisoformat(otp_data['otp_expires_at']) < datetime.utcnow():
+        return api_error("Código expirado.", 400)
+
+    # Cambiar contraseña
+    supabase.auth.admin.update_user_by_id(user_id, {"password": new_password})
+
+    # Borrar OTP
+    supabase.table("password_otps").delete().eq("user_id", user_id).execute()
+
+    return jsonify({'message': 'Contraseña actualizada correctamente'}), 200
+
 
 # ========== RUTAS ==========
 @app.route('/')
