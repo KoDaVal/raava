@@ -635,10 +635,17 @@ playAudioButton.title = 'Reproducir audio';
 let currentAudioInstance = null;
 
 playAudioButton.addEventListener('click', async () => {
-    // Obtén el texto del mensaje que quieres convertir en audio
     const messageText = messageElement.innerText || messageElement.textContent;
     if (!messageText) {
         console.warn('No hay texto disponible para generar audio.');
+        return;
+    }
+
+    // Recuperar token del usuario autenticado
+    const { data } = await supabaseClient.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) {
+        alert("Debes iniciar sesión para usar TTS.");
         return;
     }
 
@@ -653,11 +660,12 @@ playAudioButton.addEventListener('click', async () => {
         playAudioButton.classList.add('loading');
         playAudioButton.classList.remove('playing');
 
-        // Solicita el audio al backend
+        // Enviar el texto + token al backend
         const response = await fetch('/generate_audio', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': `Bearer ${token}` // <-- IMPORTANTE
             },
             body: new URLSearchParams({ text: messageText })
         });
@@ -686,7 +694,6 @@ playAudioButton.addEventListener('click', async () => {
         };
 
         await currentAudioInstance.play();
-        console.log('Audio iniciado.');
 
     } catch (error) {
         console.error('Error al generar o reproducir el audio:', error);
