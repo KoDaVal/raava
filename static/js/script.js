@@ -684,7 +684,10 @@ playAudioButton.addEventListener('click', async () => {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'Authorization': `Bearer ${token}` // <-- IMPORTANTE
             },
-            body: new URLSearchParams({ text: messageText })
+           body: new URLSearchParams({ 
+    text: messageText,
+    voice_id: clonedVoiceId || ''  // <-- Envia la voz clonada si existe
+})
         });
 
         const data = await response.json();
