@@ -7,6 +7,8 @@ import json
 import requests
 from datetime import date, datetime
 from supabase import create_client
+MAX_AUDIO_SIZE = 2 * 1024 * 1024  # 2 MB
+
 
 # ========== CONFIGURACIÓN SUPABASE ==========
 supabase_url = os.getenv("SUPABASE_URL")
@@ -200,7 +202,7 @@ def chat():
             return api_error("Debes enviar un mensaje o archivo.", 400)
 
         # Truncar historial
-        conversation_history = truncate_history(conversation_history)
+        conversation_history = truncate_history(conversation_history, max_messages=10)
 
         # ==== Selección de modelo ====
         use_fallback = False
@@ -261,6 +263,10 @@ def start_mind():
 
         if not instruction or not audio_file:
             return jsonify({'error': 'Se requieren instrucción y archivo de voz.'}), 400
+
+        # --- Validar tamaño de archivo ---
+        if audio_file.content_length > MAX_AUDIO_SIZE:
+            return jsonify({"error": "Archivo de audio demasiado grande (máx 2MB)."}), 400      
 
         if not eleven_labs_api_key or eleven_labs_api_key == "sk_try_only":
             return jsonify({'error': 'Clave API de Eleven Labs no configurada o inválida.'}), 500
