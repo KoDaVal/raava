@@ -322,40 +322,6 @@ def generate_audio():
         return jsonify({"error": f"Error inesperado: {str(e)}"}), 500
 
 
-    profile = get_user_profile(user_id)
-    profile = reset_monthly_usage(profile, user_id)
-    limits = check_plan_limits(profile)
-
-    current_voice_id = cloned_voice_id if cloned_voice_id else default_eleven_labs_voice_id
-    tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{current_voice_id}/stream"
-    tts_headers = {
-        "xi-api-key": eleven_labs_api_key,
-        "Content-Type": "application/json",
-        "accept": "audio/mpeg"
-    }
-    tts_data = {
-        "text": text,
-        "model_id": "eleven_multilingual_v2",
-        "voice_settings": {"stability": 0.5, "similarity_boost": 0.75}
-    }
-
-    try:
-        tts_response = requests.post(tts_url, headers=tts_headers, json=tts_data, stream=True)
-        tts_response.raise_for_status()
-        audio_content = b''.join(tts_response.iter_content(chunk_size=4096))
-        audio_base64 = base64.b64encode(audio_content).decode('utf-8')
-
-        voice_tokens = len(text) // 4  # Estimación (puedes ajustar si quieres precisión)
-        if limits["voice_tokens"] is not None:
-            update_usage(user_id, voice_tokens=voice_tokens)
-
-        return jsonify({"audio": audio_base64})
-    except requests.exceptions.HTTPError as e:
-        return jsonify({"error": f"Error al generar el audio: {e.response.text}"}), e.response.status
-    except Exception as e:
-        print(f"Error inesperado en /generate_audio: {e}")
-        return jsonify({"error": str(e)}), 500
-
 @app.route('/verify_captcha', methods=['POST'])
 def verify_captcha():
     token = request.form.get('token')
