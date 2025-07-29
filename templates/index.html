@@ -53,22 +53,37 @@
         </div>
         <button type="submit" id="auth-submit-btn">Iniciar sesión</button>
 
-        <p id="auth-toggle-text" class="auth-toggle">
-        ¿No tienes cuenta?
-        <a href="#" id="auth-toggle-link">Regístrate</a>
-        </p>
-      <p class="auth-toggle">
+<p id="auth-toggle-text" class="auth-toggle">
+  ¿No tienes cuenta?
+  <a href="#" id="auth-toggle-link">Regístrate</a>
+</p>
+<p class="auth-toggle">
   <a href="#" id="forgot-password-link">¿Olvidaste tu contraseña?</a>
 </p>
 
-<!-- Pantalla de recuperación de contraseña -->
+<div class="auth-social">
+  <button type="button" id="google-signin" class="social-btn">
+    <i class="fab fa-google"></i> Google
+  </button>
+  <button type="button" id="github-signin" class="social-btn">
+    <i class="fab fa-github"></i> GitHub
+  </button>
+</div>
+
+</form>
+
+<!-- Mensaje tras registro: revisar correo -->
+<div id="auth-success" style="display:none; text-align:center; margin:16px 0;">
+  <p>Revisa tu correo electrónico. Te hemos enviado un enlace de verificación.</p>
+  <button id="auth-success-btn">Ir a Iniciar sesión</button>
+</div>
+
+<!-- 🔽 Pantalla de recuperación -->
 <div id="forgot-password-container" style="display:none; text-align:center;">
   <h2>Recuperar contraseña</h2>
   <form id="forgot-password-form" style="display:flex; flex-direction:column; align-items:center; gap:12px;">
     <input type="email" id="forgot-password-email" placeholder="Tu correo electrónico" required>
     <button type="button" id="forgot-password-submit" class="auth-btn">Enviar código</button>
-
-    <!-- Paso 2: Código y nueva contraseña -->
     <div id="otp-step" style="display:none; margin-top:10px;">
       <input type="text" id="otp-input" placeholder="Código de 6 dígitos">
       <div id="otp-timer" style="color:#888;margin-bottom:10px;">Expira en 8:00</div>
@@ -79,27 +94,10 @@
   </form>
   <button id="forgot-password-cancel" class="auth-btn cancel-btn" style="margin-top:10px;">Cancelar</button>
 </div>
+<!-- 🔼 Fin recuperación -->
 
-        <div class="auth-social">
-       <button type="button" id="google-signin" class="social-btn">
-         <i class="fab fa-google"></i> Google
-       </button>
-       <button type="button" id="github-signin" class="social-btn">
-       <i class="fab fa-github"></i> GitHub
-       </button>
-       </div>
+</div> <!-- Este cierra .auth-card -->
 
-</form>
-     <!-- Mensaje tras registro: revisar correo -->
-    <div
-      id="auth-success"
-      style="display:none; text-align:center; margin:16px 0;"
-    >
-      <p>Revisa tu correo electrónico. Te hemos enviado un enlace de verificación.</p>
-      <button id="auth-success-btn">Ir a Iniciar sesión</button>
-    </div>
-  </div>
-</div>
   <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
   <div class="settings-modal" id="settings-modal">
     <div class="settings-content">
