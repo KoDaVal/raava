@@ -1434,20 +1434,6 @@ input:checked + .slider:before {
     transform-origin: center;
 }
 
-#forgot-password-container {
-  display: none;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  padding: 20px;
-}
-#forgot-password-container input,
-#forgot-password-container button {
-  width: 100%;
-  max-width: 300px;
-}
-
 
 
 
