@@ -9,6 +9,28 @@ import random
 from datetime import date, datetime
 from supabase import create_client
 MAX_AUDIO_SIZE = 2 * 1024 * 1024  # 2 MB
+MAILERSEND_API_KEY = os.getenv("MAILERSEND_API_KEY")
+EMAIL_FROM = os.getenv("EMAIL_FROM", "no-reply@humancores.com")
+EMAIL_FROM_NAME = os.getenv("EMAIL_FROM_NAME", "RaavaX")
+
+def send_mailersend_email(to_email, subject, html_content):
+    url = "https://api.mailersend.com/v1/email"
+    headers = {
+        "Authorization": f"Bearer {MAILERSEND_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "from": {
+            "email": EMAIL_FROM,
+            "name": EMAIL_FROM_NAME
+        },
+        "to": [{"email": to_email}],
+        "subject": subject,
+        "html": html_content
+    }
+    response = requests.post(url, headers=headers, json=payload)
+    response.raise_for_status()
+
 
 
 # ========== CONFIGURACIÓN SUPABASE ==========
@@ -159,8 +181,22 @@ def request_password_code():
         "otp_expires_at": expires_at
     }).execute()
 
-    # Enviar correo (usa tu servicio real aquí: Resend, Mailgun, etc.)
-    print(f"OTP para {email}: {otp}")  # <-- por ahora, imprime en consola
+    # Enviar correo real con MailerSend
+    try:
+        send_mailersend_email(
+            email,
+            "Código de recuperación de contraseña - RaavaX",
+            f"""
+            <p>Hola,</p>
+            <p>Tu código para recuperar la contraseña es:</p>
+            <h2 style="color:#4CAF50; font-size:24px;">{otp}</h2>
+            <p>Este código expira en 8 minutos.</p>
+            <p>Si no solicitaste este código, ignora este mensaje.</p>
+            """
+        )
+    except Exception as e:
+        print("Error enviando correo:", e)
+        return api_error("Error enviando el correo.", 500)
 
     return jsonify({'message': 'Código enviado'}), 200
 
