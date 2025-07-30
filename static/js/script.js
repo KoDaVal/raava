@@ -4,9 +4,6 @@ const SUPABASE_ANON_KEY= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 const supabaseClient   = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════
 document.addEventListener('DOMContentLoaded', () => {
-  // ... tu código original de chat, sidebar, etc.
-});
-document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const newChatBtn = document.getElementById('new-chat-btn');
     const welcomeScreen = document.getElementById('welcome-screen');
@@ -696,7 +693,30 @@ document.getElementById('sidebar-backdrop').addEventListener('click', () => {
         document.getElementById('sidebar-backdrop').classList.add('active');
     });
 }
+  // Mostrar plan del usuario en el menú
+(async () => {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session && session.user) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('plan')
+        .eq('id', session.user.id)
+        .single();
 
+      if (!error && data) {
+        document.getElementById('user-plan-label').textContent = `Plan: ${data.plan}`;
+      } else {
+        document.getElementById('user-plan-label').textContent = `Plan: Desconocido`;
+      }
+    } catch (e) {
+      console.error('Error obteniendo plan:', e);
+      document.getElementById('user-plan-label').textContent = `Plan: Error`;
+    }
+  } else {
+    document.getElementById('user-plan-label').textContent = `Plan: No autenticado`;
+  }
+})();
 
 });
 
