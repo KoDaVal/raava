@@ -37,6 +37,21 @@ def send_mailersend_email(to_email, subject, html_content):
 supabase_url = os.getenv("SUPABASE_URL")
 supabase_key = os.getenv("SUPABASE_SERVICE_KEY")
 supabase = create_client(supabase_url, supabase_key)
+def verify_token(token):
+    try:
+        url = f"{supabase_url}/auth/v1/user"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "apikey": supabase_key
+        }
+        r = requests.get(url, headers=headers)
+        if r.status_code == 200:
+            return r.json()
+        return None
+    except Exception as e:
+        print("Error verificando token:", e)
+        return None
+
 
 # ========== PLANES Y LÍMITES ==========
 PLAN_LIMITS = {
@@ -280,13 +295,17 @@ def reset_password_with_code():
 @app.route('/')
 def index():
     return render_template('index.html')
-
+@app.route('/login')
+def login():
+    return render_template('login.html')
 @app.route('/chat', methods=['POST'])
 def chat():
     try:
-        user_id = request.headers.get("X-User-Id")
-        if not user_id:
-            return api_error("Falta el ID del usuario.", 401)
+        token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        user_data = verify_token(token)
+        if not user_data:
+            return jsonify({"error": "No autorizado"}), 401
+        user_id = user_data["id"]
 
         profile = get_user_profile(user_id)
         profile = reset_monthly_usage(profile, user_id)
@@ -400,11 +419,11 @@ def start_mind():
     global cloned_voice_id
     try:
         # --- Autenticación ---
-        auth_header = request.headers.get("Authorization")
-        user_id = get_user_from_token(auth_header)
-        if not user_id:
-            return jsonify({"error": "Usuario no autenticado."}), 401
-
+        token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        user_data = verify_token(token)
+        if not user_data:
+            return jsonify({"error": "No autorizado"}), 401
+        user_id = user_data["id"]
         # --- Lectura de datos ---
         instruction = request.form.get('instruction', '')
         audio_file = request.files.get('audio_file')
@@ -453,10 +472,13 @@ def start_mind():
 def generate_audio():
     text = request.form.get('text', '')
     voice_id = request.form.get('voice_id')  # Puede venir del frontend
-    auth_header = request.headers.get("Authorization")
-    user_id = get_user_from_token(auth_header)
-    if not user_id:
-        return jsonify({"error": "Usuario no autenticado."}), 401
+    
+    # --- Autenticación ---
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    user_data = verify_token(token)
+    if not user_data:
+        return jsonify({"error": "No autorizado"}), 401
+    user_id = user_data["id"]
 
     if not text:
         return jsonify({"error": "Texto vacío para generar audio."}), 400
@@ -464,7 +486,6 @@ def generate_audio():
     try:
         # Si viene un voice_id explícito, úsalo; si no, usa el clon global; si no, usa el default
         current_voice_id = voice_id if voice_id else cloned_voice_id if cloned_voice_id else default_eleven_labs_voice_id
-
         tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{current_voice_id}/stream"
         tts_headers = {
             "xi-api-key": eleven_labs_api_key,
