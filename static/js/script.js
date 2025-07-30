@@ -693,30 +693,51 @@ document.getElementById('sidebar-backdrop').addEventListener('click', () => {
         document.getElementById('sidebar-backdrop').classList.add('active');
     });
 }
-  // Mostrar plan del usuario en el menú
+    // --- Cargar perfil al iniciar sesión ---
+async function loadUserProfile(user) {
+  const avatar = document.getElementById('header-profile-pic');
+  if (user.user_metadata?.avatar_url && avatar) {
+    avatar.src = user.user_metadata.avatar_url;
+  }
+
+  const userPlanLabel = document.getElementById('user-plan-label');
+  if (userPlanLabel) {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const token = session?.access_token;
+    fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${token}`
+      }
+    })
+    .then(res => res.json())
+    .then(data => { 
+      userPlanLabel.textContent = `Plan: ${data[0]?.plan || 'essence'}`;
+    })
+    .catch(err => console.error("Error al cargar el plan:", err));
+
+    supabaseClient
+      .channel('public:profiles')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, payload => {
+        if (payload.new?.plan) userPlanLabel.textContent = `Plan: ${payload.new.plan}`;
+      })
+      .subscribe();
+  }
+
+  // --- Botón logout ---
+  const logoutOption = document.getElementById('logout-option');
+  if (logoutOption) {
+    logoutOption.addEventListener('click', async () => {
+      await supabaseClient.auth.signOut();
+      location.reload();
+    });
+  }
+}
+
+// --- Verificar sesión al cargar ---
 (async () => {
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session && session.user) {
-    try {
-      const { data, error } = await supabaseClient
-        .from('profiles')
-        .select('plan')
-        .eq('id', session.user.id)
-        .single();
-
-      if (!error && data) {
-        document.getElementById('user-plan-label').textContent = `Plan: ${data.plan}`;
-      } else {
-        document.getElementById('user-plan-label').textContent = `Plan: Desconocido`;
-      }
-    } catch (e) {
-      console.error('Error obteniendo plan:', e);
-      document.getElementById('user-plan-label').textContent = `Plan: Error`;
-    }
-  } else {
-    document.getElementById('user-plan-label').textContent = `Plan: No autenticado`;
-  }
+  if (session?.user) loadUserProfile(session.user);
 })();
-
 });
 
