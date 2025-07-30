@@ -109,24 +109,33 @@ function startResendCountdown(seconds) {
   }, 1000);
 }
 
-async function resetPasswordWithCode() {
+// --- Resetear contraseña desde OTP (Hacerla global para que funcione el onclick)
+window.resetPasswordWithCode = async function () {
   const email = forgotPasswordEmail.value.trim();
   const otp = document.getElementById('otp-input').value.trim();
   const pass = document.getElementById('new-password').value.trim();
   const pass2 = document.getElementById('confirm-new-password').value.trim();
 
   if (pass !== pass2) return alert("Las contraseñas no coinciden");
-  const res = await fetch('/reset_password_with_code', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, otp, new_password: pass })
-  });
-  const data = await res.json();
-  if (res.ok) {
-    alert("Contraseña actualizada. Inicia sesión.");
-    location.reload();
-  } else alert(data.error);
-}
+
+  try {
+    const res = await fetch('/reset_password_with_code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp, new_password: pass })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert("Contraseña actualizada correctamente.");
+      location.reload(); // 🔄 Recarga toda la app desde cero
+    } else {
+      alert(data.error || "Error al cambiar la contraseña.");
+    }
+  } catch (err) {
+    console.error("Error:", err);
+    alert("Ocurrió un error al cambiar la contraseña.");
+  }
+};
 
   // --- Logout ---
   if (logoutOption) {
