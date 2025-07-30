@@ -128,16 +128,18 @@ def get_user_by_email_admin(email):
     }
     try:
         r = requests.get(url, headers=headers)
-        print(f"[DEBUG] Respuesta Admin Supabase ({email}): {r.status_code} - {r.text}")  # <-- LOG para depurar
+        print(f"[DEBUG] Respuesta Admin Supabase ({email}): {r.status_code} - {r.text}")  # Log para depurar
         if r.status_code != 200:
             return None
         data = r.json()
-        if isinstance(data, list) and len(data) > 0:
-            return data[0]
+        users = data.get("users", [])
+        if users and isinstance(users, list):
+            return users[0]  # Primer usuario encontrado
         return None
     except Exception as e:
         print(f"Error en get_user_by_email_admin: {e}")
         return None
+
 # ========== FLASK ==========
 app = Flask(__name__)
 CORS(app)
