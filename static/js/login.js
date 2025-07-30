@@ -1,210 +1,247 @@
 // ═══════════════ Supabase Setup ═══════════════
 const SUPABASE_URL = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Tu anon key
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ═══════════════ Estado ═══════════════
 let isLoginMode = true;
 
-// ═══════════════ Lógica Auth ═══════════════
 document.addEventListener('DOMContentLoaded', () => {
-    const authForm = document.getElementById('auth-form');
-    const emailInput = document.getElementById('auth-email');
-    const passwordInput = document.getElementById('auth-password');
-    const confirmWrapper = document.getElementById('confirm-password-wrapper');
-    const confirmInput = document.getElementById('auth-confirm-password');
-    const submitBtn = document.getElementById('auth-submit-btn');
-    const toggleText = document.getElementById('auth-toggle-text');
-    const toggleLink = document.getElementById('auth-toggle-link');
-    const googleBtn = document.getElementById('google-signin');
-    const githubBtn = document.getElementById('github-signin');
-    const forgotPasswordLink = document.getElementById('forgot-password-link');
-    const forgotPasswordContainer = document.getElementById('forgot-password-container');
-    const forgotPasswordEmail = document.getElementById('forgot-password-email');
-    const forgotPasswordSubmit = document.getElementById('forgot-password-submit');
-    const forgotPasswordCancel = document.getElementById('forgot-password-cancel');
-    const passwordStrength = document.getElementById('password-strength');
-    const eyeToggle = document.getElementById('toggle-password');
-    const confirmEyeToggle = document.getElementById('toggle-confirm-password');
+  const authForm = document.getElementById('auth-form');
+  const emailInput = document.getElementById('auth-email');
+  const passwordInput = document.getElementById('auth-password');
+  const confirmWrapper = document.getElementById('confirm-password-wrapper');
+  const confirmInput = document.getElementById('auth-confirm-password');
+  const submitBtn = document.getElementById('auth-submit-btn');
+  const toggleText = document.getElementById('auth-toggle-text');
+  const toggleLink = document.getElementById('auth-toggle-link');
+  const googleBtn = document.getElementById('google-signin');
+  const githubBtn = document.getElementById('github-signin');
+  const successContainer = document.getElementById('auth-success');
+  const successBtn = document.getElementById('auth-success-btn');
+  const forgotPasswordLink = document.getElementById('forgot-password-link');
+  const forgotPasswordContainer = document.getElementById('forgot-password-container');
+  const forgotPasswordEmail = document.getElementById('forgot-password-email');
+  const forgotPasswordSubmit = document.getElementById('forgot-password-submit');
+  const forgotPasswordCancel = document.getElementById('forgot-password-cancel');
 
-    // --- Mostrar/ocultar contraseña ---
-    function togglePassword(input, toggleElement) {
-        const type = input.type === 'password' ? 'text' : 'password';
-        input.type = type;
-        toggleElement.querySelector('i').classList.toggle('fa-eye');
-        toggleElement.querySelector('i').classList.toggle('fa-eye-slash');
+  // Barra de fuerza
+  const strengthBar = document.querySelector('.password-strength-bar-fill');
+  const strengthText = document.querySelector('.password-strength-text');
+  const strengthContainer = document.getElementById('password-strength-container');
+
+  // Toggle de ojos
+  const eyeToggle = document.getElementById('toggle-password');
+  const confirmEyeToggle = document.getElementById('toggle-confirm-password');
+
+  // Mostrar/ocultar contraseña
+  function togglePasswordVisibility(input, icon) {
+    const type = input.type === 'password' ? 'text' : 'password';
+    input.type = type;
+    icon.classList.toggle('fa-eye');
+    icon.classList.toggle('fa-eye-slash');
+  }
+
+  eyeToggle.addEventListener('click', () => togglePasswordVisibility(passwordInput, eyeToggle));
+  confirmEyeToggle.addEventListener('click', () => togglePasswordVisibility(confirmInput, confirmEyeToggle));
+
+  // Fuerza de contraseña
+  function updatePasswordStrength(password) {
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    const percentage = (score / 4) * 100;
+    strengthBar.style.width = `${percentage}%`;
+
+    if (score <= 1) {
+      strengthBar.style.background = 'red';
+      strengthText.textContent = 'Fuerza: Débil';
+    } else if (score === 2) {
+      strengthBar.style.background = 'orange';
+      strengthText.textContent = 'Fuerza: Media';
+    } else if (score === 3) {
+      strengthBar.style.background = 'blue';
+      strengthText.textContent = 'Fuerza: Buena';
+    } else {
+      strengthBar.style.background = 'green';
+      strengthText.textContent = 'Fuerza: Excelente';
     }
+  }
 
-    eyeToggle.addEventListener('click', () => togglePassword(passwordInput, eyeToggle));
-    confirmEyeToggle.addEventListener('click', () => togglePassword(confirmInput, confirmEyeToggle));
+  passwordInput.addEventListener('input', () => {
+    if (!isLoginMode) updatePasswordStrength(passwordInput.value);
+  });
 
-    // --- Fuerza de contraseña ---
-    passwordInput.addEventListener('input', () => {
-        const val = passwordInput.value;
-        const strong = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_\-+=])(?=.{8,})/.test(val);
-        passwordStrength.textContent = strong
-            ? 'Fuerza: ✅ Cumple requisitos'
-            : 'Fuerza: mínimo 8 caracteres, 1 mayúscula, 1 especial';
-        passwordStrength.style.color = strong ? 'green' : 'red';
-        passwordStrength.style.display = 'block';
+  // --- Cambiar entre login y registro ---
+  toggleLink.addEventListener('click', e => {
+    e.preventDefault();
+    isLoginMode = !isLoginMode;
+    if (isLoginMode) {
+      submitBtn.textContent = 'Iniciar sesión';
+      toggleText.innerHTML = '¿No tienes cuenta? <a href="#" id="auth-toggle-link">Regístrate</a>';
+      confirmWrapper.style.display = 'none';
+      strengthContainer.style.display = 'none';
+    } else {
+      submitBtn.textContent = 'Registrarse';
+      toggleText.innerHTML = '¿Ya tienes cuenta? <a href="#" id="auth-toggle-link">Inicia sesión</a>';
+      confirmWrapper.style.display = 'block';
+      strengthContainer.style.display = 'block';
+    }
+  });
+
+  // --- Recuperación de contraseña ---
+  if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      authForm.style.display = 'none';
+      successContainer.style.display = 'none';
+      forgotPasswordContainer.style.display = 'block';
     });
-
-    // --- Toggle entre login y registro ---
-    toggleLink.addEventListener('click', e => {
-        e.preventDefault();
-        isLoginMode = !isLoginMode;
-        if (isLoginMode) {
-            submitBtn.textContent = 'Iniciar sesión';
-            toggleText.textContent = '¿No tienes cuenta? ';
-            toggleLink.textContent = 'Regístrate';
-            confirmWrapper.style.display = 'none';
-            confirmInput.disabled = true;
-            passwordStrength.style.display = 'none';
-        } else {
-            submitBtn.textContent = 'Registrarse';
-            toggleText.textContent = '¿Ya tienes cuenta? ';
-            toggleLink.textContent = 'Inicia sesión';
-            confirmWrapper.style.display = 'block';
-            confirmInput.disabled = false;
-            passwordStrength.style.display = 'block';
-        }
-        toggleText.appendChild(toggleLink);
+  }
+  if (forgotPasswordCancel) {
+    forgotPasswordCancel.addEventListener('click', () => {
+      forgotPasswordContainer.style.display = 'none';
+      authForm.style.display = 'block';
     });
+  }
+  if (forgotPasswordSubmit) {
+    forgotPasswordSubmit.addEventListener('click', sendOtpCode);
+  }
 
-    // --- Olvidé mi contraseña ---
-    if (forgotPasswordLink) {
-        forgotPasswordLink.addEventListener('click', e => {
-            e.preventDefault();
-            authForm.style.display = 'none';
-            forgotPasswordContainer.style.display = 'block';
-        });
-    }
-    if (forgotPasswordCancel) {
-        forgotPasswordCancel.addEventListener('click', () => {
-            forgotPasswordContainer.style.display = 'none';
-            authForm.style.display = 'block';
-        });
-    }
+  let otpTimer, resendTimer;
+  async function sendOtpCode() {
+    const email = forgotPasswordEmail.value.trim();
+    if (!email) return alert("Ingresa tu correo");
+    forgotPasswordSubmit.disabled = true;
+    forgotPasswordSubmit.textContent = "Enviando...";
 
-    // --- Envío del formulario ---
-    authForm.addEventListener('submit', async e => {
-        e.preventDefault();
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
-        if (!email || !password || (!isLoginMode && !confirmInput.value)) {
-            alert('Completa todos los campos');
-            return;
-        }
-        if (!isLoginMode && password !== confirmInput.value) {
-            alert('Las contraseñas no coinciden');
-            return;
-        }
-
-        submitBtn.disabled = true;
-        submitBtn.textContent = isLoginMode ? 'Iniciando...' : 'Registrando...';
-
-        try {
-            if (isLoginMode) {
-                const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                if (error) throw error;
-                location.href = "/";
-            } else {
-                const { error } = await supabaseClient.auth.signUp({ email, password });
-                if (error) throw error;
-                alert('Revisa tu correo para confirmar tu cuenta.');
-                location.reload();
-            }
-        } catch (err) {
-            alert(err.message || 'Error en la autenticación');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
-        }
+    const res = await fetch('/request_password_code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
     });
+    const data = await res.json();
+    if (res.ok) {
+      alert("Código enviado a tu correo.");
+      document.getElementById('otp-step').style.display = 'block';
+      startOtpCountdown(8 * 60);
+      startResendCountdown(60);
+    } else alert(data.error);
 
-    // --- Login social ---
-    googleBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
-    githubBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
+    forgotPasswordSubmit.disabled = false;
+    forgotPasswordSubmit.textContent = "Reenviar código";
+  }
 
-    // ═══════════════ Recuperación con OTP ═══════════════
-    let otpTimer, resendTimer;
+  function startOtpCountdown(seconds) {
+    const timerEl = document.getElementById('otp-timer');
+    clearInterval(otpTimer);
+    otpTimer = setInterval(() => {
+      if (seconds <= 0) { 
+        clearInterval(otpTimer); 
+        timerEl.textContent = "Expirado"; 
+        alert("El código ha expirado. Solicita uno nuevo.");
+        document.getElementById('otp-input').value = ''; 
+        return; 
+      }
+      let min = Math.floor(seconds / 60), sec = seconds % 60;
+      timerEl.textContent = `Expira en ${min}:${sec.toString().padStart(2, '0')}`;
+      seconds--;
+    }, 1000);
+  }
 
-    async function sendOtpCode() {
-        const email = forgotPasswordEmail.value.trim();
-        if (!email) return alert("Ingresa tu correo");
-        forgotPasswordSubmit.disabled = true;
-        forgotPasswordSubmit.textContent = "Enviando...";
-        const res = await fetch('/request_password_code', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-        });
-        const data = await res.json();
-        if (res.ok) {
-            alert("Código enviado a tu correo");
-            document.getElementById('otp-step').style.display = 'block';
-            startOtpCountdown(8 * 60);
-            startResendCountdown(60);
-        } else alert(data.error || 'Error al enviar código');
-        forgotPasswordSubmit.disabled = false;
-        forgotPasswordSubmit.textContent = "Reenviar código";
+  function startResendCountdown(seconds) {
+    clearInterval(resendTimer);
+    resendTimer = setInterval(() => {
+      if (seconds <= 0) { 
+        forgotPasswordSubmit.disabled = false; 
+        forgotPasswordSubmit.textContent = "Reenviar código"; 
+        clearInterval(resendTimer); 
+        return; 
+      }
+      forgotPasswordSubmit.textContent = `Reenviar (${seconds}s)`;
+      forgotPasswordSubmit.disabled = true;
+      seconds--;
+    }, 1000);
+  }
+
+  window.resetPasswordWithCode = async function () {
+    const email = forgotPasswordEmail.value.trim();
+    const otp = document.getElementById('otp-input').value.trim();
+    const pass = document.getElementById('new-password').value.trim();
+    const pass2 = document.getElementById('confirm-new-password').value.trim();
+
+    if (pass !== pass2) return alert("Las contraseñas no coinciden");
+
+    try {
+      const res = await fetch('/reset_password_with_code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp, new_password: pass })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("Contraseña actualizada correctamente.");
+        location.reload();
+      } else {
+        alert(data.error || "Error al cambiar la contraseña.");
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      alert("Ocurrió un error al cambiar la contraseña.");
+    }
+  };
+
+  // --- Login/Register submit ---
+  authForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const recaptchaResponse = grecaptcha.getResponse();
+    if (!recaptchaResponse) return alert('Por favor, confirma el reCAPTCHA.');
+
+    const captchaCheck = await fetch('/verify_captcha', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ token: recaptchaResponse })
+    });
+    const captchaResult = await captchaCheck.json();
+    if (!captchaResult.success) return alert('Error al verificar el reCAPTCHA.');
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!email || !password || (!isLoginMode && !confirmInput.value)) {
+      alert('Por favor, completa todos los campos.');
+      return;
     }
 
-    function startOtpCountdown(seconds) {
-        const timerEl = document.getElementById('otp-timer');
-        clearInterval(otpTimer);
-        otpTimer = setInterval(() => {
-            if (seconds <= 0) {
-                clearInterval(otpTimer);
-                timerEl.textContent = "Expirado";
-                return;
-            }
-            let min = Math.floor(seconds / 60),
-                sec = seconds % 60;
-            timerEl.textContent = `Expira en ${min}:${sec.toString().padStart(2, '0')}`;
-            seconds--;
-        }, 1000);
+    submitBtn.disabled = true;
+    submitBtn.textContent = isLoginMode ? 'Iniciando sesión...' : 'Registrando...';
+
+    try {
+      if (isLoginMode) {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) return alert('Error al iniciar sesión: ' + error.message);
+        if (data?.session) location.href = '/';
+      } else {
+        if (password !== confirmInput.value) return alert('Las contraseñas no coinciden.');
+        const { error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) return alert('Error al registrarse: ' + error.message);
+        authForm.style.display = 'none';
+        successContainer.style.display = 'block';
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Ocurrió un error inesperado.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
     }
+  });
 
-    function startResendCountdown(seconds) {
-        clearInterval(resendTimer);
-        resendTimer = setInterval(() => {
-            if (seconds <= 0) {
-                forgotPasswordSubmit.disabled = false;
-                forgotPasswordSubmit.textContent = "Reenviar código";
-                clearInterval(resendTimer);
-                return;
-            }
-            forgotPasswordSubmit.textContent = `Reenviar (${seconds}s)`;
-            forgotPasswordSubmit.disabled = true;
-            seconds--;
-        }, 1000);
-    }
-
-    if (forgotPasswordSubmit) forgotPasswordSubmit.addEventListener('click', sendOtpCode);
-
-    window.resetPasswordWithCode = async function () {
-        const email = forgotPasswordEmail.value.trim();
-        const otp = document.getElementById('otp-input').value.trim();
-        const pass = document.getElementById('new-password').value.trim();
-        const pass2 = document.getElementById('confirm-new-password').value.trim();
-        if (pass !== pass2) return alert("Las contraseñas no coinciden");
-
-        try {
-            const res = await fetch('/reset_password_with_code', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, otp, new_password: pass })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                alert("Contraseña actualizada correctamente");
-                location.reload();
-            } else alert(data.error || "Error al cambiar la contraseña");
-        } catch (err) {
-            console.error(err);
-            alert("Error al cambiar contraseña");
-        }
-    };
+  // Social login
+  googleBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
+  githubBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
+  successBtn.addEventListener('click', () => location.reload());
 });
+
 
