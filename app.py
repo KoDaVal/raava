@@ -160,16 +160,16 @@ def truncate_history(history, max_messages=20):
 @app.route('/request_password_code', methods=['POST'])
 def request_password_code():
     try:
-        data = request.json
-        if not data or not data.get('email'):
+        data = request.get_json(force=True)
+        email = data.get('email')
+        if not email:
             return api_error('Correo requerido')
-        email = data['email']
 
-        # Buscar usuario
-        user_res = supabase.table("auth.users").select("id").eq("email", email).execute()
-        if not user_res.data:
+        # Buscar usuario con Admin API
+        user_data = supabase.auth.admin.get_user_by_email(email)
+        if not user_data or not user_data.user:
             return api_error("Correo no registrado.", 404)
-        user_id = user_res.data[0]['id']
+        user_id = user_data.user.id
 
         # Generar OTP
         otp = random.randint(100000, 999999)
@@ -200,7 +200,6 @@ def request_password_code():
                 )
         except Exception as e:
             print("Error enviando correo:", e)
-            # No bloqueamos el flujo, solo informamos
             return jsonify({'message': 'Código generado, pero no se pudo enviar el correo.'}), 200
 
         return jsonify({'message': 'Código enviado'}), 200
@@ -210,38 +209,43 @@ def request_password_code():
         print("Error inesperado en /request_password_code:", traceback.format_exc())
         return api_error("Error interno al generar el código.", 500)
 
+
 @app.route('/reset_password_with_code', methods=['POST'])
 def reset_password_with_code():
-    data = request.json
-    email = data.get('email')
-    otp = data.get('otp')
-    new_password = data.get('new_password')
+    try:
+        data = request.get_json(force=True)
+        email = data.get('email')
+        otp = data.get('otp')
+        new_password = data.get('new_password')
+        if not all([email, otp, new_password]):
+            return api_error('Datos incompletos')
 
-    if not all([email, otp, new_password]):
-        return api_error('Datos incompletos')
+        # Buscar usuario con Admin API
+        user_data = supabase.auth.admin.get_user_by_email(email)
+        if not user_data or not user_data.user:
+            return api_error("Correo no registrado.", 404)
+        user_id = user_data.user.id
 
-    # Buscar usuario
-    user_res = supabase.table("auth.users").select("id").eq("email", email).execute()
-    if not user_res.data:
-        return api_error("Correo no registrado.", 404)
-    user_id = user_res.data[0]['id']
+        # Validar OTP
+        otp_res = supabase.table("password_otps").select("*").eq("user_id", user_id).eq("otp_code", otp).execute()
+        if not otp_res.data:
+            return api_error("Código inválido.", 400)
+        otp_data = otp_res.data[0]
+        if datetime.fromisoformat(otp_data['otp_expires_at']) < datetime.utcnow():
+            return api_error("Código expirado.", 400)
 
-    # Validar OTP
-    otp_res = supabase.table("password_otps").select("*").eq("user_id", user_id).eq("otp_code", otp).execute()
-    if not otp_res.data:
-        return api_error("Código inválido.", 400)
-    otp_data = otp_res.data[0]
-    if datetime.fromisoformat(otp_data['otp_expires_at']) < datetime.utcnow():
-        return api_error("Código expirado.", 400)
+        # Cambiar contraseña
+        supabase.auth.admin.update_user_by_id(user_id, {"password": new_password})
 
-    # Cambiar contraseña
-    supabase.auth.admin.update_user_by_id(user_id, {"password": new_password})
+        # Borrar OTP
+        supabase.table("password_otps").delete().eq("user_id", user_id).execute()
 
-    # Borrar OTP
-    supabase.table("password_otps").delete().eq("user_id", user_id).execute()
+        return jsonify({'message': 'Contraseña actualizada correctamente'}), 200
 
-    return jsonify({'message': 'Contraseña actualizada correctamente'}), 200
-
+    except Exception as e:
+        import traceback
+        print("Error inesperado en /reset_password_with_code:", traceback.format_exc())
+        return api_error("Error interno al cambiar la contraseña.", 500)
 
 # ========== RUTAS ==========
 @app.route('/')
