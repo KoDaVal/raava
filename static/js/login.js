@@ -1,97 +1,35 @@
 // ═══════════════ Supabase Setup ═══════════════
-const SUPABASE_URL = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Tu anon key
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_URL     = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
+const SUPABASE_ANON_KEY= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
+const supabaseClient   = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ═══════════════ Estado y Helpers ═══════════════
 let isLoginMode = true;
 
+// ═══════════════ Auth & UI Logic ═══════════════
 document.addEventListener('DOMContentLoaded', () => {
-  const authForm = document.getElementById('auth-form');
-  const emailInput = document.getElementById('auth-email');
-  const passwordInput = document.getElementById('auth-password');
-  const confirmWrapper = document.getElementById('confirm-password-wrapper');
-  const confirmInput = document.getElementById('auth-confirm-password');
-  const submitBtn = document.getElementById('auth-submit-btn');
-  const toggleText = document.getElementById('auth-toggle-text');
-  const toggleLink = document.getElementById('auth-toggle-link');
-  const googleBtn = document.getElementById('google-signin');
-  const githubBtn = document.getElementById('github-signin');
-  const successContainer = document.getElementById('auth-success');
-  const successBtn = document.getElementById('auth-success-btn');
+  const authForm           = document.getElementById('auth-form');
+  const emailInput         = document.getElementById('auth-email');
+  const passwordInput      = document.getElementById('auth-password');
+  const confirmWrapper     = document.getElementById('confirm-password-wrapper');
+  const confirmInput       = document.getElementById('auth-confirm-password');
+  const submitBtn          = document.getElementById('auth-submit-btn');
+  const toggleText         = document.getElementById('auth-toggle-text');
+  const toggleLink         = document.getElementById('auth-toggle-link');
+  const googleBtn          = document.getElementById('google-signin');
+  const githubBtn          = document.getElementById('github-signin');
+  const successContainer   = document.getElementById('auth-success');
+  const successBtn         = document.getElementById('auth-success-btn');
   const forgotPasswordLink = document.getElementById('forgot-password-link');
   const forgotPasswordContainer = document.getElementById('forgot-password-container');
   const forgotPasswordEmail = document.getElementById('forgot-password-email');
   const forgotPasswordSubmit = document.getElementById('forgot-password-submit');
   const forgotPasswordCancel = document.getElementById('forgot-password-cancel');
+  const passwordStrength   = document.getElementById('password-strength');
+  const eyeToggle          = document.getElementById('toggle-password');
+  const confirmEyeToggle   = document.getElementById('toggle-confirm-password');
 
-  // Barra de fuerza
-  const strengthBar = document.querySelector('.password-strength-bar-fill');
-  const strengthText = document.querySelector('.password-strength-text');
-  const strengthContainer = document.getElementById('password-strength-container');
-
-  // Toggle de ojos
-  const eyeToggle = document.getElementById('toggle-password');
-  const confirmEyeToggle = document.getElementById('toggle-confirm-password');
-
-  // Mostrar/ocultar contraseña
-  function togglePasswordVisibility(input, icon) {
-    const type = input.type === 'password' ? 'text' : 'password';
-    input.type = type;
-    icon.classList.toggle('fa-eye');
-    icon.classList.toggle('fa-eye-slash');
-  }
-
-  eyeToggle.addEventListener('click', () => togglePasswordVisibility(passwordInput, eyeToggle));
-  confirmEyeToggle.addEventListener('click', () => togglePasswordVisibility(confirmInput, confirmEyeToggle));
-
-  // Fuerza de contraseña
-  function updatePasswordStrength(password) {
-    let score = 0;
-    if (password.length >= 8) score++;
-    if (/[A-Z]/.test(password)) score++;
-    if (/[0-9]/.test(password)) score++;
-    if (/[^A-Za-z0-9]/.test(password)) score++;
-
-    const percentage = (score / 4) * 100;
-    strengthBar.style.width = `${percentage}%`;
-
-    if (score <= 1) {
-      strengthBar.style.background = 'red';
-      strengthText.textContent = 'Fuerza: Débil';
-    } else if (score === 2) {
-      strengthBar.style.background = 'orange';
-      strengthText.textContent = 'Fuerza: Media';
-    } else if (score === 3) {
-      strengthBar.style.background = 'blue';
-      strengthText.textContent = 'Fuerza: Buena';
-    } else {
-      strengthBar.style.background = 'green';
-      strengthText.textContent = 'Fuerza: Excelente';
-    }
-  }
-
-  passwordInput.addEventListener('input', () => {
-    if (!isLoginMode) updatePasswordStrength(passwordInput.value);
-  });
-
-  // --- Cambiar entre login y registro ---
-  toggleLink.addEventListener('click', e => {
-    e.preventDefault();
-    isLoginMode = !isLoginMode;
-    if (isLoginMode) {
-      submitBtn.textContent = 'Iniciar sesión';
-      toggleText.innerHTML = '¿No tienes cuenta? <a href="#" id="auth-toggle-link">Regístrate</a>';
-      confirmWrapper.style.display = 'none';
-      strengthContainer.style.display = 'none';
-    } else {
-      submitBtn.textContent = 'Registrarse';
-      toggleText.innerHTML = '¿Ya tienes cuenta? <a href="#" id="auth-toggle-link">Inicia sesión</a>';
-      confirmWrapper.style.display = 'block';
-      strengthContainer.style.display = 'block';
-    }
-  });
-
-  // --- Recuperación de contraseña ---
+  // --- Eventos de recuperación de contraseña ---
   if (forgotPasswordLink) {
     forgotPasswordLink.addEventListener('click', (e) => {
       e.preventDefault();
@@ -110,10 +48,13 @@ document.addEventListener('DOMContentLoaded', () => {
     forgotPasswordSubmit.addEventListener('click', sendOtpCode);
   }
 
+  // === NUEVO: Lógica OTP para recuperación de contraseña ===
   let otpTimer, resendTimer;
+
   async function sendOtpCode() {
     const email = forgotPasswordEmail.value.trim();
     if (!email) return alert("Ingresa tu correo");
+
     forgotPasswordSubmit.disabled = true;
     forgotPasswordSubmit.textContent = "Enviando...";
 
@@ -166,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
   }
 
+  // --- Resetear contraseña desde OTP (global para el onclick)
   window.resetPasswordWithCode = async function () {
     const email = forgotPasswordEmail.value.trim();
     const otp = document.getElementById('otp-input').value.trim();
@@ -193,55 +135,100 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // --- Login/Register submit ---
+  // --- Mostrar/ocultar contraseña ---
+  eyeToggle.addEventListener('click', () => {
+    const type = passwordInput.type === 'password' ? 'text' : 'password';
+    passwordInput.type = type;
+    eyeToggle.querySelector('i').classList.toggle('fa-eye-slash');
+    eyeToggle.querySelector('i').classList.toggle('fa-eye');
+  });
+  confirmEyeToggle.addEventListener('click', () => {
+    const type = confirmInput.type === 'password' ? 'text' : 'password';
+    confirmInput.type = type;
+    confirmEyeToggle.querySelector('i').classList.toggle('fa-eye-slash');
+    confirmEyeToggle.querySelector('i').classList.toggle('fa-eye');
+  });
+
+  // --- Barra de fuerza de contraseña ---
+  passwordInput.addEventListener('input', () => {
+    const val = passwordInput.value;
+    const strong = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_\-+=])(?=.{8,})/.test(val);
+    passwordStrength.textContent = strong
+      ? 'Fuerza: ✅ Cumple requisitos'
+      : 'Fuerza: mínimo 8 caracteres, 1 mayúscula, 1 especial';
+    passwordStrength.style.color = strong ? 'green' : 'red';
+  });
+
+  // --- Cambiar entre login y registro ---
+  toggleLink.addEventListener('click', e => {
+    e.preventDefault();
+    isLoginMode = !isLoginMode;
+    if (isLoginMode) {
+      submitBtn.textContent = 'Iniciar sesión';
+      toggleText.textContent = '¿No tienes cuenta? ';
+      toggleLink.textContent = 'Regístrate';
+      confirmWrapper.style.display= 'none';
+      confirmInput.disabled = true;
+      confirmInput.required = false;
+      passwordStrength.style.display = 'none';
+    } else {
+      submitBtn.textContent = 'Registrarse';
+      toggleText.textContent = '¿Ya tienes cuenta? ';
+      toggleLink.textContent = 'Inicia sesión';
+      confirmWrapper.style.display= 'flex';
+      confirmInput.disabled = false;
+      confirmInput.required = true;
+      passwordStrength.style.display = 'block';
+    }
+    toggleText.appendChild(toggleLink);
+  });
+
+  // --- Envío del formulario ---
   authForm.addEventListener('submit', async e => {
     e.preventDefault();
-    const recaptchaResponse = grecaptcha.getResponse();
-    if (!recaptchaResponse) return alert('Por favor, confirma el reCAPTCHA.');
-
-    const captchaCheck = await fetch('/verify_captcha', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ token: recaptchaResponse })
-    });
-    const captchaResult = await captchaCheck.json();
-    if (!captchaResult.success) return alert('Error al verificar el reCAPTCHA.');
-
-    const email = emailInput.value.trim();
+    const email    = emailInput.value.trim();
     const password = passwordInput.value;
     if (!email || !password || (!isLoginMode && !confirmInput.value)) {
-      alert('Por favor, completa todos los campos.');
+      alert('Por favor, ingresa tu correo y contraseña.');
       return;
     }
-
     submitBtn.disabled = true;
     submitBtn.textContent = isLoginMode ? 'Iniciando sesión...' : 'Registrando...';
-
     try {
       if (isLoginMode) {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) return alert('Error al iniciar sesión: ' + error.message);
-        if (data?.session) location.href = '/';
+        if (error) {
+          alert('Error al iniciar sesión: ' + error.message);
+          return;
+        }
+        if (data?.session) location.href = "/";
       } else {
-        if (password !== confirmInput.value) return alert('Las contraseñas no coinciden.');
+        if (password !== confirmInput.value) {
+          alert('Las contraseñas no coinciden.');
+          return;
+        }
         const { error } = await supabaseClient.auth.signUp({ email, password });
-        if (error) return alert('Error al registrarse: ' + error.message);
+        if (error) {
+          alert('Error al registrarse: ' + error.message);
+          return;
+        }
         authForm.style.display = 'none';
         successContainer.style.display = 'block';
       }
     } catch (err) {
       console.error(err);
-      alert('Ocurrió un error inesperado.');
+      alert('Ocurrió un error inesperado. Inténtalo de nuevo.');
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = isLoginMode ? 'Iniciar sesión' : 'Registrarse';
     }
   });
 
-  // Social login
-  googleBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
-  githubBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
+  // --- Botones sociales ---
   successBtn.addEventListener('click', () => location.reload());
+  googleBtn.addEventListener('click',  () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
+  githubBtn.addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
 });
+
 
 
