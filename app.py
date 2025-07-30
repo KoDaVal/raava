@@ -118,6 +118,26 @@ def update_usage(user_id, tokens=0, voice_tokens=0):
         "voice_inc": voice_tokens
     }).execute()
 
+def get_user_by_email_admin(email):
+    """Obtiene un usuario por email usando el endpoint Admin de Supabase."""
+    url = f"{supabase_url}/auth/v1/admin/users?email={email}"
+    headers = {
+        "apikey": supabase_key,
+        "Authorization": f"Bearer {supabase_key}",
+        "Content-Type": "application/json"
+    }
+    try:
+        r = requests.get(url, headers=headers)
+        if r.status_code != 200:
+            print(f"Error buscando usuario: {r.status_code} - {r.text}")
+            return None
+        data = r.json()
+        if isinstance(data, list) and len(data) > 0:
+            return data[0]  # Primer usuario encontrado
+        return None
+    except Exception as e:
+        print(f"Error en get_user_by_email_admin: {e}")
+        return None
 # ========== FLASK ==========
 app = Flask(__name__)
 CORS(app)
@@ -165,11 +185,11 @@ def request_password_code():
         if not email:
             return api_error('Correo requerido')
 
-        # Buscar usuario con Admin API
-        user_data = supabase.auth.admin.get_user_by_email(email)
-        if not user_data or not user_data.user:
+        # Buscar usuario por email
+        user_data = get_user_by_email_admin(email)
+        if not user_data:
             return api_error("Correo no registrado.", 404)
-        user_id = user_data.user.id
+        user_id = user_data["id"]
 
         # Generar OTP
         otp = random.randint(100000, 999999)
@@ -182,7 +202,7 @@ def request_password_code():
             "otp_expires_at": expires_at
         }).execute()
 
-        # Intentar enviar correo
+        # Enviar correo
         try:
             if not MAILERSEND_API_KEY:
                 print("⚠️ MAILERSEND_API_KEY no configurada. No se envió correo.")
@@ -209,7 +229,6 @@ def request_password_code():
         print("Error inesperado en /request_password_code:", traceback.format_exc())
         return api_error("Error interno al generar el código.", 500)
 
-
 @app.route('/reset_password_with_code', methods=['POST'])
 def reset_password_with_code():
     try:
@@ -220,11 +239,11 @@ def reset_password_with_code():
         if not all([email, otp, new_password]):
             return api_error('Datos incompletos')
 
-        # Buscar usuario con Admin API
-        user_data = supabase.auth.admin.get_user_by_email(email)
-        if not user_data or not user_data.user:
+        # Buscar usuario por email
+        user_data = get_user_by_email_admin(email)
+        if not user_data:
             return api_error("Correo no registrado.", 404)
-        user_id = user_data.user.id
+        user_id = user_data["id"]
 
         # Validar OTP
         otp_res = supabase.table("password_otps").select("*").eq("user_id", user_id).eq("otp_code", otp).execute()
@@ -235,7 +254,16 @@ def reset_password_with_code():
             return api_error("Código expirado.", 400)
 
         # Cambiar contraseña
-        supabase.auth.admin.update_user_by_id(user_id, {"password": new_password})
+        url = f"{supabase_url}/auth/v1/admin/users/{user_id}"
+        headers = {
+            "apikey": supabase_key,
+            "Authorization": f"Bearer {supabase_key}",
+            "Content-Type": "application/json"
+        }
+        r = requests.put(url, headers=headers, json={"password": new_password})
+        if r.status_code != 200:
+            print(f"Error al actualizar contraseña: {r.status_code} - {r.text}")
+            return api_error("Error al cambiar la contraseña.", 500)
 
         # Borrar OTP
         supabase.table("password_otps").delete().eq("user_id", user_id).execute()
@@ -246,7 +274,6 @@ def reset_password_with_code():
         import traceback
         print("Error inesperado en /reset_password_with_code:", traceback.format_exc())
         return api_error("Error interno al cambiar la contraseña.", 500)
-
 # ========== RUTAS ==========
 @app.route('/')
 def index():
