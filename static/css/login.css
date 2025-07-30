@@ -30,7 +30,12 @@ h2 {
   margin-bottom: 20px;
 }
 
-#auth-form input {
+.input-wrapper {
+  position: relative;
+}
+
+#auth-form input,
+#forgot-password-container input {
   width: 100%;
   padding: 14px;
   margin: 10px 0;
@@ -39,9 +44,22 @@ h2 {
   font-size: 16px;
   background: #fff;
   outline: none;
+  padding-right: 40px;
 }
 
-#auth-submit-btn {
+.toggle-password {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  color: #666;
+}
+
+#auth-submit-btn,
+#forgot-password-submit,
+#reset-password-btn {
   width: 100%;
   padding: 14px;
   margin-top: 12px;
@@ -54,7 +72,9 @@ h2 {
   cursor: pointer;
 }
 
-#auth-submit-btn:hover {
+#auth-submit-btn:hover,
+#forgot-password-submit:hover,
+#reset-password-btn:hover {
   background: #333;
 }
 
@@ -63,7 +83,8 @@ h2 {
   font-size: 14px;
 }
 
-.auth-toggle a, #forgot-password-link {
+.auth-toggle a,
+#forgot-password-link {
   color: #0d6efd;
   text-decoration: none;
   cursor: pointer;
@@ -127,6 +148,24 @@ h2 {
   margin-top: 10px;
   color: #f44336;
   font-size: 14px;
+}
+
+#password-strength {
+  font-size: 13px;
+  margin-top: -5px;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+/* Recuperación */
+#forgot-password-container {
+  display: none;
+  margin-top: 20px;
+}
+
+#otp-step {
+  display: none;
+  margin-top: 10px;
 }
 
 @media (max-width: 480px) {
