@@ -3,16 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Iniciar sesión - Raavax</title>
+  <title>Acceso - Raavax</title>
   <link rel="stylesheet" href="/static/css/login.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="login-container">
     <div class="login-card">
       <img src="/static/raava_logo.png" alt="Raavax Logo" class="login-logo">
       <h2 id="login-title">Iniciar sesión</h2>
+      <div id="status-msg" class="status-msg"></div>
       <form id="auth-form">
         <input type="email" id="auth-email" placeholder="Correo electrónico" required>
         <div class="password-wrapper">
@@ -29,12 +31,27 @@
       </form>
       <p class="switch-mode">¿No tienes cuenta? <a href="#" id="auth-toggle-link">Regístrate</a></p>
       <p><a href="#" id="forgot-password-link">¿Olvidaste tu contraseña?</a></p>
+      <div id="forgot-password-container" style="display:none;">
+        <input type="email" id="forgot-password-email" placeholder="Correo para recuperar">
+        <button id="forgot-password-submit">Enviar código</button>
+        <div id="otp-step" style="display:none;">
+          <input type="text" id="otp-input" placeholder="Código de 6 dígitos">
+          <div id="otp-timer">Expira en 8:00</div>
+          <input type="password" id="new-password" placeholder="Nueva contraseña">
+          <input type="password" id="confirm-new-password" placeholder="Confirmar contraseña">
+          <button id="change-password-btn">Cambiar contraseña</button>
+        </div>
+        <button id="forgot-password-cancel" class="cancel-btn">Cancelar</button>
+      </div>
       <div class="social-login">
         <button id="google-signin"><i class="fab fa-google"></i> Google</button>
         <button id="github-signin"><i class="fab fa-github"></i> GitHub</button>
       </div>
     </div>
   </div>
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <script src="/static/js/login.js"></script>
 </body>
 </html>
+
+
