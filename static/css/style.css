@@ -1177,3 +1177,15 @@ input:checked + .slider:before {
     display: none;
   }
 }
+.menu-plan {
+    font-size: 0.9rem;
+    color: #bbb;
+    padding: 8px 12px;
+    cursor: default;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 6px;
+}
+.menu-plan:hover {
+    background: none;
+}
+
