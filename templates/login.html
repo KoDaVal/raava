@@ -1,69 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Raavax – Login</title>
+  <title>Raavax - Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/login.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
-  <div class="auth-container">
-    <div class="auth-card">
-      <img src="/static/raava_logo.png" alt="Raavax Logo" class="auth-logo">
-      <h2 id="form-title">Login</h2>
+  <div class="login-container">
+    <div class="login-card">
+      <img src="/static/raava_logo.png" alt="Raavax Logo" class="login-logo">
+      <h2 id="auth-title">Iniciar sesión</h2>
       <form id="auth-form">
-        <input type="email" id="email" placeholder="Email" required>
-
-        <div class="password-wrapper">
-          <input type="password" id="password" placeholder="Password" required>
-          <span id="toggle-password" class="toggle-password"><i class="fas fa-eye-slash"></i></span>
+        <input type="email" id="auth-email" placeholder="Correo electrónico" required>
+        <div class="input-wrapper">
+          <input type="password" id="auth-password" placeholder="Contraseña" required>
+          <span class="toggle-password" id="toggle-password"><i class="fa-solid fa-eye"></i></span>
         </div>
-
-        <div id="confirm-password-wrapper" style="display:none;">
-          <div class="password-wrapper">
-            <input type="password" id="confirm-password" placeholder="Confirm Password">
-            <span id="toggle-confirm-password" class="toggle-password"><i class="fas fa-eye-slash"></i></span>
-          </div>
+        <div id="confirm-password-wrapper" class="input-wrapper">
+          <input type="password" id="auth-confirm-password" placeholder="Confirmar contraseña">
+          <span class="toggle-password" id="toggle-confirm-password"><i class="fa-solid fa-eye"></i></span>
         </div>
-
-        <small id="password-strength" style="display:none;">Password strength</small>
-
-        <button type="submit" id="auth-submit-btn">Continue</button>
+        <div id="password-strength"></div>
+        <button id="auth-submit-btn" type="submit">Iniciar sesión</button>
+        <div class="auth-toggle">
+          <span id="auth-toggle-text">¿No tienes cuenta? </span>
+          <a href="#" id="auth-toggle-link">Regístrate</a>
+        </div>
+        <a id="forgot-password-link" href="#">¿Olvidaste tu contraseña?</a>
       </form>
 
-      <a href="#" id="forgot-password-link" class="forgot-link">Forgot password?</a>
-
-      <!-- Recuperar contraseña -->
-      <div id="forgot-password-container" style="display:none;">
-        <h3>Reset Password</h3>
-        <input type="email" id="forgot-password-email" placeholder="Your email">
-        <button id="forgot-password-submit">Send code</button>
-
-        <div id="otp-step" style="display:none;">
-          <input type="text" id="otp-input" placeholder="6-digit code">
-          <div class="password-wrapper">
-            <input type="password" id="new-password" placeholder="New password">
-            <span id="toggle-new-password" class="toggle-password"><i class="fas fa-eye-slash"></i></span>
-          </div>
-          <div class="password-wrapper">
-            <input type="password" id="confirm-new-password" placeholder="Confirm password">
-            <span id="toggle-confirm-new-password" class="toggle-password"><i class="fas fa-eye-slash"></i></span>
-          </div>
-          <button id="reset-password-btn">Reset password</button>
+      <!-- Recuperación de contraseña -->
+      <div id="forgot-password-container">
+        <p>Recuperar contraseña</p>
+        <input type="email" id="forgot-password-email" placeholder="Tu correo electrónico">
+        <button id="forgot-password-submit">Enviar código</button>
+        <div id="otp-step">
+          <input type="text" id="otp-input" placeholder="Código de 6 dígitos">
+          <div id="otp-timer">Expira en 8:00</div>
+          <input type="password" id="new-password" placeholder="Nueva contraseña">
+          <input type="password" id="confirm-new-password" placeholder="Confirmar contraseña">
+          <button id="reset-password-btn" onclick="resetPasswordWithCode()">Cambiar contraseña</button>
         </div>
-        <button id="cancel-forgot-password" class="cancel-btn">Cancel</button>
+        <button id="forgot-password-cancel">Cancelar</button>
       </div>
 
-      <div class="divider"><span>Or</span></div>
-
-      <button id="google-login" class="social-btn"><i class="fab fa-google"></i> Continue with Google</button>
-      <button id="github-login" class="social-btn"><i class="fab fa-github"></i> Continue with GitHub</button>
-
-      <p class="auth-toggle-text">
-        Don’t have an account? <a href="#" id="toggle-auth-mode">Sign up</a>
-      </p>
+      <div class="or-separator">o</div>
+      <div class="auth-social">
+        <button class="social-btn" id="google-signin">
+          <img src="/static/icons/google.png" class="social-icon"> Iniciar con Google
+        </button>
+        <button class="social-btn" id="github-signin">
+          <img src="/static/icons/github.png" class="social-icon"> Iniciar con GitHub
+        </button>
+      </div>
+      <div id="auth-messages"></div>
     </div>
   </div>
   <script src="/static/js/login.js"></script>
