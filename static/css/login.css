@@ -1,211 +1,158 @@
-/* === Contenedor principal === */
+/* General */
 body {
-  margin: 0;
+  background: #111;
   font-family: 'Inter', sans-serif;
-  background: #0d0d0d;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   height: 100vh;
+  margin: 0;
   color: #fff;
 }
 
-/* === Tarjeta === */
-.login-card {
+/* Card principal */
+.auth-card {
   background: #1f1f1f;
-  padding: 40px 30px;
+  padding: 40px;
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
   width: 100%;
-  max-width: 400px;
+  max-width: 380px;
   text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 
 /* Logo */
-.login-card img {
-  width: 80px;
+.auth-logo {
+  width: 60px;
   margin-bottom: 20px;
-  opacity: 0.95;
-}
-
-/* Título */
-.login-card h2 {
-  font-size: 1.8rem;
-  margin-bottom: 20px;
-  color: #fff;
 }
 
 /* Inputs */
-.login-card input[type="email"],
-.login-card input[type="password"],
-.login-card input[type="text"] {
+.auth-form input[type="email"],
+.auth-form input[type="password"] {
   width: 100%;
-  padding: 14px 16px;
-  margin-bottom: 15px;
-  border-radius: 10px;
-  border: none;
+  padding: 12px 40px 12px 14px;
+  margin: 8px 0;
+  border: 1px solid #333;
+  border-radius: 8px;
+  font-size: 15px;
   background: #2a2a2a;
   color: #fff;
-  font-size: 1rem;
-  box-shadow: inset 0 0 0 1px #333;
-  transition: box-shadow 0.2s ease, background 0.2s ease;
+  box-sizing: border-box;
 }
-
-.login-card input:focus {
+.auth-form input:focus {
   outline: none;
-  background: #333;
-  box-shadow: 0 0 0 2px #5ef38c;
+  border-color: #5ef38c;
 }
 
-/* === Password Wrapper === */
+/* Wrapper de contraseña + ícono */
 .password-wrapper {
   position: relative;
-  display: flex;
-  align-items: center;
 }
-
-.password-wrapper input {
-  flex: 1;
-  padding-right: 40px;
-}
-
 .toggle-password {
   position: absolute;
-  right: 12px;
   top: 50%;
+  right: 12px;
   transform: translateY(-50%);
-  font-size: 1.2rem;
   color: #aaa;
+  font-size: 18px;
   cursor: pointer;
 }
+.toggle-password:hover { color: #fff; }
 
-.toggle-password:hover {
-  color: #fff;
-}
-
-/* === Botón principal === */
+/* Botón principal */
 #auth-submit-btn {
   width: 100%;
-  padding: 14px;
-  border: none;
-  border-radius: 10px;
   background: #5ef38c;
   color: #000;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 16px;
   font-weight: bold;
-  font-size: 1rem;
+  margin-top: 12px;
   cursor: pointer;
-  margin-top: 10px;
-  transition: background 0.3s ease;
+  transition: background 0.2s ease;
 }
-
 #auth-submit-btn:hover {
-  background: #4ee57c;
+  background: #4ddc7b;
 }
 
-/* === Texto alternativo === */
-.auth-toggle {
-  font-size: 0.9rem;
-  margin-top: 15px;
-  color: #ccc;
-}
-
-.auth-toggle a {
-  color: #5ef38c;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.auth-toggle a:hover {
-  text-decoration: underline;
-}
-
-/* === Botones sociales === */
+/* Botones sociales */
 .auth-social {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 20px;
+  margin: 16px 0;
 }
-
 .social-btn {
+  width: 100%;
+  background: #fff;
+  color: #000;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  background: #fff;
-  color: #000;
-  border-radius: 8px;
-  padding: 12px;
+  gap: 8px;
+  margin-bottom: 10px;
   cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
   transition: background 0.2s ease;
 }
+.social-btn:hover { background: #f2f2f2; }
 
-.social-btn:hover {
-  background: #e6e6e6;
+/* Toggle entre login y registro */
+.auth-toggle {
+  margin-top: 14px;
+  font-size: 14px;
 }
-
-/* === Forgot Password === */
-#forgot-password-link {
-  display: block;
-  margin-top: 10px;
-  font-size: 0.9rem;
+.auth-toggle a {
   color: #5ef38c;
-  cursor: pointer;
+  text-decoration: none;
+  font-weight: 600;
 }
+.auth-toggle a:hover { text-decoration: underline; }
 
+/* Forgot password */
+#forgot-password-link {
+  display: inline-block;
+  margin: 10px 0;
+  font-size: 14px;
+  color: #5ef38c;
+}
+#forgot-password-link:hover { text-decoration: underline; }
+
+/* Recuperación contraseña */
 #forgot-password-container {
   display: none;
-  flex-direction: column;
-  gap: 12px;
-  text-align: left;
 }
-
 #forgot-password-container input {
-  margin-bottom: 10px;
+  margin: 6px 0;
 }
-
-#forgot-password-submit, 
-#forgot-password-cancel {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
 #forgot-password-submit {
+  width: 100%;
   background: #5ef38c;
   color: #000;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  margin-top: 10px;
 }
-
 #forgot-password-cancel {
-  background: #444;
+  width: 100%;
+  background: #555;
   color: #fff;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  margin-top: 10px;
 }
 
-/* === Password Strength === */
+/* Password strength */
 #password-strength {
-  font-size: 0.85rem;
+  font-size: 13px;
   text-align: left;
-  margin-bottom: 8px;
+  margin-top: 6px;
 }
-
-/* === Responsive === */
-@media (max-width: 480px) {
-  .login-card {
-    padding: 30px 20px;
-    border-radius: 12px;
-  }
-  .login-card h2 {
-    font-size: 1.5rem;
-  }
-  #auth-submit-btn {
-    font-size: 0.95rem;
-  }
-}
-
 
