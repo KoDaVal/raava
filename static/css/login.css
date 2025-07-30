@@ -1,89 +1,95 @@
 body {
-  margin: 0;
   font-family: 'Inter', sans-serif;
-  background: #0f0f0f;
+  background: #0e0e0e;
+  color: #fff;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
+  margin: 0;
 }
+
 .login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   width: 100%;
+  max-width: 400px;
 }
+
 .login-card {
-  background: #1a1a1a;
+  background: #1f1f1f;
   padding: 40px;
   border-radius: 12px;
-  max-width: 400px;
-  width: 90%;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
   text-align: center;
-  color: #fff;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
+
 .login-logo {
-  width: 70px;
+  width: 80px;
   margin-bottom: 20px;
 }
-h2 {
+
+.login-card h2 {
   margin-bottom: 20px;
 }
-.status-msg {
-  font-size: 0.9em;
-  margin-bottom: 10px;
-  color: #5ef38c;
-}
-input {
+
+.login-card input {
   width: 100%;
   padding: 12px;
-  margin-bottom: 15px;
+  margin: 8px 0;
+  border: none;
   border-radius: 8px;
-  border: 1px solid #333;
-  background: #2a2a2a;
-  color: #fff;
+  background: #fff;
+  color: #000;
+  font-size: 14px;
 }
+
 button {
   width: 100%;
   padding: 12px;
+  margin-top: 12px;
   border: none;
   border-radius: 8px;
-  background: #5ef38c;
+  background: #5EF38C;
   color: #000;
-  font-weight: 600;
+  font-weight: bold;
+  font-size: 16px;
   cursor: pointer;
-  margin-bottom: 15px;
-  transition: background 0.3s;
 }
+
 button:hover {
-  background: #4de07e;
+  background: #4fe07f;
 }
-.cancel-btn {
-  background: #444;
-  color: #fff;
+
+.auth-toggle {
+  margin-top: 16px;
 }
-.switch-mode, a {
-  color: #bbb;
-  font-size: 0.9em;
-}
-.social-login button {
-  background: #2a2a2a;
-  color: #fff;
-  margin-bottom: 10px;
-}
-.password-strength {
-  font-size: 0.8em;
-  display: block;
-  margin-bottom: 10px;
-}
-.password-wrapper {
-  position: relative;
-}
-.toggle-password {
-  position: absolute;
-  top: 50%;
-  right: 10px;
-  transform: translateY(-50%);
+
+.auth-toggle a, #forgot-password-link {
+  color: #5EF38C;
   cursor: pointer;
+}
+
+.auth-social {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.social-btn {
+  background: #fff;
+  color: #000;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.social-btn:hover {
+  background: #eee;
+}
+
+#auth-messages {
+  margin-top: 10px;
+  color: #f66;
+  font-size: 14px;
 }
