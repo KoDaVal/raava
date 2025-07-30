@@ -1,8 +1,15 @@
+/* Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Base layout */
 body {
   font-family: 'Inter', sans-serif;
   background: #fafafa;
   color: #111;
-  margin: 0;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -20,8 +27,8 @@ body {
 }
 
 .login-logo {
-  width: 100px;
-  margin-bottom: 20px;
+  width: 60px;
+  margin: 0 auto 20px;
 }
 
 h2 {
@@ -30,43 +37,42 @@ h2 {
   margin-bottom: 20px;
 }
 
+/* Inputs */
 #auth-form input,
 #forgot-password-container input {
   width: 100%;
-  padding: 14px 44px 14px 16px; /* espacio para el ícono */
+  padding: 14px;
   margin: 10px 0;
   border-radius: 25px;
   border: 1px solid #ccc;
   font-size: 16px;
   background: #fff;
   outline: none;
-  box-sizing: border-box;
 }
 
-#auth-form input:focus,
-#forgot-password-container input:focus {
-  border-color: #0d6efd;
-}
-
+/* Password wrapper for eye toggle */
 .password-wrapper {
   position: relative;
 }
+.password-wrapper input {
+  padding-right: 40px;
+}
 .toggle-password {
   position: absolute;
+  right: 12px;
   top: 50%;
-  right: 14px;
   transform: translateY(-50%);
-  color: #666;
-  font-size: 18px;
   cursor: pointer;
+  color: #777;
+  font-size: 18px;
 }
 .toggle-password:hover {
   color: #000;
 }
 
+/* Submit button */
 #auth-submit-btn,
-#forgot-password-submit,
-#forgot-password-cancel {
+.auth-btn {
   width: 100%;
   padding: 14px;
   margin-top: 12px;
@@ -79,34 +85,27 @@ h2 {
   cursor: pointer;
 }
 #auth-submit-btn:hover,
-#forgot-password-submit:hover {
+.auth-btn:hover {
   background: #333;
 }
-#forgot-password-cancel {
-  background: #ccc;
-  color: #111;
-}
-#forgot-password-cancel:hover {
-  background: #bbb;
-}
 
+/* Toggle login/register */
 .auth-toggle {
   margin: 15px 0;
   font-size: 14px;
+  text-align: center;
 }
-
 .auth-toggle a,
 #forgot-password-link {
   color: #0d6efd;
   text-decoration: none;
-  cursor: pointer;
 }
-
 .auth-toggle a:hover,
 #forgot-password-link:hover {
   text-decoration: underline;
 }
 
+/* OR Separator */
 .or-separator {
   margin: 20px 0;
   text-align: center;
@@ -114,7 +113,6 @@ h2 {
   color: #666;
   position: relative;
 }
-
 .or-separator::before,
 .or-separator::after {
   content: "";
@@ -125,14 +123,15 @@ h2 {
   background: #ccc;
 }
 .or-separator::before { left: 0; }
-.or-separator::after { right: 0; }
+.or-separator::after  { right: 0; }
 
+/* Social buttons */
 .auth-social {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-top: 10px;
 }
-
 .social-btn {
   display: flex;
   align-items: center;
@@ -146,38 +145,40 @@ h2 {
   transition: background 0.2s;
   gap: 12px;
 }
-
 .social-btn:hover {
   background: #f5f5f5;
 }
-
 .social-btn img.social-icon {
   width: 20px;
   height: 20px;
 }
 
-#auth-messages {
-  margin-top: 10px;
-  color: #f44336;
-  font-size: 14px;
-}
-
 /* Password strength */
 #password-strength {
+  margin-top: 4px;
   font-size: 13px;
+  color: #888;
   text-align: left;
-  margin: 5px 0 10px;
-  color: #f44336;
-}
-#password-strength.valid {
-  color: green;
+  display: block;
 }
 
+/* OTP recovery */
 #forgot-password-container {
   display: none;
   margin-top: 20px;
+  text-align: center;
+}
+#otp-step {
+  margin-top: 10px;
+  display: none;
+}
+#otp-timer {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: #555;
 }
 
+/* Responsive */
 @media (max-width: 480px) {
   .login-container {
     max-width: 90%;
@@ -187,3 +188,4 @@ h2 {
     font-size: 24px;
   }
 }
+
