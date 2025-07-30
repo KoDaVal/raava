@@ -1,95 +1,141 @@
 body {
   font-family: 'Inter', sans-serif;
-  background: #0e0e0e;
-  color: #fff;
+  background: #fafafa;
+  color: #111;
+  margin: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  margin: 0;
 }
 
 .login-container {
   width: 100%;
   max-width: 400px;
+  padding: 20px;
 }
 
 .login-card {
-  background: #1f1f1f;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.5);
   text-align: center;
 }
 
 .login-logo {
-  width: 80px;
+  width: 100px;
   margin-bottom: 20px;
 }
 
-.login-card h2 {
+h2 {
+  font-size: 28px;
+  font-weight: 600;
   margin-bottom: 20px;
 }
 
-.login-card input {
+#auth-form input {
   width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  border: none;
-  border-radius: 8px;
+  padding: 14px;
+  margin: 10px 0;
+  border-radius: 25px;
+  border: 1px solid #ccc;
+  font-size: 16px;
   background: #fff;
-  color: #000;
-  font-size: 14px;
+  outline: none;
 }
 
-button {
+#auth-submit-btn {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   margin-top: 12px;
   border: none;
-  border-radius: 8px;
-  background: #5EF38C;
-  color: #000;
-  font-weight: bold;
+  border-radius: 25px;
+  background: #111;
+  color: #fff;
   font-size: 16px;
+  font-weight: 500;
   cursor: pointer;
 }
 
-button:hover {
-  background: #4fe07f;
+#auth-submit-btn:hover {
+  background: #333;
 }
 
 .auth-toggle {
-  margin-top: 16px;
+  margin: 15px 0;
+  font-size: 14px;
 }
 
 .auth-toggle a, #forgot-password-link {
-  color: #5EF38C;
+  color: #0d6efd;
+  text-decoration: none;
   cursor: pointer;
 }
 
+.auth-toggle a:hover {
+  text-decoration: underline;
+}
+
+.or-separator {
+  margin: 20px 0;
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  position: relative;
+}
+
+.or-separator::before,
+.or-separator::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #ccc;
+}
+
+.or-separator::before { left: 0; }
+.or-separator::after { right: 0; }
+
 .auth-social {
-  margin-top: 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
 .social-btn {
-  background: #fff;
-  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 12px 20px;
+  border-radius: 25px;
   border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 10px;
+  background: #fff;
+  font-size: 15px;
   cursor: pointer;
+  transition: background 0.2s;
+  gap: 12px;
 }
 
 .social-btn:hover {
-  background: #eee;
+  background: #f5f5f5;
+}
+
+.social-btn img.social-icon {
+  width: 20px;
+  height: 20px;
 }
 
 #auth-messages {
   margin-top: 10px;
-  color: #f66;
+  color: #f44336;
   font-size: 14px;
 }
+
+@media (max-width: 480px) {
+  .login-container {
+    max-width: 90%;
+    padding: 10px;
+  }
+  h2 {
+    font-size: 24px;
+  }
+}
+
