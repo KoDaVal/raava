@@ -30,36 +30,40 @@ h2 {
   margin-bottom: 20px;
 }
 
+/* Wrapper para inputs con íconos */
 .input-wrapper {
   position: relative;
+  width: 100%;
 }
 
-#auth-form input,
-#forgot-password-container input {
+.input-wrapper input {
   width: 100%;
-  padding: 14px;
+  padding: 14px 45px 14px 14px;
   margin: 10px 0;
   border-radius: 25px;
   border: 1px solid #ccc;
   font-size: 16px;
   background: #fff;
   outline: none;
-  padding-right: 40px;
 }
 
+/* Íconos de ojo */
 .toggle-password {
   position: absolute;
-  right: 15px;
   top: 50%;
+  right: 15px;
   transform: translateY(-50%);
   cursor: pointer;
-  font-size: 18px;
   color: #666;
+  font-size: 18px;
+  transition: color 0.2s ease;
+}
+.toggle-password:hover {
+  color: #111;
 }
 
-#auth-submit-btn,
-#forgot-password-submit,
-#reset-password-btn {
+/* Botón submit */
+#auth-submit-btn {
   width: 100%;
   padding: 14px;
   margin-top: 12px;
@@ -71,10 +75,7 @@ h2 {
   font-weight: 500;
   cursor: pointer;
 }
-
-#auth-submit-btn:hover,
-#forgot-password-submit:hover,
-#reset-password-btn:hover {
+#auth-submit-btn:hover {
   background: #333;
 }
 
@@ -83,8 +84,7 @@ h2 {
   font-size: 14px;
 }
 
-.auth-toggle a,
-#forgot-password-link {
+.auth-toggle a, #forgot-password-link {
   color: #0d6efd;
   text-decoration: none;
   cursor: pointer;
@@ -150,22 +150,27 @@ h2 {
   font-size: 14px;
 }
 
-#password-strength {
-  font-size: 13px;
-  margin-top: -5px;
-  margin-bottom: 10px;
+/* Barra de fuerza */
+#password-strength-container {
+  margin-top: 8px;
   text-align: left;
 }
-
-/* Recuperación */
-#forgot-password-container {
-  display: none;
-  margin-top: 20px;
+.password-strength-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: #ddd;
+  overflow: hidden;
 }
-
-#otp-step {
-  display: none;
-  margin-top: 10px;
+.password-strength-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: red;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+.password-strength-text {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #666;
 }
 
 @media (max-width: 480px) {
@@ -177,5 +182,4 @@ h2 {
     font-size: 24px;
   }
 }
-
 
