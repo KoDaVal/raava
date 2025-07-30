@@ -119,8 +119,8 @@ def update_usage(user_id, tokens=0, voice_tokens=0):
     }).execute()
 
 def get_user_by_email_admin(email):
-    """Obtiene un usuario por email usando el endpoint Admin de Supabase."""
-    url = f"{supabase_url}/auth/v1/admin/users?email={email}"
+    """Obtiene un usuario por email usando el endpoint Admin de Supabase (case-insensitive)."""
+    url = f"{supabase_url}/auth/v1/admin/users?email={email.lower()}"
     headers = {
         "apikey": supabase_key,
         "Authorization": f"Bearer {supabase_key}",
@@ -128,12 +128,12 @@ def get_user_by_email_admin(email):
     }
     try:
         r = requests.get(url, headers=headers)
+        print(f"[DEBUG] Respuesta Admin Supabase ({email}): {r.status_code} - {r.text}")  # <-- LOG para depurar
         if r.status_code != 200:
-            print(f"Error buscando usuario: {r.status_code} - {r.text}")
             return None
         data = r.json()
         if isinstance(data, list) and len(data) > 0:
-            return data[0]  # Primer usuario encontrado
+            return data[0]
         return None
     except Exception as e:
         print(f"Error en get_user_by_email_admin: {e}")
@@ -343,7 +343,7 @@ def chat():
             return api_error("Debes enviar un mensaje o archivo.", 400)
 
         # Truncar historial
-        conversation_history = truncate_history(conversation_history, max_messages=10)
+        conversation_history = truncate_history(conversation_history, max_messages=8)
 
         # ==== Selección de modelo ====
         use_fallback = False
@@ -352,14 +352,19 @@ def chat():
             if profile["tokens_used"] >= limits["tokens"]:
                 plan_model = limits["fallback_model"]
                 use_fallback = True
-
         # ==== Generar respuesta ====
         tokens_in = tokens_out = 0
         if plan_model == "gemini":
-            gemini_response = gemini_model.generate_content(conversation_history)
+            gemini_response = gemini_model.generate_content(
+                conversation_history,
+                request_options={"timeout": 10}  # Máximo 10s de espera para evitar bloqueos
+            )
             response_message = gemini_response.text
             # Estimación: tokens entrada + salida
-            tokens_in = sum(len(m['parts'][0].get('text', '')) // 4 for m in conversation_history if 'parts' in m)
+            tokens_in = sum(
+                len(m['parts'][0].get('text', '')) // 4
+                for m in conversation_history if 'parts' in m
+            )
             tokens_out = len(response_message) // 4
         else:
             # ==== Aquí iría GPT‑4o Mini real ====
