@@ -159,46 +159,56 @@ def truncate_history(history, max_messages=20):
 # ========== RUTAS DE RECUPERACIÓN DE CONTRASEÑA ==========
 @app.route('/request_password_code', methods=['POST'])
 def request_password_code():
-    data = request.json
-    email = data.get('email')
-    if not email:
-        return api_error('Correo requerido')
-
-    # Buscar usuario
-    user_res = supabase.table("auth.users").select("id").eq("email", email).execute()
-    if not user_res.data:
-        return api_error("Correo no registrado.", 404)
-    user_id = user_res.data[0]['id']
-
-    # Generar OTP
-    otp = random.randint(100000, 999999)
-    expires_at = (datetime.utcnow() + timedelta(minutes=8)).isoformat()
-
-    # Guardar OTP
-    supabase.table("password_otps").upsert({
-        "user_id": user_id,
-        "otp_code": str(otp),
-        "otp_expires_at": expires_at
-    }).execute()
-
-    # Enviar correo real con MailerSend
     try:
-        send_mailersend_email(
-            email,
-            "Código de recuperación de contraseña - RaavaX",
-            f"""
-            <p>Hola,</p>
-            <p>Tu código para recuperar la contraseña es:</p>
-            <h2 style="color:#4CAF50; font-size:24px;">{otp}</h2>
-            <p>Este código expira en 8 minutos.</p>
-            <p>Si no solicitaste este código, ignora este mensaje.</p>
-            """
-        )
-    except Exception as e:
-        print("Error enviando correo:", e)
-        return api_error("Error enviando el correo.", 500)
+        data = request.json
+        if not data or not data.get('email'):
+            return api_error('Correo requerido')
+        email = data['email']
 
-    return jsonify({'message': 'Código enviado'}), 200
+        # Buscar usuario
+        user_res = supabase.table("auth.users").select("id").eq("email", email).execute()
+        if not user_res.data:
+            return api_error("Correo no registrado.", 404)
+        user_id = user_res.data[0]['id']
+
+        # Generar OTP
+        otp = random.randint(100000, 999999)
+        expires_at = (datetime.utcnow() + timedelta(minutes=8)).isoformat()
+
+        # Guardar OTP
+        supabase.table("password_otps").upsert({
+            "user_id": user_id,
+            "otp_code": str(otp),
+            "otp_expires_at": expires_at
+        }).execute()
+
+        # Intentar enviar correo
+        try:
+            if not MAILERSEND_API_KEY:
+                print("⚠️ MAILERSEND_API_KEY no configurada. No se envió correo.")
+            else:
+                send_mailersend_email(
+                    email,
+                    "Código de recuperación de contraseña - RaavaX",
+                    f"""
+                    <p>Hola,</p>
+                    <p>Tu código para recuperar la contraseña es:</p>
+                    <h2 style="color:#4CAF50; font-size:24px;">{otp}</h2>
+                    <p>Este código expira en 8 minutos.</p>
+                    <p>Si no solicitaste este código, ignora este mensaje.</p>
+                    """
+                )
+        except Exception as e:
+            print("Error enviando correo:", e)
+            # No bloqueamos el flujo, solo informamos
+            return jsonify({'message': 'Código generado, pero no se pudo enviar el correo.'}), 200
+
+        return jsonify({'message': 'Código enviado'}), 200
+
+    except Exception as e:
+        import traceback
+        print("Error inesperado en /request_password_code:", traceback.format_exc())
+        return api_error("Error interno al generar el código.", 500)
 
 @app.route('/reset_password_with_code', methods=['POST'])
 def reset_password_with_code():
