@@ -6,7 +6,7 @@ import base64
 import json
 import requests
 import random
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from supabase import create_client
 MAX_AUDIO_SIZE = 2 * 1024 * 1024  # 2 MB
 MAILERSEND_API_KEY = os.getenv("MAILERSEND_API_KEY")
