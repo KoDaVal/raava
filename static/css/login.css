@@ -20,17 +20,17 @@ body {
 }
 
 .login-logo {
-  width: 80px;
+  width: 100px;
   margin-bottom: 20px;
 }
 
 h2 {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 600;
   margin-bottom: 20px;
 }
 
-#auth-form input {
+#auth-form input, #forgot-password-container input {
   width: 100%;
   padding: 14px;
   margin: 10px 0;
@@ -43,12 +43,6 @@ h2 {
 
 .password-wrapper {
   position: relative;
-  width: 100%;
-}
-
-.password-wrapper input {
-  width: 100%;
-  padding-right: 45px;
 }
 
 .toggle-password {
@@ -57,10 +51,10 @@ h2 {
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
-  color: #777;
+  color: #888;
 }
 
-#auth-submit-btn {
+#auth-submit-btn, #forgot-password-submit, #forgot-password-cancel {
   width: 100%;
   padding: 14px;
   margin-top: 12px;
@@ -73,7 +67,7 @@ h2 {
   cursor: pointer;
 }
 
-#auth-submit-btn:hover {
+#auth-submit-btn:hover, #forgot-password-submit:hover {
   background: #333;
 }
 
@@ -82,7 +76,7 @@ h2 {
   font-size: 14px;
 }
 
-.auth-toggle a, #forgot-password-link {
+.auth-toggle a {
   color: #0d6efd;
   text-decoration: none;
   cursor: pointer;
@@ -90,11 +84,6 @@ h2 {
 
 .auth-toggle a:hover {
   text-decoration: underline;
-}
-
-.forgot-link {
-  font-size: 14px;
-  margin-bottom: 15px;
 }
 
 .or-separator {
@@ -134,28 +123,24 @@ h2 {
   background: #fff;
   font-size: 15px;
   cursor: pointer;
-  transition: background 0.2s;
   gap: 12px;
 }
 
-.social-btn i {
-  font-size: 18px;
+.social-btn img.social-icon {
+  width: 20px;
+  height: 20px;
 }
 
-.social-btn:hover {
-  background: #f5f5f5;
+.password-strength {
+  font-size: 12px;
+  margin-top: -8px;
+  color: #666;
 }
 
-#password-strength {
-  text-align: left;
-  font-size: 13px;
-  margin-top: 5px;
-}
-
-#auth-messages {
-  margin-top: 10px;
-  color: #f44336;
+#otp-timer {
   font-size: 14px;
+  margin: 10px 0;
+  color: #333;
 }
 
 @media (max-width: 480px) {
@@ -164,8 +149,7 @@ h2 {
     padding: 10px;
   }
   h2 {
-    font-size: 22px;
+    font-size: 24px;
   }
 }
-
 
