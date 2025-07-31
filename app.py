@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
+import stripe
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 import google.generativeai as genai
 import os
 import base64
@@ -291,6 +293,39 @@ def reset_password_with_code():
         import traceback
         print("Error inesperado en /reset_password_with_code:", traceback.format_exc())
         return api_error("Error interno al cambiar la contraseña.", 500)
+
+@app.route("/create_checkout_session", methods=["POST"])
+def create_checkout_session():
+    try:
+        token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        user_data = verify_token(token)
+        if not user_data:
+            return api_error("No autorizado", 401)
+
+        data = request.get_json()
+        plan = data.get("plan")
+        price_id = {
+            "plus_monthly": os.getenv("STRIPE_PRICE_PLUS_MONTHLY"),
+            "plus_yearly": os.getenv("STRIPE_PRICE_PLUS_YEARLY"),
+            "legacy_monthly": os.getenv("STRIPE_PRICE_LEGACY_MONTHLY"),
+            "legacy_yearly": os.getenv("STRIPE_PRICE_LEGACY_YEARLY")
+        }.get(plan)
+        if not price_id:
+            return api_error("Plan inválido")
+
+        session = stripe.checkout.Session.create(
+            customer_email=user_data["email"],
+            line_items=[{"price": price_id, "quantity": 1}],
+            mode="subscription",
+            success_url="https://raavax.humancores.com/success",
+            cancel_url="https://raavax.humancores.com/cancel",
+            metadata={"user_id": user_data["id"], "plan": plan}
+        )
+        return jsonify({"url": session.url})
+    except Exception as e:
+        print("Error creando sesión:", e)
+        return api_error("Error interno", 500)
+
 # ========== RUTAS ==========
 @app.route('/')
 def index():
@@ -526,4 +561,25 @@ def verify_captcha():
         return jsonify({"success": False, "error": "Missing token or secret"}), 400
     response = requests.post("https://www.google.com/recaptcha/api/siteverify", data={"secret": secret, "response": token})
     return jsonify(response.json())
+
+@app.route("/stripe_webhook", methods=["POST"])
+def stripe_webhook():
+    payload = request.data
+    sig_header = request.headers.get("Stripe-Signature")
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, os.getenv("STRIPE_WEBHOOK_SECRET")
+        )
+    except stripe.error.SignatureVerificationError:
+        return api_error("Webhook inválido", 400)
+
+    if event["type"] in ["checkout.session.completed", "customer.subscription.updated"]:
+        session = event["data"]["object"]
+        user_id = session.get("metadata", {}).get("user_id")
+        plan = session.get("metadata", {}).get("plan")
+        if user_id and plan:
+            supabase.table("profiles").update({"plan": plan}).eq("id", user_id).execute()
+
+    return jsonify({"status": "ok"})
+
 
