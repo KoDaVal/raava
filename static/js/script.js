@@ -747,14 +747,96 @@ const chatSearchBtn = document.getElementById('search-chat-btn');
 const chatSearchModal = document.getElementById('chat-search-modal');
 const chatSearchClose = document.getElementById('chat-search-close');
 const chatSearchInput = document.getElementById('chat-search-input');
+const chatListContainer = document.getElementById('chat-list');
 
+// Cargar lista de chats desde el backend
+async function loadChats() {
+  chatListContainer.innerHTML = "<p>Cargando...</p>";
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    chatListContainer.innerHTML = "<p>Inicia sesión para ver tus chats.</p>";
+    return;
+  }
+  const res = await fetch('/get_chats', {
+    headers: { 'Authorization': `Bearer ${session.access_token}` }
+  });
+  if (!res.ok) {
+    chatListContainer.innerHTML = "<p>Error cargando chats.</p>";
+    return;
+  }
+  const chats = await res.json();
+  if (!chats || chats.length === 0) {
+    chatListContainer.innerHTML = "<p>No tienes chats guardados.</p>";
+    return;
+  }
+
+  chatListContainer.innerHTML = '';
+  chats.forEach(chat => {
+    const item = document.createElement('div');
+    item.classList.add('chat-item');
+    item.innerHTML = `
+      <span class="chat-title">${chat.title || 'Chat sin título'}</span>
+      <button class="delete-chat-btn" data-id="${chat.id}"><i class="fas fa-trash"></i></button>
+    `;
+
+    // Abrir chat al hacer clic en el título
+    item.querySelector('.chat-title').addEventListener('click', () => openChat(chat.id));
+
+    // Eliminar chat
+    item.querySelector('.delete-chat-btn').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!confirm("¿Eliminar este chat?")) return;
+      await fetch(`/delete_chat/${chat.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+      await loadChats(); // Recargar lista
+    });
+
+    chatListContainer.appendChild(item);
+  });
+}
+
+// Abrir un chat (cargar historial)
+async function openChat(chatId) {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    alert("Debes iniciar sesión.");
+    return;
+  }
+  const res = await fetch(`/load_chat/${chatId}`, {
+    headers: { 'Authorization': `Bearer ${session.access_token}` }
+  });
+  if (!res.ok) {
+    alert("Error cargando el chat.");
+    return;
+  }
+  const chatData = await res.json();
+  conversationHistory = chatData.history || [];
+
+  // Limpiar mensajes visibles
+  messagesContainer.innerHTML = '';
+  conversationHistory.forEach(msg => {
+    const role = msg.role === 'model' ? 'bot' : 'user';
+    const text = msg.parts[0].text || '';
+    addMessage(role, text);
+  });
+
+  // Cerrar el modal
+  chatSearchModal.style.display = 'none';
+}
+
+// Abrir modal y cargar chats
 if (chatSearchBtn) {
-  chatSearchBtn.addEventListener('click', () => {
+  chatSearchBtn.addEventListener('click', async () => {
     chatSearchModal.style.display = 'flex';
+    chatSearchInput.value = '';
+    await loadChats();
     chatSearchInput.focus();
   });
 }
 
+// Cerrar modal
 if (chatSearchClose) {
   chatSearchClose.addEventListener('click', () => {
     chatSearchModal.style.display = 'none';
@@ -772,9 +854,10 @@ chatSearchModal.addEventListener('click', (e) => {
 chatSearchInput.addEventListener('input', () => {
   const term = chatSearchInput.value.toLowerCase();
   document.querySelectorAll('.chat-item').forEach(item => {
-    item.style.display = item.textContent.toLowerCase().includes(term) ? 'block' : 'none';
+    item.style.display = item.textContent.toLowerCase().includes(term) ? 'flex' : 'none';
   });
 });
+
 
 });
 
