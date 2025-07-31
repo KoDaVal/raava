@@ -438,6 +438,30 @@ def chat():
         total_tokens = tokens_in + tokens_out
         if limits["tokens"] is not None and not use_fallback:
             update_usage(user_id, tokens=total_tokens)
+        # === Generar título automático (sin instrucciones) ===
+        def generate_chat_title(text, max_len=40):
+            clean = text.strip().replace("\n", " ")
+            return clean[:max_len] + ("..." if len(clean) > max_len else "")
+
+        # Filtramos historial para NO guardar instrucciones ni inlineData (voz)
+        history_to_save = []
+        for msg in conversation_history:
+            if msg.get("role") not in ["user", "model"]:
+                continue
+            if "inlineData" in msg["parts"][0]:  # Ignorar blobs (voz)
+                continue
+            if "Instrucciones adicionales del usuario" in msg["parts"][0].get("text", ""):
+                continue
+            history_to_save.append(msg)
+
+        chat_title = generate_chat_title(user_message or "Chat sin título")
+
+        # Guardar como nuevo chat en Supabase
+        supabase.table("chats").insert({
+            "user_id": user_id,
+            "title": chat_title,
+            "history": history_to_save
+        }).execute()
 
         return jsonify({"response": response_message, "updated_history": conversation_history})
 
@@ -577,5 +601,36 @@ def stripe_webhook():
             supabase.table("profiles").update({"plan": plan}).eq("id", user_id).execute()
 
     return jsonify({"status": "ok"})
+
+# === NUEVAS RUTAS PARA MANEJAR CHATS ===
+@app.route("/get_chats", methods=["GET"])
+def get_chats():
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    user_data = verify_token(token)
+    if not user_data:
+        return api_error("No autorizado", 401)
+    chats = supabase.table("chats").select("id, title, created_at").eq("user_id", user_data["id"]).order("created_at", desc=True).execute()
+    return jsonify(chats.data), 200
+
+@app.route("/load_chat/<chat_id>", methods=["GET"])
+def load_chat(chat_id):
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    user_data = verify_token(token)
+    if not user_data:
+        return api_error("No autorizado", 401)
+    chat = supabase.table("chats").select("history").eq("id", chat_id).eq("user_id", user_data["id"]).execute()
+    if not chat.data:
+        return api_error("Chat no encontrado", 404)
+    return jsonify(chat.data[0]), 200
+
+@app.route("/delete_chat/<chat_id>", methods=["DELETE"])
+def delete_chat(chat_id):
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    user_data = verify_token(token)
+    if not user_data:
+        return api_error("No autorizado", 401)
+    supabase.table("chats").delete().eq("id", chat_id).eq("user_id", user_data["id"]).execute()
+    return jsonify({"message": "Chat eliminado"}), 200
+
 
 
