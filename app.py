@@ -469,6 +469,45 @@ def chat():
         print(f"Error inesperado en /chat: {e}")
         return jsonify({"error": str(e)}), 500
 
+# ========== CHATS: LISTAR Y ELIMINAR ==========
+
+@app.route('/get_chats', methods=['GET'])
+def get_chats():
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    user_data = verify_token(token)
+    if not user_data:
+        return api_error("No autorizado", 401)
+    user_id = user_data["id"]
+
+    res = supabase.table("chats").select("id,title,created_at").eq("user_id", user_id).order("created_at", desc=True).execute()
+    chats = res.data or []
+
+    # Agrupar por fecha (hoy, ayer, otros días)
+    grouped = {}
+    today = date.today()
+    for chat in chats:
+        created = datetime.fromisoformat(chat['created_at']).date()
+        if created == today:
+            key = "Hoy"
+        elif created == today - timedelta(days=1):
+            key = "Ayer"
+        else:
+            key = created.strftime("%d/%m/%Y")
+        grouped.setdefault(key, []).append(chat)
+    return jsonify(grouped)
+
+@app.route('/delete_chat/<chat_id>', methods=['DELETE'])
+def delete_chat(chat_id):
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    user_data = verify_token(token)
+    if not user_data:
+        return api_error("No autorizado", 401)
+    user_id = user_data["id"]
+
+    # Solo borrar si pertenece al usuario
+    supabase.table("chats").delete().eq("id", chat_id).eq("user_id", user_id).execute()
+    return jsonify({"message": "Chat eliminado"})
+
 @app.route("/start_mind", methods=["POST"])
 def start_mind():
     global cloned_voice_id
