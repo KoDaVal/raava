@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
+import os
 import stripe
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 import google.generativeai as genai
-import os
 import base64
 import json
 import requests
