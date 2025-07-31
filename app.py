@@ -641,35 +641,3 @@ def stripe_webhook():
 
     return jsonify({"status": "ok"})
 
-# === NUEVAS RUTAS PARA MANEJAR CHATS ===
-@app.route("/get_chats", methods=["GET"])
-def get_chats():
-    token = request.headers.get("Authorization", "").replace("Bearer ", "")
-    user_data = verify_token(token)
-    if not user_data:
-        return api_error("No autorizado", 401)
-    chats = supabase.table("chats").select("id, title, created_at").eq("user_id", user_data["id"]).order("created_at", desc=True).execute()
-    return jsonify(chats.data), 200
-
-@app.route("/load_chat/<chat_id>", methods=["GET"])
-def load_chat(chat_id):
-    token = request.headers.get("Authorization", "").replace("Bearer ", "")
-    user_data = verify_token(token)
-    if not user_data:
-        return api_error("No autorizado", 401)
-    chat = supabase.table("chats").select("history").eq("id", chat_id).eq("user_id", user_data["id"]).execute()
-    if not chat.data:
-        return api_error("Chat no encontrado", 404)
-    return jsonify(chat.data[0]), 200
-
-@app.route("/delete_chat/<chat_id>", methods=["DELETE"])
-def delete_chat(chat_id):
-    token = request.headers.get("Authorization", "").replace("Bearer ", "")
-    user_data = verify_token(token)
-    if not user_data:
-        return api_error("No autorizado", 401)
-    supabase.table("chats").delete().eq("id", chat_id).eq("user_id", user_data["id"]).execute()
-    return jsonify({"message": "Chat eliminado"}), 200
-
-
-
