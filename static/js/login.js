@@ -143,3 +143,4 @@ submitBtn.addEventListener('click', async () => {
 // Social login
 document.getElementById('google-signin').addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
 document.getElementById('github-signin').addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
+
