@@ -1,147 +1,60 @@
-body {
-  font-family: 'Inter', sans-serif;
-  background: #f9f9f9;
-  color: #111;
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In – RaavaX</title>
+  <link rel="stylesheet" href="/static/css/login.css" />
+  <link rel="icon" href="/static/images/raavax_logo.png" type="image/png" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body data-mode="login">
+<div class="login-container">
+  <div class="login-card" id="auth-card">
+    <img src="/static/images/raavax_logo.png" alt="RaavaX Logo" class="login-logo" />
+    <h2 id="auth-title">Welcome back</h2>
 
-.login-container {
-  width: 100%;
-  max-width: 400px;
-  padding: 20px;
-}
+    <input type="email" id="auth-email" placeholder="Email address" />
 
-.login-card {
-  background: #fff;
-  padding: 30px;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  text-align: center;
-}
+    <div class="password-wrapper">
+      <input type="password" id="auth-password" placeholder="Password" />
+      <span class="toggle-password" data-target="auth-password"><i class="fa fa-eye"></i></span>
+    </div>
 
-.login-logo {
-  width: 64px;
-  margin-bottom: 20px;
-}
+    <div class="password-wrapper hidden" id="confirm-wrapper">
+      <input type="password" id="auth-confirm" placeholder="Confirm password" />
+      <span class="toggle-password" data-target="auth-confirm"><i class="fa fa-eye"></i></span>
+    </div>
 
-h2 {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 20px;
-}
+    <div id="reset-wrapper" class="hidden">
+      <input type="text" id="otp-input" placeholder="6-digit code" />
+      <input type="password" id="new-password" placeholder="New password" />
+      <input type="password" id="confirm-new-password" placeholder="Confirm new password" />
+      <button id="reset-password-btn">Change password</button>
+      <p id="otp-timer"></p>
+      <button id="resend-otp-btn">Resend code</button>
+    </div>
 
-input {
-  width: 100%;
-  padding: 14px 42px 14px 14px;
-  margin: 10px 0;
-  border-radius: 24px;
-  border: 1px solid #ddd;
-  font-size: 16px;
-  background: #fff;
-  box-sizing: border-box;
-}
+    <button id="auth-submit">Continue</button>
 
-input::placeholder {
-  color: #888;
-}
+    <p class="auth-extra" id="auth-switch-text">
+      Don't have an account? <a href="#" id="toggle-auth-mode">Sign up</a>
+    </p>
 
-.password-wrapper {
-  position: relative;
-}
+    <p class="auth-extra"><a href="#" id="forgot-password-link">Forgot your password?</a></p>
 
-.toggle-password {
-  position: absolute;
-  top: 50%;
-  right: 14px;
-  transform: translateY(-50%);
-  font-size: 16px;
-  color: #666;
-  cursor: pointer;
-}
+    <div class="or-separator">OR</div>
 
-button {
-  width: 100%;
-  padding: 14px;
-  margin-top: 12px;
-  border: none;
-  border-radius: 24px;
-  background: #000;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-}
+    <div class="auth-social">
+      <button id="google-signin" class="social-btn"><i class="fab fa-google"></i> Continue with Google</button>
+      <button id="github-signin" class="social-btn"><i class="fab fa-github"></i> Continue with GitHub</button>
+    </div>
 
-button:hover {
-  background: #111;
-}
-
-.auth-extra {
-  font-size: 14px;
-  margin: 10px 0;
-}
-
-.auth-extra a {
-  color: #0d6efd;
-  text-decoration: none;
-}
-
-.or-separator {
-  margin: 24px 0 14px;
-  font-size: 14px;
-  color: #666;
-  position: relative;
-}
-
-.or-separator::before,
-.or-separator::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  width: 40%;
-  height: 1px;
-  background: #ccc;
-}
-
-.or-separator::before { left: 0; }
-.or-separator::after { right: 0; }
-
-.auth-social {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.social-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 20px;
-  border-radius: 24px;
-  border: 1px solid #ddd;
-  background: #fff;
-  color: #111;
-  font-size: 15px;
-  gap: 12px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.social-btn:hover {
-  background: #f0f0f0;
-}
-
-#auth-messages {
-  margin-top: 14px;
-  color: #d32f2f;
-  font-size: 14px;
-}
-
-.hidden {
-  display: none;
-}
+    <p id="auth-messages"></p>
+  </div>
+</div>
+<script src="/static/js/login.js"></script>
+</body>
+</html>
 
