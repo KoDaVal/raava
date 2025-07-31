@@ -217,6 +217,18 @@
     if (!session) window.location.href = "/login";
   })();
 </script>
-
+<!-- MODAL PARA BUSCAR CHATS -->
+<div id="chat-search-modal" class="chat-search-modal">
+  <div class="chat-search-content">
+    <div class="chat-search-header">
+      <input type="text" id="chat-search-input" placeholder="Search chats..." />
+      <button id="chat-search-close">&times;</button>
+    </div>
+    <button id="new-chat-modal-btn" class="new-chat-btn">+ New chat</button>
+    <div class="chat-list-container">
+      <!-- Aquí se inyectarán los chats dinámicamente -->
+    </div>
+  </div>
+</div>
 </body>
 </html>
