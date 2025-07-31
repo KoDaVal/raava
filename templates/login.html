@@ -9,71 +9,89 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
-<body data-mode="login">
+<body>
 <div class="login-container">
-  <div class="login-card" id="auth-card">
+  <div class="login-card">
     <img src="/static/images/raavax_logo.png" alt="RaavaX Logo" class="login-logo" />
     <h2 id="auth-title">Welcome back</h2>
 
-    <!-- Paso 1: Email -->
-    <div class="step" id="step-email">
-      <input type="email" id="auth-email" placeholder="Email address" />
-      <p class="error-msg" id="email-error"></p>
-      <button id="start-reset-btn">Send code</button>
-    </div>
-
-    <!-- Paso 2: Código -->
-    <div class="step hidden" id="step-otp">
-      <input type="text" id="otp-input" placeholder="6-digit code" />
-      <p class="error-msg" id="otp-error"></p>
-      <p id="otp-timer"></p>
-      <button id="verify-otp-btn">Verify code</button>
-    </div>
-
-    <!-- Paso 3: Nueva contraseña -->
-    <div class="step hidden" id="step-newpass">
-      <div class="password-wrapper">
-        <input type="password" id="new-password" placeholder="New password" />
-        <span class="toggle-password" data-target="new-password"><i class="fa fa-eye"></i></span>
-      </div>
-      <p class="error-msg" id="newpass-error"></p>
-      <div class="password-wrapper">
-        <input type="password" id="confirm-new-password" placeholder="Confirm new password" />
-        <span class="toggle-password" data-target="confirm-new-password"><i class="fa fa-eye"></i></span>
-      </div>
-      <p class="error-msg" id="confirmpass-error"></p>
-      <button id="reset-password-btn">Change password</button>
-    </div>
-
-    <!-- Paso 4: Éxito -->
-    <div class="step hidden" id="step-success">
-      <p>Your password has been changed successfully.</p>
-      <button id="return-login-btn">Continue</button>
-    </div>
-
-    <!-- Login normal -->
+    <!-- LOGIN/REGISTER -->
     <div id="login-section">
+      <input type="email" id="auth-email" placeholder="Email address" />
+      <p class="error-msg" id="login-email-error"></p>
+
       <div class="password-wrapper">
         <input type="password" id="auth-password" placeholder="Password" />
         <span class="toggle-password" data-target="auth-password"><i class="fa fa-eye"></i></span>
       </div>
+      <p class="error-msg" id="login-password-error"></p>
+
       <div class="password-wrapper hidden" id="confirm-wrapper">
         <input type="password" id="auth-confirm" placeholder="Confirm password" />
         <span class="toggle-password" data-target="auth-confirm"><i class="fa fa-eye"></i></span>
       </div>
+      <p class="error-msg" id="login-confirm-error"></p>
+
       <button id="auth-submit">Continue</button>
+
       <p class="auth-extra" id="auth-switch-text">
         Don't have an account? <a href="#" id="toggle-auth-mode">Sign up</a>
       </p>
+
       <p class="auth-extra"><a href="#" id="forgot-password-link">Forgot your password?</a></p>
+
       <div class="or-separator">OR</div>
+
       <div class="auth-social" id="social-buttons">
         <button id="google-signin" class="social-btn"><i class="fab fa-google"></i> Continue with Google</button>
         <button id="github-signin" class="social-btn"><i class="fab fa-github"></i> Continue with GitHub</button>
       </div>
     </div>
 
-    <p id="auth-messages"></p>
+    <!-- RECOVERY WIZARD -->
+    <div id="recovery-section" class="hidden">
+      <!-- Step 1 -->
+      <div class="recovery-step" id="step-email">
+        <p>Enter your account email</p>
+        <input type="email" id="recover-email" placeholder="Email address" />
+        <p class="error-msg" id="recover-email-error"></p>
+        <button id="start-reset-btn">Send code</button>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="recovery-step hidden" id="step-otp">
+        <p>Enter the code we sent you</p>
+        <input type="text" id="otp-input" placeholder="6-digit code" />
+        <p id="otp-timer"></p>
+        <p class="error-msg" id="otp-error"></p>
+        <button id="verify-otp-btn">Verify code</button>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="recovery-step hidden" id="step-newpass">
+        <p>Set a new password</p>
+        <div class="password-wrapper">
+          <input type="password" id="new-password" placeholder="New password" />
+          <span class="toggle-password" data-target="new-password"><i class="fa fa-eye"></i></span>
+        </div>
+        <p class="error-msg" id="newpass-error"></p>
+
+        <div class="password-wrapper">
+          <input type="password" id="confirm-new-password" placeholder="Confirm new password" />
+          <span class="toggle-password" data-target="confirm-new-password"><i class="fa fa-eye"></i></span>
+        </div>
+        <p class="error-msg" id="confirmpass-error"></p>
+
+        <button id="reset-password-btn">Change password</button>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="recovery-step hidden" id="step-success">
+        <p>Your password has been changed successfully.</p>
+        <button id="return-login-btn">Continue</button>
+      </div>
+    </div>
+
   </div>
 </div>
 <script src="/static/js/login.js"></script>
