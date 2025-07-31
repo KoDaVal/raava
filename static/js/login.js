@@ -1,53 +1,111 @@
 const SUPABASE_URL = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; 
+const SUPABASE_ANON_KEY = 'tu_clave_anonima_aqui';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const emailStep = document.getElementById('step-email');
-const passwordStep = document.getElementById('step-password');
-const resetStep = document.getElementById('step-reset');
-const emailInput = document.getElementById('login-email');
-const passwordInput = document.getElementById('login-password');
-const togglePasswordBtn = document.getElementById('toggle-password');
-const passwordStrength = document.getElementById('password-strength');
+let isLogin = true;
+
+const title = document.getElementById('auth-title');
+const email = document.getElementById('auth-email');
+const password = document.getElementById('auth-password');
+const confirm = document.getElementById('auth-confirm');
+const confirmWrapper = document.getElementById('confirm-wrapper');
+const submitBtn = document.getElementById('auth-submit');
+const switchText = document.getElementById('auth-switch-text');
 const messages = document.getElementById('auth-messages');
+const resetWrapper = document.getElementById('reset-wrapper');
 
-// --- Mostrar fuerza de la contraseña ---
-passwordInput.addEventListener('input', () => {
-  const val = passwordInput.value;
-  const strong = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.{8,})/.test(val);
-  passwordStrength.textContent = strong ? "Contraseña segura" : "Mínimo 8 caracteres, 1 mayúscula y 1 especial";
-  passwordStrength.style.color = strong ? "green" : "red";
+// Mostrar/Ocultar contraseñas
+document.querySelectorAll('.toggle-password').forEach((icon) => {
+  icon.addEventListener('click', () => {
+    const input = document.getElementById(icon.dataset.target);
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    icon.innerHTML = isHidden ? '<i class="fa fa-eye-slash"></i>' : '<i class="fa fa-eye"></i>';
+  });
 });
 
-// --- Mostrar/Ocultar contraseña ---
-togglePasswordBtn.addEventListener('click', () => {
-  const type = passwordInput.type === 'password' ? 'text' : 'password';
-  passwordInput.type = type;
-  togglePasswordBtn.innerHTML = type === 'password' ? '<i class="fa fa-eye"></i>' : '<i class="fa fa-eye-slash"></i>';
-});
-
-// --- Paso 1: Continuar con email ---
-document.getElementById('next-to-password').addEventListener('click', () => {
-  if (!emailInput.value.trim()) return showMessage("Ingresa tu correo.");
-  emailStep.classList.add('hidden');
-  passwordStep.classList.remove('hidden');
-});
-
-// --- Iniciar sesión ---
-document.getElementById('login-submit').addEventListener('click', async () => {
-  try {
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email: emailInput.value,
-      password: passwordInput.value
-    });
-    if (error) return showMessage("Error: " + error.message);
-    window.location.href = "/";
-  } catch (e) {
-    showMessage("Error inesperado.");
+// Alternar entre login y registro
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'toggle-auth-mode') {
+    e.preventDefault();
+    isLogin = !isLogin;
+    title.textContent = isLogin ? 'Welcome back' : 'Create your account';
+    confirmWrapper.classList.toggle('hidden', isLogin);
+    resetWrapper.classList.add('hidden');
+    switchText.innerHTML = isLogin
+      ? `Don't have an account? <a href="#" id="toggle-auth-mode">Sign up</a>`
+      : `Already have an account? <a href="#" id="toggle-auth-mode">Log in</a>`;
   }
 });
 
-// --- Social login ---
+// Forgot password
+document.getElementById('forgot-password-link').addEventListener('click', async () => {
+  isLogin = true;
+  confirmWrapper.classList.add('hidden');
+  resetWrapper.classList.remove('hidden');
+
+  const res = await fetch('/request_password_code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email.value })
+  });
+
+  const data = await res.json();
+  if (!res.ok) return show(data.error || "Error sending code");
+  startOtpTimer(600);
+});
+
+function startOtpTimer(seconds) {
+  const timer = document.getElementById('otp-timer');
+  clearInterval(window.otpInterval);
+  window.otpInterval = setInterval(() => {
+    if (seconds <= 0) {
+      clearInterval(window.otpInterval);
+      timer.textContent = "Expired";
+      return;
+    }
+    const m = Math.floor(seconds / 60), s = seconds % 60;
+    timer.textContent = `Expires in ${m}:${s.toString().padStart(2, '0')}`;
+    seconds--;
+  }, 1000);
+}
+
+document.getElementById('resend-otp-btn').addEventListener('click', () => {
+  document.getElementById('forgot-password-link').click();
+});
+
+document.getElementById('reset-password-btn').addEventListener('click', async () => {
+  const otp = document.getElementById('otp-input').value;
+  const newPass = document.getElementById('new-password').value;
+  const confirmNew = document.getElementById('confirm-new-password').value;
+  if (newPass !== confirmNew) return show("Passwords do not match.");
+
+  const res = await fetch('/reset_password_with_code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email.value, otp, new_password: newPass })
+  });
+
+  const data = await res.json();
+  if (!res.ok) return show(data.error || "Reset failed");
+  alert("Password updated. Log in again.");
+  window.location.reload();
+});
+
+// Submit login/signup
+submitBtn.addEventListener('click', async () => {
+  if (!email.value || !password.value) return show("Please fill all fields.");
+  if (!isLogin && password.value !== confirm.value) return show("Passwords don't match.");
+
+  const { data, error } = isLogin
+    ? await supabaseClient.auth.signInWithPassword({ email: email.value, password: password.value })
+    : await supabaseClient.auth.signUp({ email: email.value, password: password.value });
+
+  if (error) return show(error.message);
+  window.location.href = "/";
+});
+
+// Social login
 document.getElementById('google-signin').addEventListener('click', () => {
   supabaseClient.auth.signInWithOAuth({ provider: 'google' });
 });
@@ -55,58 +113,7 @@ document.getElementById('github-signin').addEventListener('click', () => {
   supabaseClient.auth.signInWithOAuth({ provider: 'github' });
 });
 
-// --- Olvidaste tu contraseña ---
-document.getElementById('forgot-password-link').addEventListener('click', async () => {
-  passwordStep.classList.add('hidden');
-  resetStep.classList.remove('hidden');
-  await requestOtp();
-});
-
-// --- Solicitar OTP ---
-async function requestOtp() {
-  const res = await fetch('/request_password_code', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: emailInput.value })
-  });
-  const data = await res.json();
-  if (!res.ok) return showMessage(data.error || "Error al enviar el código");
-  startOtpTimer(8 * 60);
-}
-
-// --- Reenviar OTP ---
-document.getElementById('resend-otp-btn').addEventListener('click', requestOtp);
-
-let otpInterval;
-function startOtpTimer(seconds) {
-  const timer = document.getElementById('otp-timer');
-  clearInterval(otpInterval);
-  otpInterval = setInterval(() => {
-    if (seconds <= 0) { clearInterval(otpInterval); timer.textContent = "Expirado"; return; }
-    const m = Math.floor(seconds / 60), s = seconds % 60;
-    timer.textContent = `Expira en ${m}:${s.toString().padStart(2,'0')}`;
-    seconds--;
-  }, 1000);
-}
-
-// --- Resetear contraseña ---
-document.getElementById('reset-password-btn').addEventListener('click', async () => {
-  const otp = document.getElementById('otp-input').value;
-  const newPass = document.getElementById('new-password').value;
-  const confirmPass = document.getElementById('confirm-new-password').value;
-  if (newPass !== confirmPass) return showMessage("Las contraseñas no coinciden.");
-  const res = await fetch('/reset_password_with_code', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: emailInput.value, otp, new_password: newPass })
-  });
-  const data = await res.json();
-  if (!res.ok) return showMessage(data.error || "Error al cambiar la contraseña");
-  alert("Contraseña actualizada. Inicia sesión.");
-  window.location.reload();
-});
-
-// --- Mostrar mensajes ---
-function showMessage(msg) {
+function show(msg) {
   messages.textContent = msg;
 }
+
