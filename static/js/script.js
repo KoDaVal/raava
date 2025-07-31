@@ -741,5 +741,40 @@ async function loadUserProfile(user) {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session?.user) loadUserProfile(session.user);
 })();
+
+// ===== LÓGICA MODAL BÚSQUEDA DE CHATS =====
+const chatSearchBtn = document.getElementById('search-chat-btn');
+const chatSearchModal = document.getElementById('chat-search-modal');
+const chatSearchClose = document.getElementById('chat-search-close');
+const chatSearchInput = document.getElementById('chat-search-input');
+
+if (chatSearchBtn) {
+  chatSearchBtn.addEventListener('click', () => {
+    chatSearchModal.style.display = 'flex';
+    chatSearchInput.focus();
+  });
+}
+
+if (chatSearchClose) {
+  chatSearchClose.addEventListener('click', () => {
+    chatSearchModal.style.display = 'none';
+  });
+}
+
+// Cerrar al hacer clic fuera
+chatSearchModal.addEventListener('click', (e) => {
+  if (e.target === chatSearchModal) {
+    chatSearchModal.style.display = 'none';
+  }
+});
+
+// Búsqueda local en la lista (filtra por texto)
+chatSearchInput.addEventListener('input', () => {
+  const term = chatSearchInput.value.toLowerCase();
+  document.querySelectorAll('.chat-item').forEach(item => {
+    item.style.display = item.textContent.toLowerCase().includes(term) ? 'block' : 'none';
+  });
+});
+
 });
 
