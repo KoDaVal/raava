@@ -357,11 +357,12 @@ def chat():
         except json.JSONDecodeError:
             return api_error("Historial en formato inválido.", 400)
 
-        # Prompt inicial
+        # Prompt inicial (mejorado)
         base_instruction = (
-            "Eres Raavax, un asistente conversacional inteligente, claro y cercano. "
-            "Mantén respuestas breves, útiles y al grano, como si platicaras con alguien de confianza. "
-            "Adapta tu tono al contexto y evita tecnicismos innecesarios. Sé humano, adaptable y auténtico."
+            "Eres Raavax, un asistente conversacional diseñado para interactuar de forma humana, cercana y útil. "
+            "Tu función principal es poder encarnar diferentes estilos de comunicación o personalidades basadas en instrucciones o archivos cargados por el usuario, siempre con fines apropiados y políticamente correctos. "
+            "Mantén las respuestas breves, claras y sensatas, con un tono humano y natural, evitando tecnicismos innecesarios. "
+            "No menciones tu identidad o función a menos que el usuario lo pregunte explícitamente."
         )
         if persistent_instruction:
             base_instruction += f"\n\nInstrucciones adicionales del usuario:\n{persistent_instruction}"
@@ -401,6 +402,11 @@ def chat():
         # Truncar historial
         conversation_history = truncate_history(conversation_history, max_messages=8)
 
+        # FIX: Convertir cualquier 'system' a 'user' (Gemini no soporta system)
+        for msg in conversation_history:
+            if msg.get("role") == "system":
+                msg["role"] = "user"
+
         # ==== Selección de modelo ====
         use_fallback = False
         if plan_model == "gpt-4o-mini":
@@ -438,16 +444,6 @@ def chat():
     except Exception as e:
         print(f"Error inesperado en /chat: {e}")
         return jsonify({"error": str(e)}), 500
-
-def get_user_from_token(auth_header):
-    if not auth_header or not auth_header.startswith("Bearer "):
-        return None
-    token = auth_header.split(" ")[1]
-    # Validar el token con Supabase
-    user_data = supabase.auth.get_user(token)
-    if user_data.user:
-        return user_data.user.id
-    return None
 
 @app.route("/start_mind", methods=["POST"])
 def start_mind():
