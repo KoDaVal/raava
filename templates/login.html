@@ -1,54 +1,147 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Iniciar sesión - RaavaX</title>
-  <link rel="stylesheet" href="/static/css/login.css">
-  <link rel="icon" href="/static/raava_logo.png" type="image/png">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-</head>
-<body>
-<div class="login-container">
-  <div class="login-card" id="step-email">
-    <img src="/static/raava_logo.png" alt="RaavaX Logo" class="login-logo">
-    <h2>Bienvenido de nuevo</h2>
-    <input type="email" id="login-email" placeholder="Correo electrónico">
-    <button id="next-to-password">Continuar</button>
-    <div class="or-separator">o</div>
-    <div class="auth-social">
-      <button id="google-signin" class="social-btn"><i class="fab fa-google"></i> Continuar con Google</button>
-      <button id="github-signin" class="social-btn"><i class="fab fa-github"></i> Continuar con GitHub</button>
-    </div>
-  </div>
+body {
+  font-family: 'Inter', sans-serif;
+  background: #f9f9f9;
+  color: #111;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 
-  <div class="login-card hidden" id="step-password">
-    <img src="/static/raava_logo.png" alt="RaavaX Logo" class="login-logo">
-    <h2>Introduce tu contraseña</h2>
-    <div class="password-wrapper">
-      <input type="password" id="login-password" placeholder="Contraseña">
-      <button type="button" class="toggle-password" id="toggle-password"><i class="fa fa-eye"></i></button>
-    </div>
-    <div id="password-strength"></div>
-    <button id="login-submit">Iniciar sesión</button>
-    <p class="auth-toggle"><a href="#" id="forgot-password-link">¿Olvidaste tu contraseña?</a></p>
-  </div>
+.login-container {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+}
 
-  <div class="login-card hidden" id="step-reset">
-    <img src="/static/raava_logo.png" alt="RaavaX Logo" class="login-logo">
-    <h2>Recuperar contraseña</h2>
-    <input type="text" id="otp-input" placeholder="Código de 6 dígitos">
-    <input type="password" id="new-password" placeholder="Nueva contraseña">
-    <input type="password" id="confirm-new-password" placeholder="Confirmar contraseña">
-    <button id="reset-password-btn">Cambiar contraseña</button>
-    <p id="otp-timer"></p>
-    <button id="resend-otp-btn">Reenviar código</button>
-  </div>
+.login-card {
+  background: #fff;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
 
-  <p id="auth-messages"></p>
-</div>
-<script src="/static/js/login.js"></script>
-</body>
-</html>
+.login-logo {
+  width: 64px;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+input {
+  width: 100%;
+  padding: 14px 42px 14px 14px;
+  margin: 10px 0;
+  border-radius: 24px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+input::placeholder {
+  color: #888;
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: #666;
+  cursor: pointer;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 12px;
+  border: none;
+  border-radius: 24px;
+  background: #000;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #111;
+}
+
+.auth-extra {
+  font-size: 14px;
+  margin: 10px 0;
+}
+
+.auth-extra a {
+  color: #0d6efd;
+  text-decoration: none;
+}
+
+.or-separator {
+  margin: 24px 0 14px;
+  font-size: 14px;
+  color: #666;
+  position: relative;
+}
+
+.or-separator::before,
+.or-separator::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #ccc;
+}
+
+.or-separator::before { left: 0; }
+.or-separator::after { right: 0; }
+
+.auth-social {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border-radius: 24px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #111;
+  font-size: 15px;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.social-btn:hover {
+  background: #f0f0f0;
+}
+
+#auth-messages {
+  margin-top: 14px;
+  color: #d32f2f;
+  font-size: 14px;
+}
+
+.hidden {
+  display: none;
+}
 
