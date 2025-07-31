@@ -1,222 +1,60 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
-  <link rel="icon" href="/static/raava_logo.png" type="image/png">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Raavax AI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="/static/css/style.css">
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-</head>
-<body>
-<!-- MOVIDO FUERA DEL FORM -->
-<div id="forgot-password-container" style="display:none; text-align:center;">
-  <p style="margin-bottom:10px;">Recuperar contraseña</p>
-  <input type="email" id="forgot-password-email" placeholder="Tu correo electrónico">
-  <button id="forgot-password-submit" class="auth-btn">Enviar enlace</button>
-  <div id="otp-step" style="display:none; margin-top:10px;">
-    <input type="text" id="otp-input" placeholder="Código de 6 dígitos">
-    <div id="otp-timer">Expira en 8:00</div>
-    <input type="password" id="new-password" placeholder="Nueva contraseña">
-    <input type="password" id="confirm-new-password" placeholder="Confirmar contraseña">
-    <button onclick="resetPasswordWithCode()" class="auth-btn">Cambiar contraseña</button>
-  </div>
-  <button id="forgot-password-cancel" class="auth-btn cancel-btn">Cancelar</button>
-</div>
-     <!-- Mensaje tras registro: revisar correo -->
-    <div
-      id="auth-success"
-      style="display:none; text-align:center; margin:16px 0;"
-    >
-      <p>Revisa tu correo electrónico. Te hemos enviado un enlace de verificación.</p>
-      <button id="auth-success-btn">Ir a Iniciar sesión</button>
-    </div>
-  </div>
-</div>
-  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
-  <div class="settings-modal" id="settings-modal">
-    <div class="settings-content">
-      <div class="settings-header">
-        <h3>Settings</h3>
-        <button class="close-settings-btn" id="close-settings-btn">&times;</button>
-      </div>
-      <div class="settings-body">
-        <div class="settings-nav">
-          <div class="settings-nav-item active">General</div>
-          <div class="settings-nav-item">Notifications</div>
-          <div class="settings-nav-item">Personalization</div>
-          <div class="settings-nav-item">Connected apps</div>
-          <div class="settings-nav-item">Data controls</div>
-          <div class="settings-nav-item">Account</div>
-        </div>
-        <div class="settings-pane">
-          <div class="setting-row">
-            <label>Theme</label>
-            <select id="theme-select">
-              <option value="dark">Dark</option>
-              <option value="light">Light</option>
-            </select>
-          </div>
-          <div class="setting-row">
-            <label>Language</label>
-            <select>
-              <option value="auto">Auto-detect</option>
-              </select>
-          </div>
-          <div class="setting-row">
-            <label>Spoken language</label>
-            <select>
-              <option value="auto">Auto-detect</option>
-              </select>
-          </div>
-          <div class="setting-row">
-            <label>Voice</label>
-            <div class="voice-controls">
-              <button><i class="fas fa-play"></i></button>
-              <span>Ember</span>
-            </div>
-          </div>
-          <div class="setting-row toggle-row">
-            <label>Show follow up suggestions in chats</label>
-            <label class="switch">
-              <input type="checkbox" checked>
-              <span class="slider round"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="main-container">
-    <div class="sidebar">
-  <div class="sidebar-header">
-   <img src="/static/raava_logo.png" alt="Raava AI Logo" class="sidebar-raava-logo" id="sidebar-toggle-btn">
-    <button id="hide-sidebar-btn" class="hide-sidebar-btn"><i class="fas fa-bars"></i></button>
-  </div>
-
-<a href="https://raavax.framer.website/">
-    <img src="/static/icons/home.png" alt="Inicio" class="theme-icon" data-dark-src="/static/icons/home-dark.png" data-light-src="/static/icons/home.png">
-    <span>Inicio</span>
-</a>
-<a href="#" id="search-chat-btn">
-    <img src="/static/icons/find.png" alt="Buscar chat" class="theme-icon" data-dark-src="/static/icons/find-dark.png" data-light-src="/static/icons/find.png">
-    <span>Buscar chat</span>
-</a>
-<a href="#" id="new-chat-btn">
-    <img src="/static/icons/new.png" alt="Nuevo chat" class="theme-icon" data-dark-src="/static/icons/new-dark.png" data-light-src="/static/icons/new.png">
-    <span>Nuevo chat</span>
-</a>
-<a href="https://discord.gg/v5a6Vw94">
-    <img src="/static/icons/community.png" alt="Comunidad" class="theme-icon" data-dark-src="/static/icons/community-dark.png" data-light-src="/static/icons/community.png">
-    <span>Comunidad</span>
-</a>
-<a href="https://raavax.framer.website/pricing#pricing" id="premium-button">
-    <img src="/static/icons/premium.png" alt="Premium">
-    <span>Premium</span>
-</a>
-</div>
-
-    <div class="chat-main-section">
- <div class="header">
-  <!-- Botón hamburguesa solo visible en móvil -->
-  <div class="header-left">
-    <button id="mobile-hamburger-btn" class="hamburger-btn mobile-show">
-      <i class="fas fa-bars"></i>
-    </button>
-    <span class="mobile-hide">Raavax AI</span>
-  </div>
-
-  <!-- Título centrado solo visible en móvil -->
-  <div class="header-center mobile-show">
-    Raavax AI
-  </div>
-
-  <div class="header-right">
-    <img src="/static/person.jpg" alt="Foto de perfil" class="profile-pic" id="header-profile-pic">
-    <div class="settings-menu" id="settings-menu">
-      <div id="user-plan-label" class="menu-plan">Plan: ...</div> <!-- NUEVO -->
-      <div class="settings-menu-item" id="settings-option">Ajustes</div>
-      <div class="settings-menu-item">Ayuda</div>
-      <div class="settings-menu-item" id="logout-option">Cerrar sesión</div>
-    </div>
-  </div>
-</div>
-        <div id="status-message" style="margin-top: 10px; text-align: center; color: #888; font-size: 0.9em;"></div>
-<div class="chat-area">
-  <div class="messages"></div>
-  <div id="welcome-screen" class="welcome-screen">
-  <img src="/static/raava_logo.png" alt="Raavax Logo">
-  <h1>¿En qué puedo ayudarte hoy?</h1>
-</div>
-
-<!-- BOTONES SOLO PARA MÓVIL -->
-<div class="action-buttons-row mobile-only">
-  <!-- Botón: Subir voz (como label) -->
-  <label for="voice-file-input" class="action-button voice-button" title="Subir voz">
-    <img src="/static/icons/micicon.png" alt="Micrófono">
-  </label>
-  <input type="file" id="voice-file-input" accept="audio/*" hidden>
-
-  <!-- Botón: Subir información (como label) -->
-  <label for="info-file-input" class="action-button file-button" title="Subir información">
-    <img src="/static/icons/fileicon.png" alt="Archivo de información">
-  </label>
-  <input type="file" id="info-file-input" accept=".txt" hidden>
-
-  <!-- Botón: Iniciar mente (sigue siendo botón real) -->
-  <button id="start-mind-button-mobile" class="action-button mind-button" title="Iniciar mente">
-    <img src="/static/icons/brainicon.png" alt="Iniciar mente">
-  </button>
-</div>
-
-  <!-- BARRA DE TEXTO -->
-  <div class="input-bar initial" id="input-bar">
-    <label for="file-upload" class="file-button" title="Adjuntar archivo">+</label>
-    <input type="file" id="file-upload" hidden>
-    <div id="file-display" style="display: none;" class="file-info">
-      <span id="file-name"></span>
-      <button id="clear-file" class="clear-file" title="Limpiar archivo adjunto">x</button>
-    </div>
-    <textarea id="user-input" placeholder="Enviar un mensaje..." rows="1"></textarea>
-    <button id="send-button" class="send-button" title="Enviar mensaje">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
-      </svg>
-    </button>
-  </div>
-
-  <!-- botones desktop -->
- <div class="action-buttons-row desktop-only">
-  <!-- Botón: Subir voz -->
-  <button id="upload-voice-btn" class="action-button voice-button" title="Subir voz">
-    <img src="/static/icons/micicon.png" alt="Micrófono">
-  </button>
-
-  <!-- Botón: Subir información -->
-  <button id="upload-info-btn" class="action-button file-button" title="Subir información">
-    <img src="/static/icons/fileicon.png" alt="Archivo de información">
-  </button>
-
-  <!-- Botón: Iniciar mente -->
-  <button id="start-mind-button" class="action-button mind-button" title="Iniciar mente">
-    <img src="/static/icons/brainicon.png" alt="Iniciar mente">
-  </button>
-
-  <!-- Inputs ocultos -->
-  <input type="file" id="voice-file-input" accept="audio/*" hidden>
-  <input type="file" id="info-file-input"  accept=".txt" hidden>
-</div>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In – RaavaX</title>
+  <link rel="stylesheet" href="/static/css/login.css" />
+  <link rel="icon" href="/static/images/raavax_logo.png" type="image/png" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="/static/js/script.js"></script>
-  <script>
-  (async () => {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) window.location.href = "/login";
-  })();
-</script>
+</head>
+<body data-mode="login">
+<div class="login-container">
+  <div class="login-card" id="auth-card">
+    <img src="/static/images/raavax_logo.png" alt="RaavaX Logo" class="login-logo" />
+    <h2 id="auth-title">Welcome back</h2>
 
+    <input type="email" id="auth-email" placeholder="Email address" />
+
+    <div class="password-wrapper">
+      <input type="password" id="auth-password" placeholder="Password" />
+      <span class="toggle-password" data-target="auth-password"><i class="fa fa-eye"></i></span>
+    </div>
+
+    <div class="password-wrapper hidden" id="confirm-wrapper">
+      <input type="password" id="auth-confirm" placeholder="Confirm password" />
+      <span class="toggle-password" data-target="auth-confirm"><i class="fa fa-eye"></i></span>
+    </div>
+
+    <div id="reset-wrapper" class="hidden">
+      <input type="text" id="otp-input" placeholder="6-digit code" />
+      <input type="password" id="new-password" placeholder="New password" />
+      <input type="password" id="confirm-new-password" placeholder="Confirm new password" />
+      <button id="reset-password-btn">Change password</button>
+      <p id="otp-timer"></p>
+      <button id="resend-otp-btn">Resend code</button>
+    </div>
+
+    <button id="auth-submit">Continue</button>
+
+    <p class="auth-extra" id="auth-switch-text">
+      Don't have an account? <a href="#" id="toggle-auth-mode">Sign up</a>
+    </p>
+
+    <p class="auth-extra"><a href="#" id="forgot-password-link">Forgot your password?</a></p>
+
+    <div class="or-separator">OR</div>
+
+    <div class="auth-social">
+      <button id="google-signin" class="social-btn"><i class="fab fa-google"></i> Continue with Google</button>
+      <button id="github-signin" class="social-btn"><i class="fab fa-github"></i> Continue with GitHub</button>
+    </div>
+
+    <p id="auth-messages"></p>
+  </div>
+</div>
+<script src="/static/js/login.js"></script>
 </body>
 </html>
+
