@@ -1320,5 +1320,19 @@ input:checked + .slider:before {
     border-radius: 0;
   }
 }
+.delete-chat-btn {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 16px;
+  cursor: pointer;
+  float: right;
+  transition: color 0.2s;
+}
+.delete-chat-btn:hover {
+  color: #e74c3c;
+}
+
+
 
 
