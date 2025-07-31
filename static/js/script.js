@@ -619,7 +619,8 @@ messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
 
            const { data: { session } } = await supabaseClient.auth.getSession();
-if (!session?.user?.id) {
+const token = session?.access_token;
+if (!token) {
     alert("No hay sesión activa.");
     return;
 }
@@ -627,10 +628,11 @@ if (!session?.user?.id) {
 const response = await fetch('/chat', {
     method: 'POST',
     headers: {
-        'X-User-Id': session.user.id
+        'Authorization': `Bearer ${token}` // 🔹 Enviar el token correcto
     },
     body: formData
 });
+
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. ${errorText}`);
