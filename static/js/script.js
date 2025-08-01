@@ -750,6 +750,7 @@ const chatSearchInput = document.getElementById('chat-search-input');
 const chatListContainer = document.getElementById('chat-list');
 
 // Cargar lista de chats desde el backend
+// ====== Cargar lista de chats agrupados ======
 async function loadChats() {
   chatListContainer.innerHTML = "<p>Cargando...</p>";
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -757,6 +758,7 @@ async function loadChats() {
     chatListContainer.innerHTML = "<p>Inicia sesión para ver tus chats.</p>";
     return;
   }
+
   const res = await fetch('/get_chats', {
     headers: { 'Authorization': `Bearer ${session.access_token}` }
   });
@@ -764,40 +766,52 @@ async function loadChats() {
     chatListContainer.innerHTML = "<p>Error cargando chats.</p>";
     return;
   }
-  const chats = await res.json();
-  if (!chats || chats.length === 0) {
+
+  const groupedChats = await res.json();
+  if (!groupedChats || Object.keys(groupedChats).length === 0) {
     chatListContainer.innerHTML = "<p>No tienes chats guardados.</p>";
     return;
   }
 
   chatListContainer.innerHTML = '';
-  chats.forEach(chat => {
-    const item = document.createElement('div');
-    item.classList.add('chat-item');
-    item.innerHTML = `
-      <span class="chat-title">${chat.title || 'Chat sin título'}</span>
-      <button class="delete-chat-btn" data-id="${chat.id}"><i class="fas fa-trash"></i></button>
-    `;
 
-    // Abrir chat al hacer clic en el título
-    item.querySelector('.chat-title').addEventListener('click', () => openChat(chat.id));
+  // Recorrer grupos (Hoy, Ayer, fechas pasadas)
+  for (const group in groupedChats) {
+    // Título del grupo
+    const groupTitle = document.createElement('div');
+    groupTitle.classList.add('chat-group-title');
+    groupTitle.textContent = group;
+    chatListContainer.appendChild(groupTitle);
 
-    // Eliminar chat
-    item.querySelector('.delete-chat-btn').addEventListener('click', async (e) => {
-      e.stopPropagation();
-      if (!confirm("¿Eliminar este chat?")) return;
-      await fetch(`/delete_chat/${chat.id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
+    // Chats del grupo
+    groupedChats[group].forEach(chat => {
+      const item = document.createElement('div');
+      item.classList.add('chat-item');
+      item.innerHTML = `
+        <span class="chat-title">${chat.title || 'Chat sin título'}</span>
+        <button class="delete-chat-btn" data-id="${chat.id}"><i class="fas fa-trash"></i></button>
+      `;
+
+      // Abrir chat al hacer clic en el título
+      item.querySelector('.chat-title').addEventListener('click', () => openChat(chat.id));
+
+      // Eliminar chat
+      item.querySelector('.delete-chat-btn').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (!confirm("¿Eliminar este chat?")) return;
+        await fetch(`/delete_chat/${chat.id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+        await loadChats(); // Recargar lista
       });
-      await loadChats(); // Recargar lista
-    });
 
-    chatListContainer.appendChild(item);
-  });
+      chatListContainer.appendChild(item);
+    });
+  }
 }
 
-// Abrir un chat (cargar historial)
+// ====== Abrir un chat (cargar historial) ======
 async function openChat(chatId) {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
@@ -826,7 +840,7 @@ async function openChat(chatId) {
   chatSearchModal.style.display = 'none';
 }
 
-// Abrir modal y cargar chats
+// ====== Eventos del modal ======
 if (chatSearchBtn) {
   chatSearchBtn.addEventListener('click', async () => {
     chatSearchModal.style.display = 'flex';
@@ -836,27 +850,26 @@ if (chatSearchBtn) {
   });
 }
 
-// Cerrar modal
 if (chatSearchClose) {
   chatSearchClose.addEventListener('click', () => {
     chatSearchModal.style.display = 'none';
   });
 }
 
-// Cerrar al hacer clic fuera
 chatSearchModal.addEventListener('click', (e) => {
   if (e.target === chatSearchModal) {
     chatSearchModal.style.display = 'none';
   }
 });
 
-// Búsqueda local en la lista (filtra por texto)
+// ====== Filtro local ======
 chatSearchInput.addEventListener('input', () => {
   const term = chatSearchInput.value.toLowerCase();
   document.querySelectorAll('.chat-item').forEach(item => {
     item.style.display = item.textContent.toLowerCase().includes(term) ? 'flex' : 'none';
   });
 });
+
 
 
 });
