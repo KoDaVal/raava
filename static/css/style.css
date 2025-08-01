@@ -1332,6 +1332,14 @@ input:checked + .slider:before {
 .delete-chat-btn:hover {
   color: #e74c3c;
 }
+.chat-group-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--link-color, #aaa);
+  margin: 12px 0 6px 0;
+}
+
 
 
 
