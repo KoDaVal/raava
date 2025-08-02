@@ -317,7 +317,7 @@ def create_checkout_session():
             customer_email=user_data["email"],
             line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription",
-            success_url="https://raavax.humancores.com/success",
+            success_url=f"https://raavax.humancores.com/success?plan={plan}",
             cancel_url="https://raavax.humancores.com/cancel",
             metadata={"user_id": user_data["id"], "plan": plan}
         )
