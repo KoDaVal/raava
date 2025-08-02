@@ -673,40 +673,7 @@ from flask import redirect, url_for
 
 @app.route('/subscribe')
 def subscribe():
-    from urllib.parse import urlencode
-    plan = request.args.get("plan")  # plus_monthly, plus_yearly, legacy_monthly, legacy_yearly
-    token = request.cookies.get("sb-access-token")  # Token de sesión Supabase
-    user_data = verify_token(token) if token else None
-
-    if not user_data:
-        # No está logueado → redirigir a login con el parámetro redirect
-        redirect_url = url_for('login') + '?' + urlencode({"redirect": f"/subscribe?plan={plan}"})
-        return redirect(redirect_url)
-
-    # Mapeo de planes a Price IDs de Stripe
-    price_id = {
-        "plus_monthly": os.getenv("STRIPE_PRICE_PLUS_MONTHLY"),
-        "plus_yearly": os.getenv("STRIPE_PRICE_PLUS_YEARLY"),
-        "legacy_monthly": os.getenv("STRIPE_PRICE_LEGACY_MONTHLY"),
-        "legacy_yearly": os.getenv("STRIPE_PRICE_LEGACY_YEARLY")
-    }.get(plan)
-
-    if not price_id:
-        return api_error("Plan inválido", 400)
-
-    try:
-        # Crear sesión de Stripe
-        session = stripe.checkout.Session.create(
-            customer_email=user_data["email"],
-            line_items=[{"price": price_id, "quantity": 1}],
-            mode="subscription",
-            success_url="https://raavax.humancores.com/success",
-            cancel_url="https://raavax.humancores.com/cancel",
-            metadata={"user_id": user_data["id"], "plan": plan}
-        )
-        return redirect(session.url)
-    except Exception as e:
-        print("Error creando sesión de Stripe:", e)
-        return api_error("Error al iniciar el checkout", 500)
+    plan = request.args.get("plan", "plus_monthly")
+    return render_template("subscribe.html", plan=plan)
 
 
