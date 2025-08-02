@@ -14,6 +14,7 @@ if (newChatBtn) {
         // Limpia el historial de mensajes
         messagesContainer.innerHTML = '';
         conversationHistory = [];
+        currentChatId = null; // Reiniciar ID
       
         if (welcomeScreen) {
             // Asegura que esté visible
@@ -35,6 +36,7 @@ if (newChatBtn) {
     const clearFileButton = document.getElementById('clear-file');
     let typingIndicatorElement = null;
     let selectedFile = null;
+    let currentChatId = null; // ID del chat actual (nuevo o en curso)
     let conversationHistory = [];
 
     // --- Elementos y lógica para la barra lateral derecha gseguro (info-panel) ---
@@ -603,6 +605,10 @@ messagesContainer.scrollTop = messagesContainer.scrollHeight;
             const formData = new FormData();
             formData.append('message', message);
             formData.append('history', JSON.stringify(conversationHistory));
+            if (currentChatId) {
+    formData.append('chat_id', currentChatId);
+}
+
 
             // --- AÑADIDO: Añade la instrucción persistente si está activa ---
             if (activePersistentInstruction) {
@@ -638,6 +644,9 @@ const response = await fetch('/chat', {
                 throw new Error(`Error HTTP: ${response.status} - ${response.statusText}. ${errorText}`);
             }
             const data = await response.json();
+            if (data.chat_id) {
+    currentChatId = data.chat_id; // Guardamos el ID del chat
+}
             hideTypingIndicator();
             // Pasa el audio (data.audio) a addMessage si existe
             await addMessage('bot', data.response, data.audio);
@@ -827,6 +836,8 @@ async function openChat(chatId) {
   }
   const chatData = await res.json();
   conversationHistory = chatData.history || [];
+    currentChatId = chatId; // Guardar ID
+
 
   // Limpiar mensajes visibles
   messagesContainer.innerHTML = '';
