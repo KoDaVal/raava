@@ -652,4 +652,20 @@ def stripe_webhook():
             supabase.table("profiles").update({"plan": plan}).eq("id", user_id).execute()
 
     return jsonify({"status": "ok"})
+@app.route('/load_chat/<chat_id>', methods=['GET'])
+def load_chat(chat_id):
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    user_data = verify_token(token)
+    if not user_data:
+        return api_error("No autorizado", 401)
+    user_id = user_data["id"]
+
+    # Buscar el chat
+    res = supabase.table("chats").select("history").eq("id", chat_id).eq("user_id", user_id).execute()
+    if not res.data:
+        return api_error("Chat no encontrado", 404)
+
+    return jsonify({
+        "history": res.data[0].get("history", [])
+    })
 
