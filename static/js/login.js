@@ -137,7 +137,16 @@ submitBtn.addEventListener('click', async () => {
     : await supabaseClient.auth.signUp({ email, password: pass });
   submitBtn.textContent = "Continue"; submitBtn.classList.remove('loading');
   if (error) return errPass.textContent = error.message;
-  window.location.href = "/";
+  // Después de login exitoso
+const urlParams = new URLSearchParams(window.location.search);
+const redirectTo = urlParams.get('redirect');
+
+// Solo permitir redirecciones internas
+if (redirectTo && redirectTo.startsWith('/')) {
+    window.location.href = redirectTo;
+} else {
+    window.location.href = "/";
+}
 });
 
 // Social login
