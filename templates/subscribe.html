@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Conectando con Stripe… – RaavaX</title>
+  <link rel="icon" href="/static/raava_logo.png" type="image/png">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f9f9f9;
+      color: #111;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .subscribe-container {
+      background: #fff;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      text-align: center;
+      max-width: 420px;
+    }
+    .subscribe-logo {
+      width: 80px;
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 25px;
+    }
+    .loader {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #000;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      margin: 0 auto;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="subscribe-container">
+    <img src="/static/raava_logo.png" alt="RaavaX Logo" class="subscribe-logo">
+    <h2>Conectando con Stripe…</h2>
+    <p>Estamos preparando tu checkout. Un momento por favor.</p>
+    <div class="loader"></div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const plan = "{{ plan }}";
+
+    async function init() {
+      const { data } = await supabaseClient.auth.getSession();
+      if (!data.session) {
+        window.location.href = `/login?redirect=/subscribe?plan=${plan}`;
+        return;
+      }
+
+      const token = data.session.access_token;
+
+      try {
+        const res = await fetch("/create_checkout_session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ plan })
+        });
+
+        const dataRes = await res.json();
+        if (!res.ok) throw new Error(dataRes.error || "Error creando sesión");
+
+        window.location.href = dataRes.url;
+      } catch (err) {
+        alert("Error al iniciar el checkout: " + err.message);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
