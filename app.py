@@ -351,6 +351,7 @@ def chat():
         user_message = request.form.get('message', '')
         uploaded_file = request.files.get('file')
         persistent_instruction = request.form.get('persistent_instruction', '')
+        chat_id = request.form.get('chat_id') or None  # ID del chat si continuamos uno existente
 
         try:
             conversation_history = json.loads(history_json)
@@ -456,14 +457,25 @@ def chat():
 
         chat_title = generate_chat_title(user_message or "Chat sin título")
 
-        # Guardar como nuevo chat en Supabase
-        supabase.table("chats").insert({
-            "user_id": user_id,
-            "title": chat_title,
-            "history": history_to_save
-        }).execute()
+        # Guardar chat (update si existe, insert si no)
+        if chat_id:
+            supabase.table("chats").update({
+                "history": history_to_save
+            }).eq("id", chat_id).eq("user_id", user_id).execute()
+        else:
+            new_chat = supabase.table("chats").insert({
+                "user_id": user_id,
+                "title": chat_title,
+                "history": history_to_save
+            }).execute()
+            chat_id = new_chat.data[0]['id'] if new_chat.data else None
 
-        return jsonify({"response": response_message, "updated_history": conversation_history})
+        return jsonify({
+            "response": response_message,
+            "updated_history": conversation_history,
+            "chat_id": chat_id
+        })
+
 
     except Exception as e:
         print(f"Error inesperado en /chat: {e}")
