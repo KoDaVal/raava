@@ -694,8 +694,4 @@ def success():
 
 @app.route('/cancel')
 def cancel():
-    # Si no quieres mostrar página de cancelación, simplemente redirige:
-    return redirect(url_for('subscribe'))
-
-
-
+    return render_template('cancel.html')
