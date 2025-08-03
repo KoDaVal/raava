@@ -676,4 +676,15 @@ def subscribe():
     plan = request.args.get("plan", "plus_monthly")
     return render_template("subscribe.html", plan=plan)
 
+@app.route('/success')
+def success():
+    plan = request.args.get("plan", "plus_monthly")
+    return render_template("success.html", plan=plan)
+
+@app.route('/cancel')
+def cancel():
+    # Si no quieres mostrar página de cancelación, simplemente redirige:
+    return redirect(url_for('subscribe'))
+
+
 
