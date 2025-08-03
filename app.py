@@ -642,23 +642,17 @@ def stripe_webhook():
             payload, sig_header, os.getenv("STRIPE_WEBHOOK_SECRET")
         )
     except stripe.error.SignatureVerificationError:
-        print("⚠️ Webhook con firma inválida")
         return api_error("Webhook inválido", 400)
-
-    # === LOGS DE DEPURACIÓN ===
-    print("=== Webhook recibido ===")
-    print("Tipo de evento:", event["type"])
-    print("Payload completo:", event)
 
     if event["type"] in ["checkout.session.completed", "customer.subscription.updated"]:
         session = event["data"]["object"]
         user_id = session.get("metadata", {}).get("user_id")
         plan = session.get("metadata", {}).get("plan")
-        print(f"Metadata recibida: user_id={user_id}, plan={plan}")  # <-- LOG IMPORTANTE
         if user_id and plan:
             supabase.table("profiles").update({"plan": plan}).eq("id", user_id).execute()
 
     return jsonify({"status": "ok"})
+
 
 @app.route('/load_chat/<chat_id>', methods=['GET'])
 def load_chat(chat_id):
