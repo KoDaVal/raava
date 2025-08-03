@@ -757,3 +757,30 @@ def success():
 @app.route('/cancel')
 def cancel():
     return render_template('cancel.html')
+@app.route('/verify_password_code', methods=['POST'])
+def verify_password_code():
+    try:
+        data = request.get_json(force=True)
+        email = data.get('email')
+        otp = data.get('otp')
+        if not all([email, otp]):
+            return api_error('Datos incompletos')
+
+        user_data = get_user_by_email_admin(email)
+        if not user_data:
+            return api_error("Correo no registrado.", 404)
+        user_id = user_data["id"]
+
+        otp_res = supabase.table("password_otps").select("*").eq("user_id", user_id).eq("otp_code", otp).execute()
+        if not otp_res.data:
+            return api_error("Código inválido.", 400)
+        otp_data = otp_res.data[0]
+        if datetime.fromisoformat(otp_data['otp_expires_at']) < datetime.utcnow():
+            return api_error("Código expirado.", 400)
+
+        return jsonify({'message': 'Código válido'}), 200
+    except Exception as e:
+        import traceback
+        print("Error en /verify_password_code:", traceback.format_exc())
+        return api_error("Error interno al verificar el código.", 500)
+
