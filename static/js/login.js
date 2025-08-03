@@ -67,12 +67,30 @@ document.getElementById('start-reset-btn').addEventListener('click', async () =>
   showStep('otp');
 });
 
-// Step 2: Verify code
-document.getElementById('verify-otp-btn').addEventListener('click', () => {
+// Step 2: Verify code (con validación real)
+document.getElementById('verify-otp-btn').addEventListener('click', async () => {
   const otp = document.getElementById('otp-input').value;
+  const email = document.getElementById('recover-email').value;
   const err = document.getElementById('otp-error');
   err.textContent = '';
   if (!otp) return err.textContent = "Code required.";
+
+  const btn = document.getElementById('verify-otp-btn');
+  btn.textContent = "Verifying..."; 
+  btn.classList.add('loading');
+
+  const res = await fetch('/verify_password_code', {
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, otp })
+  });
+
+  btn.textContent = "Verify code"; 
+  btn.classList.remove('loading');
+
+  const data = await res.json();
+  if (!res.ok) return err.textContent = data.error || "Invalid or expired code.";
+
   showStep('newpass');
 });
 
