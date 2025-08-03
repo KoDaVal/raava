@@ -143,18 +143,27 @@ let redirectTo = urlParams.get('redirect');
 
 if (redirectTo && redirectTo !== 'undefined' && redirectTo !== 'null') {
     try {
+        // Decodificar completamente para que mantenga los parámetros como ?plan=...
         redirectTo = decodeURIComponent(redirectTo);
     } catch (e) {
-        redirectTo = null; // si la URL no se puede decodificar, la descartamos
+        redirectTo = null;
     }
 }
 
-// Solo permitir redirecciones internas
-if (redirectTo && redirectTo.startsWith('/')) {
+// Redirigir al destino si es interno o pertenece a RaavaX
+if (
+    redirectTo &&
+    (
+        redirectTo.startsWith('/') ||
+        redirectTo.startsWith('https://raavax.humancores.com') ||
+        redirectTo.startsWith('https://raavax.framer.website')
+    )
+) {
     window.location.href = redirectTo;
 } else {
     window.location.href = "/";
 }
+
 });
 
 // Social login
