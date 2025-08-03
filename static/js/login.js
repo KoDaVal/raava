@@ -1,6 +1,29 @@
 const SUPABASE_URL = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Capturar login social (Google/GitHub) y redirigir al ?redirect correcto
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if (event === "SIGNED_IN" && session) {
+    const params = new URLSearchParams(window.location.search);
+    let redirect = params.get("redirect") || "/";
+    try {
+      redirect = decodeURIComponent(redirect);
+    } catch (e) {
+      redirect = "/";
+    }
+    // Validar que sea un destino seguro
+    if (
+      redirect.startsWith("/") ||
+      redirect.startsWith("https://raavax.humancores.com") ||
+      redirect.startsWith("https://raavax.framer.website")
+    ) {
+      window.location.href = redirect;
+    } else {
+      window.location.href = "/";
+    }
+  }
+});
+
 
 let isLogin = true;
 
