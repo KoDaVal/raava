@@ -170,15 +170,26 @@ if not gemini_api_key:
 genai.configure(api_key=gemini_api_key)
 gemini_model = genai.GenerativeModel('gemini-1.5-flash')
 
-# (A futuro) GPT‑4o Mini
-# import openai
-# import tiktoken
-# openai.api_key = os.getenv("OPENAI_API_KEY")
-# encoder = tiktoken.encoding_for_model("gpt-4o-mini")
-# def gpt4o_mini_generate(history):
-#     # Implementar generación real con OpenAI
-#     # return {"text": "respuesta...", "tokens_in": X, "tokens_out": Y}
-#     pass
+import openai
+import tiktoken
+openai.api_key = os.getenv("OPENAI_API_KEY")
+encoder = tiktoken.encoding_for_model("gpt-4o-mini")
+
+def gpt4o_mini_generate(history):
+    messages = []
+    for msg in history:
+        if msg["role"] in ["user", "assistant"]:
+            messages.append({"role": "user" if msg["role"] == "user" else "assistant", "content": msg["parts"][0].get("text", "")})
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4o-mini",
+        messages=messages,
+        temperature=0.7,
+    )
+    text = response.choices[0].message["content"]
+    tokens_in = sum(len(encoder.encode(m["content"])) for m in messages)
+    tokens_out = len(encoder.encode(text))
+    return {"text": text, "tokens_in": tokens_in, "tokens_out": tokens_out}
 
 # ========== ELEVEN LABS ==========
 eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_try_only")
@@ -432,9 +443,11 @@ def chat():
             )
             tokens_out = len(response_message) // 4
         else:
-            # ==== Aquí iría GPT‑4o Mini real ====
-            response_message = "Respuesta de GPT‑4o Mini (simulada, agrega tu API key)."
-            tokens_in = tokens_out = 0  # Cuando actives OpenAI, usa tiktoken
+            gpt_response = gpt4o_mini_generate(conversation_history)
+            response_message = gpt_response["text"]
+            tokens_in = gpt_response["tokens_in"]
+            tokens_out = gpt_response["tokens_out"]
+
 
         conversation_history.append({'role': 'model', 'parts': [{'text': response_message}]})
 
