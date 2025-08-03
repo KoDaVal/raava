@@ -449,11 +449,15 @@ def chat():
         for msg in conversation_history:
             if msg.get("role") not in ["user", "model"]:
                 continue
+            text_part = msg["parts"][0].get("text", "")
             if "inlineData" in msg["parts"][0]:  # Ignorar blobs (voz)
                 continue
-            if "Instrucciones adicionales del usuario" in msg["parts"][0].get("text", ""):
+            if text_part.startswith("Eres Raavax, un asistente conversacional"):  # Eliminar base_instruction
+                continue
+            if "Instrucciones adicionales del usuario" in text_part:
                 continue
             history_to_save.append(msg)
+
 
         chat_title = generate_chat_title(user_message or "Chat sin título")
 
