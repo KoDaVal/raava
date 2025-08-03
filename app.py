@@ -644,7 +644,6 @@ def stripe_webhook():
     except stripe.error.SignatureVerificationError:
         return api_error("Webhook inválido", 400)
     except Exception as e:
-        # Captura cualquier otro error inesperado
         print("Error construyendo evento Stripe:", e)
         return jsonify({"status": "ignored"}), 200
 
@@ -652,6 +651,7 @@ def stripe_webhook():
         if event["type"] in ["checkout.session.completed", "customer.subscription.updated"]:
             session = event["data"]["object"]
             user_id = session.get("metadata", {}).get("user_id")
+            user_email = session.get("customer_email")
             plan = session.get("metadata", {}).get("plan")
 
             plan_mapping = {
@@ -662,13 +662,19 @@ def stripe_webhook():
             }
             final_plan = plan_mapping.get(plan, "essence")
 
+            # Si tenemos el user_id, actualizamos directo
             if user_id and final_plan:
-                supabase.table("profiles").update({"plan": final_plan}).eq("id", user_id).execute()
+                res = supabase.table("profiles").update({"plan": final_plan}).eq("id", user_id).execute()
+                if not res.data:
+                    print(f"No se encontró perfil con id={user_id}, intentando por email...")
+
+            # Si no hay user_id o no encontró el perfil, buscamos por email
+            if user_email and final_plan:
+                supabase.table("profiles").update({"plan": final_plan}).eq("email", user_email).execute()
 
     except Exception as e:
         print("Error procesando webhook:", e)
 
-    # Siempre respondemos 200 para que Stripe no reintente
     return jsonify({"status": "ok"}), 200
 
 @app.route('/load_chat/<chat_id>', methods=['GET'])
