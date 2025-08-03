@@ -5,3 +5,4 @@ gunicorn
 requests
 stripe
 supabase
+openai tiktoken
