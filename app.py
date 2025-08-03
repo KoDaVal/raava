@@ -784,4 +784,8 @@ def verify_password_code():
         import traceback
         print("Error en /verify_password_code:", traceback.format_exc())
         return api_error("Error interno al verificar el código.", 500)
+@app.route('/confirmed')
+def confirmed():
+    return render_template('confirmed.html')
+
 
