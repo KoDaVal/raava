@@ -139,15 +139,16 @@ submitBtn.addEventListener('click', async () => {
   if (error) return errPass.textContent = error.message;
   // Después de login exitoso
 const urlParams = new URLSearchParams(window.location.search);
-const redirectTo = urlParams.get('redirect');
-
-// Solo permitir redirecciones internas
+let redirectTo = urlParams.get('redirect');
+if (redirectTo) {
+    // Decodificar por si viene con caracteres especiales (como el ?plan=...)
+    redirectTo = decodeURIComponent(redirectTo);
+}
 if (redirectTo && redirectTo.startsWith('/')) {
     window.location.href = redirectTo;
 } else {
     window.location.href = "/";
 }
-});
 
 // Social login
 document.getElementById('google-signin').addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
