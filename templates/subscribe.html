@@ -60,41 +60,49 @@
     <div class="loader"></div>
   </div>
 
-  <script>
-    const SUPABASE_URL = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const plan = "{{ plan }}";
+<script>
+  const SUPABASE_URL = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const plan = "{{ plan }}";
 
-    async function init() {
-      const { data } = await supabaseClient.auth.getSession();
-      if (!data.session) {
-        window.location.href = `/login?redirect=/subscribe?plan=${plan}`;
-        return;
-      }
-
-      const token = data.session.access_token;
-
-      try {
-        const res = await fetch("/create_checkout_session", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({ plan })
-        });
-
-        const dataRes = await res.json();
-        if (!res.ok) throw new Error(dataRes.error || "Error creando sesión");
-
-        window.location.href = dataRes.url;
-      } catch (err) {
-        alert("Error al iniciar el checkout: " + err.message);
-      }
+  async function redirectToStripe(session) {
+    const token = session.access_token;
+    try {
+      const res = await fetch("/create_checkout_session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ plan })
+      });
+      const dataRes = await res.json();
+      if (!res.ok) throw new Error(dataRes.error || "Error creando sesión");
+      window.location.href = dataRes.url;
+    } catch (err) {
+      alert("Error al iniciar el checkout: " + err.message);
     }
+  }
 
-    init();
-  </script>
+  async function init() {
+    const { data } = await supabaseClient.auth.getSession();
+    if (data.session) {
+      // Si ya hay sesión, ir directo
+      redirectToStripe(data.session);
+    } else {
+      // Si no hay sesión aún, esperar el login (por ejemplo, tras Google/GitHub)
+      supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === "SIGNED_IN" && session) {
+          redirectToStripe(session);
+        }
+      });
+      // Si no hay sesión, redirigir a login
+      window.location.href = `/login?redirect=/subscribe?plan=${plan}`;
+    }
+  }
+
+  init();
+</script>
 </body>
 </html>
