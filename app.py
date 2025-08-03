@@ -647,50 +647,58 @@ def stripe_webhook():
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
     except stripe.error.SignatureVerificationError:
+        print("[STRIPE] Firma inválida")
         return api_error("Webhook inválido", 400)
 
-    session = event["data"]["object"]
     event_type = event["type"]
-    print(f"[STRIPE] Evento: {event_type}")
+    data = event["data"]["object"]
+    print(f"[STRIPE] Evento recibido: {event_type}")
 
-    # --- Obtener datos clave ---
-    user_id = session.get("metadata", {}).get("user_id")
-    plan = session.get("metadata", {}).get("plan")
-    customer_id = session.get("customer")
-    customer_email = session.get("customer_email")
-    subscription_id = session.get("subscription")
-
-    # Mapeo de planes
+    # Mapeo de planes (mensual y anual → mismo plan)
     plan_mapping = {
         "plus_monthly": "plus",
         "plus_yearly": "plus",
         "legacy_monthly": "legacy",
         "legacy_yearly": "legacy"
     }
-    final_plan = plan_mapping.get(plan, "essence")
 
-    print(f"[STRIPE] Metadata user_id: {user_id}, plan: {plan}, customer: {customer_id}, email: {customer_email}")
+    if event_type == "checkout.session.completed":
+        user_id = data.get("metadata", {}).get("user_id")
+        plan = data.get("metadata", {}).get("plan")
+        customer_id = data.get("customer")
+        customer_email = data.get("customer_email")
+        final_plan = plan_mapping.get(plan, "essence")
 
-    # --- Buscar perfil si no hay user_id ---
-    if not user_id and customer_email:
-        print("[STRIPE] Buscando usuario por email...")
-        res = supabase.table("profiles").select("id").ilike("email", customer_email).execute()
-        if res.data:
-            user_id = res.data[0]["id"]
+        # Buscar user_id si no viene
+        if not user_id:
+            if customer_email:
+                res = supabase.table("profiles").select("id").ilike("email", customer_email).execute()
+                if res.data:
+                    user_id = res.data[0]["id"]
+            elif customer_id:
+                res = supabase.table("profiles").select("id").eq("stripe_customer_id", customer_id).execute()
+                if res.data:
+                    user_id = res.data[0]["id"]
 
-    if not user_id:
-        print("[STRIPE] No se pudo encontrar user_id. Abortando actualización.")
-        return jsonify({"status": "ignored"})
+        if not user_id:
+            print("[STRIPE] No se pudo encontrar user_id. Abortando.")
+            return jsonify({"status": "ignored"})
 
-    # --- Actualizar perfil ---
-    update_data = {
-        "plan": final_plan,
-        "stripe_customer_id": customer_id,
-        "subscription_renewal": datetime.utcnow().isoformat()
-    }
-    supabase.table("profiles").update(update_data).eq("id", user_id).execute()
+        supabase.table("profiles").update({
+            "plan": final_plan,
+            "stripe_customer_id": customer_id
+        }).eq("id", user_id).execute()
+        print(f"[STRIPE] Plan actualizado para {user_id}: {final_plan}")
 
-    print(f"[STRIPE] Plan actualizado para {user_id}: {final_plan}")
+    elif event_type == "customer.subscription.updated":
+        customer_id = data.get("customer")
+        status = data.get("status")
+        print(f"[STRIPE] Suscripción {customer_id} estado: {status}")
+
+        if status in ["canceled", "unpaid", "incomplete", "incomplete_expired"]:
+            supabase.table("profiles").update({"plan": "essence"}).eq("stripe_customer_id", customer_id).execute()
+            print(f"[STRIPE] Suscripción cancelada. Cliente {customer_id} vuelto a essence.")
+
     return jsonify({"status": "success"})
     
 @app.route('/load_chat/<chat_id>', methods=['GET'])
