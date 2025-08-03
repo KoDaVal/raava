@@ -158,6 +158,8 @@ submitBtn.addEventListener('click', async () => {
   // Si es registro y no hubo error, mostrar pantalla de verificación
 if (!error && !isLogin) {
     loginSection.classList.add('hidden');
+    recoverySection.classList.add('hidden');
+    socialButtons.classList.add('hidden');
     document.getElementById('verify-email-step').classList.remove('hidden');
     return; // Evitar que siga el flujo normal
 }
@@ -192,8 +194,8 @@ if (
 document.getElementById('back-to-login').addEventListener('click', () => {
     document.getElementById('verify-email-step').classList.add('hidden');
     loginSection.classList.remove('hidden');
+    socialButtons.classList.remove('hidden');
 });
-
 // Social login
 document.getElementById('google-signin').addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
 document.getElementById('github-signin').addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
