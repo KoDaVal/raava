@@ -656,10 +656,10 @@ def stripe_webhook():
 
     # Mapeo de planes (mensual y anual → mismo plan)
     plan_mapping = {
-        "plus_monthly": "plus",
-        "plus_yearly": "plus",
-        "legacy_monthly": "legacy",
-        "legacy_yearly": "legacy"
+        "plus_monthly": "Plus",
+        "plus_yearly": "Plus",
+        "legacy_monthly": "Legacy",
+        "legacy_yearly": "Legacy"
     }
 
     if event_type == "checkout.session.completed":
