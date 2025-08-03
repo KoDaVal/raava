@@ -318,7 +318,7 @@ def create_checkout_session():
             line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription",
             success_url=f"https://raavax.humancores.com/success?plan={plan}",
-            cancel_url="https://raavax.humancores.com/cancel",
+            cancel_url="https://raavax.framer.website/pricing#pricing",
             metadata={"user_id": user_data["id"], "plan": plan}
         )
         return jsonify({"url": session.url})
