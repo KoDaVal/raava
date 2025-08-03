@@ -22,18 +22,19 @@ def send_mailersend_email(to_email, subject, html_content):
         "Content-Type": "application/json"
     }
     payload = {
-        "from": {
-            "email": EMAIL_FROM,
-            "name": EMAIL_FROM_NAME
-        },
+        "from": { "email": EMAIL_FROM, "name": EMAIL_FROM_NAME },
         "to": [{"email": to_email}],
         "subject": subject,
         "html": html_content
     }
     response = requests.post(url, headers=headers, json=payload)
+
+    # ==== LOGS PARA DEPURAR ====
+    print(f"[MAILERSEND DEBUG] Status: {response.status_code}")
+    print(f"[MAILERSEND DEBUG] Response: {response.text}")
+    # ===========================
+    
     response.raise_for_status()
-
-
 
 # ========== CONFIGURACIÓN SUPABASE ==========
 supabase_url = os.getenv("SUPABASE_URL")
