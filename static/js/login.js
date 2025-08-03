@@ -155,6 +155,12 @@ submitBtn.addEventListener('click', async () => {
     : await supabaseClient.auth.signUp({ email, password: pass });
   submitBtn.textContent = "Continue"; submitBtn.classList.remove('loading');
   if (error) return errPass.textContent = error.message;
+  // Si es registro y no hubo error, mostrar pantalla de verificación
+if (!error && !isLogin) {
+    loginSection.classList.add('hidden');
+    document.getElementById('verify-email-step').classList.remove('hidden');
+    return; // Evitar que siga el flujo normal
+}
 // Después de login exitoso
 const urlParams = new URLSearchParams(window.location.search);
 let redirectTo = urlParams.get('redirect');
@@ -180,8 +186,12 @@ if (
     window.location.href = redirectTo;
 } else {
     window.location.href = "/";
-}
-
+} 
+});
+// Volver al login desde la pantalla de verificación
+document.getElementById('back-to-login').addEventListener('click', () => {
+    document.getElementById('verify-email-step').classList.add('hidden');
+    loginSection.classList.remove('hidden');
 });
 
 // Social login
