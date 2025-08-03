@@ -81,12 +81,13 @@ PLAN_LIMITS = {
 }
 
 # Helpers Supabase
-def get_user_profile(user_id):
+def get_user_profile(user_id, email=None):
     res = supabase.table("profiles").select("*").eq("id", user_id).execute()
     today_str = date.today().isoformat()
     if not res.data:
         supabase.table("profiles").insert({
             "id": user_id,
+            "email": email,  # <-- NUEVO
             "plan": "essence",
             "tokens_used": 0,
             "voice_tokens_used": 0,
@@ -94,6 +95,7 @@ def get_user_profile(user_id):
         }).execute()
         return {
             "id": user_id,
+            "email": email,
             "plan": "essence",
             "tokens_used": 0,
             "voice_tokens_used": 0,
@@ -636,75 +638,61 @@ def verify_captcha():
         return jsonify({"success": False, "error": "Missing token or secret"}), 400
     response = requests.post("https://www.google.com/recaptcha/api/siteverify", data={"secret": secret, "response": token})
     return jsonify(response.json())
-
+    
 @app.route("/stripe_webhook", methods=["POST"])
 def stripe_webhook():
     payload = request.data
     sig_header = request.headers.get("Stripe-Signature")
+    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
     try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, os.getenv("STRIPE_WEBHOOK_SECRET")
-        )
+        event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
     except stripe.error.SignatureVerificationError:
         return api_error("Webhook inválido", 400)
-    except Exception as e:
-        print("Error construyendo evento Stripe:", e)
-        return jsonify({"status": "ignored"}), 200
 
-    try:
-        if event["type"] in ["checkout.session.completed", "customer.subscription.updated"]:
-            session = event["data"]["object"]
-            user_id = session.get("metadata", {}).get("user_id")
-            user_email = session.get("customer_email")
-            plan = session.get("metadata", {}).get("plan")
+    session = event["data"]["object"]
+    event_type = event["type"]
+    print(f"[STRIPE] Evento: {event_type}")
 
-            plan_mapping = {
-                "plus_monthly": "plus",
-                "plus_yearly": "plus",
-                "legacy_monthly": "legacy",
-                "legacy_yearly": "legacy"
-            }
-            final_plan = plan_mapping.get(plan, "essence")
+    # --- Obtener datos clave ---
+    user_id = session.get("metadata", {}).get("user_id")
+    plan = session.get("metadata", {}).get("plan")
+    customer_id = session.get("customer")
+    customer_email = session.get("customer_email")
+    subscription_id = session.get("subscription")
 
-            # 1. Si hay user_id, intentamos actualizar directo
-            updated = False
-            if user_id and final_plan:
-                res = supabase.table("profiles").update({"plan": final_plan}).eq("id", user_id).execute()
-                if res.data:
-                    updated = True
+    # Mapeo de planes
+    plan_mapping = {
+        "plus_monthly": "plus",
+        "plus_yearly": "plus",
+        "legacy_monthly": "legacy",
+        "legacy_yearly": "legacy"
+    }
+    final_plan = plan_mapping.get(plan, "essence")
 
-            # 2. Si no funcionó, buscamos por email (case-insensitive)
-            if not updated and user_email and final_plan:
-                res = supabase.table("profiles").update({"plan": final_plan}).ilike("email", user_email).execute()
-                if res.data:
-                    updated = True
+    print(f"[STRIPE] Metadata user_id: {user_id}, plan: {plan}, customer: {customer_id}, email: {customer_email}")
 
-            # 3. Si no existe el perfil, lo creamos
-            if not updated and user_email:
-                # Buscamos el ID real del usuario desde Supabase Auth
-                url = f"{supabase_url}/auth/v1/admin/users?email={user_email.lower()}"
-                headers = {
-                    "apikey": supabase_key,
-                    "Authorization": f"Bearer {supabase_key}",
-                    "Content-Type": "application/json"
-                }
-                r = requests.get(url, headers=headers)
-                if r.status_code == 200 and r.json().get("users"):
-                    real_user_id = r.json()["users"][0]["id"]
-                    supabase.table("profiles").insert({
-                        "id": real_user_id,
-                        "email": user_email,
-                        "plan": final_plan,
-                        "tokens_used": 0,
-                        "voice_tokens_used": 0,
-                        "tokens_reset_date": date.today().isoformat()
-                    }).execute()
+    # --- Buscar perfil si no hay user_id ---
+    if not user_id and customer_email:
+        print("[STRIPE] Buscando usuario por email...")
+        res = supabase.table("profiles").select("id").ilike("email", customer_email).execute()
+        if res.data:
+            user_id = res.data[0]["id"]
 
-    except Exception as e:
-        print("Error procesando webhook:", e)
+    if not user_id:
+        print("[STRIPE] No se pudo encontrar user_id. Abortando actualización.")
+        return jsonify({"status": "ignored"})
 
-    return jsonify({"status": "ok"}), 200
+    # --- Actualizar perfil ---
+    update_data = {
+        "plan": final_plan,
+        "stripe_customer_id": customer_id,
+        "subscription_renewal": datetime.utcnow().isoformat()
+    }
+    supabase.table("profiles").update(update_data).eq("id", user_id).execute()
 
+    print(f"[STRIPE] Plan actualizado para {user_id}: {final_plan}")
+    return jsonify({"status": "success"})
+    
 @app.route('/load_chat/<chat_id>', methods=['GET'])
 def load_chat(chat_id):
     token = request.headers.get("Authorization", "").replace("Bearer ", "")
