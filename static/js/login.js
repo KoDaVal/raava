@@ -137,20 +137,26 @@ submitBtn.addEventListener('click', async () => {
     : await supabaseClient.auth.signUp({ email, password: pass });
   submitBtn.textContent = "Continue"; submitBtn.classList.remove('loading');
   if (error) return errPass.textContent = error.message;
-  // Después de login exitoso
+// Después de login exitoso
 const urlParams = new URLSearchParams(window.location.search);
 let redirectTo = urlParams.get('redirect');
-if (redirectTo) {
-    // Decodificar por si viene con caracteres especiales (como el ?plan=...)
-    redirectTo = decodeURIComponent(redirectTo);
+
+if (redirectTo && redirectTo !== 'undefined' && redirectTo !== 'null') {
+    try {
+        redirectTo = decodeURIComponent(redirectTo);
+    } catch (e) {
+        redirectTo = null; // si la URL no se puede decodificar, la descartamos
+    }
 }
+
+// Solo permitir redirecciones internas
 if (redirectTo && redirectTo.startsWith('/')) {
     window.location.href = redirectTo;
 } else {
     window.location.href = "/";
 }
+});
 
 // Social login
 document.getElementById('google-signin').addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
 document.getElementById('github-signin').addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
-
