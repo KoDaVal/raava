@@ -176,8 +176,14 @@ import tiktoken
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 encoder = tiktoken.encoding_for_model("gpt-4o-mini")
 
-def gpt4o_mini_generate(history):
+def gpt4o_mini_generate(history, base_instruction):
     messages = []
+    # Añadir el system prompt al inicio
+    messages.append({
+        "role": "system",
+        "content": base_instruction
+    })
+    # Pasar el resto del historial
     for msg in history:
         if msg["role"] in ["user", "assistant"]:
             messages.append({
@@ -195,7 +201,6 @@ def gpt4o_mini_generate(history):
     tokens_in = sum(len(encoder.encode(m["content"])) for m in messages)
     tokens_out = len(encoder.encode(text))
     return {"text": text, "tokens_in": tokens_in, "tokens_out": tokens_out}
-
 
 # ========== ELEVEN LABS ==========
 eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_try_only")
@@ -449,7 +454,7 @@ def chat():
             )
             tokens_out = len(response_message) // 4
         else:
-            gpt_response = gpt4o_mini_generate(conversation_history)
+            gpt_response = gpt4o_mini_generate(conversation_history, base_instruction)
             response_message = gpt_response["text"]
             tokens_in = gpt_response["tokens_in"]
             tokens_out = gpt_response["tokens_out"]
