@@ -666,15 +666,39 @@ def stripe_webhook():
             }
             final_plan = plan_mapping.get(plan, "essence")
 
-            # Si tenemos el user_id, actualizamos directo
+            # 1. Si hay user_id, intentamos actualizar directo
+            updated = False
             if user_id and final_plan:
                 res = supabase.table("profiles").update({"plan": final_plan}).eq("id", user_id).execute()
-                if not res.data:
-                    print(f"No se encontró perfil con id={user_id}, intentando por email...")
+                if res.data:
+                    updated = True
 
-            # Si no hay user_id o no encontró el perfil, buscamos por email
-            if user_email and final_plan:
-                supabase.table("profiles").update({"plan": final_plan}).eq("email", user_email).execute()
+            # 2. Si no funcionó, buscamos por email (case-insensitive)
+            if not updated and user_email and final_plan:
+                res = supabase.table("profiles").update({"plan": final_plan}).ilike("email", user_email).execute()
+                if res.data:
+                    updated = True
+
+            # 3. Si no existe el perfil, lo creamos
+            if not updated and user_email:
+                # Buscamos el ID real del usuario desde Supabase Auth
+                url = f"{supabase_url}/auth/v1/admin/users?email={user_email.lower()}"
+                headers = {
+                    "apikey": supabase_key,
+                    "Authorization": f"Bearer {supabase_key}",
+                    "Content-Type": "application/json"
+                }
+                r = requests.get(url, headers=headers)
+                if r.status_code == 200 and r.json().get("users"):
+                    real_user_id = r.json()["users"][0]["id"]
+                    supabase.table("profiles").insert({
+                        "id": real_user_id,
+                        "email": user_email,
+                        "plan": final_plan,
+                        "tokens_used": 0,
+                        "voice_tokens_used": 0,
+                        "tokens_reset_date": date.today().isoformat()
+                    }).execute()
 
     except Exception as e:
         print("Error procesando webhook:", e)
