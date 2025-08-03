@@ -648,11 +648,20 @@ def stripe_webhook():
         session = event["data"]["object"]
         user_id = session.get("metadata", {}).get("user_id")
         plan = session.get("metadata", {}).get("plan")
-        if user_id and plan:
-            supabase.table("profiles").update({"plan": plan}).eq("id", user_id).execute()
+
+        # Mapeo: convertir mensual/anual a plan base
+        plan_mapping = {
+            "plus_monthly": "plus",
+            "plus_yearly": "plus",
+            "legacy_monthly": "legacy",
+            "legacy_yearly": "legacy"
+        }
+        final_plan = plan_mapping.get(plan, "essence")  # fallback a essence si no coincide
+
+        if user_id and final_plan:
+            supabase.table("profiles").update({"plan": final_plan}).eq("id", user_id).execute()
 
     return jsonify({"status": "ok"})
-
 
 @app.route('/load_chat/<chat_id>', methods=['GET'])
 def load_chat(chat_id):
