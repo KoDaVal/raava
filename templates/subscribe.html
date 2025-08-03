@@ -59,7 +59,6 @@
     <p>Estamos preparando tu checkout. Un momento por favor.</p>
     <div class="loader"></div>
   </div>
-
 <script>
   const SUPABASE_URL = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
@@ -88,20 +87,19 @@
   async function init() {
     const { data } = await supabaseClient.auth.getSession();
     if (data.session) {
-      // Si ya hay sesión, ir directo
+      // Si ya hay sesión, ir directo a Stripe
       redirectToStripe(data.session);
     } else {
-      // Si no hay sesión aún, esperar el login (por ejemplo, tras Google/GitHub)
+      // Si NO hay sesión, esperar el login social
       supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === "SIGNED_IN" && session) {
           redirectToStripe(session);
         }
       });
-      // Si no hay sesión, redirigir a login
+      // Si no hay sesión aún, redirigir a login con redirect
       window.location.href = `/login?redirect=/subscribe?plan=${plan}`;
     }
   }
-
   init();
 </script>
 </body>
