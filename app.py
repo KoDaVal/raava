@@ -170,26 +170,32 @@ if not gemini_api_key:
 genai.configure(api_key=gemini_api_key)
 gemini_model = genai.GenerativeModel('gemini-1.5-flash')
 
-import openai
+from openai import OpenAI
 import tiktoken
-openai.api_key = os.getenv("OPENAI_API_KEY")
+
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 encoder = tiktoken.encoding_for_model("gpt-4o-mini")
 
 def gpt4o_mini_generate(history):
     messages = []
     for msg in history:
         if msg["role"] in ["user", "assistant"]:
-            messages.append({"role": "user" if msg["role"] == "user" else "assistant", "content": msg["parts"][0].get("text", "")})
+            messages.append({
+                "role": "user" if msg["role"] == "user" else "assistant",
+                "content": msg["parts"][0].get("text", "")
+            })
 
-    response = openai.ChatCompletion.create(
+    response = openai_client.chat.completions.create(
         model="gpt-4o-mini",
         messages=messages,
-        temperature=0.7,
+        temperature=0.7
     )
-    text = response.choices[0].message["content"]
+
+    text = response.choices[0].message.content
     tokens_in = sum(len(encoder.encode(m["content"])) for m in messages)
     tokens_out = len(encoder.encode(text))
     return {"text": text, "tokens_in": tokens_in, "tokens_out": tokens_out}
+
 
 # ========== ELEVEN LABS ==========
 eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_try_only")
