@@ -156,3 +156,21 @@ button:hover {
 .recovery-step p { margin: 8px 0; font-size: 15px; }
 #otp-timer { font-size: 14px; margin: 8px 0; color: #666; }
 button.loading { opacity: 0.7; cursor: wait; }
+/* Pantallas adicionales */
+#verify-email-step, #email-verified-step {
+  text-align: center;
+  padding: 20px;
+}
+
+#verify-email-step p,
+#email-verified-step p {
+  margin: 15px 0;
+  color: #555;
+}
+
+#verify-email-step button,
+#email-verified-step button {
+  margin-top: 20px;
+  width: 100%;
+}
+
