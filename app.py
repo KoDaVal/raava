@@ -776,9 +776,10 @@ def verify_password_code():
         if not otp_res.data:
             return api_error("Código inválido.", 400)
         otp_data = otp_res.data[0]
-        if datetime.fromisoformat(otp_data['otp_expires_at']) < datetime.utcnow():
-            return api_error("Código expirado.", 400)
-
+        from datetime import timezone
+        otp_expires_at = datetime.fromisoformat(otp_data['otp_expires_at']).astimezone(timezone.utc)
+        if otp_expires_at < datetime.now(timezone.utc):
+            return jsonify({"error": "Code expired"}), 400
         return jsonify({'message': 'Código válido'}), 200
     except Exception as e:
         import traceback
