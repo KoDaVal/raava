@@ -179,7 +179,14 @@ submitBtn.addEventListener('click', async () => {
     ? await supabaseClient.auth.signInWithPassword({ email, password: pass })
     : await supabaseClient.auth.signUp({ email, password: pass });
   submitBtn.textContent = "Continue"; submitBtn.classList.remove('loading');
-  if (error) return errPass.textContent = error.message;
+  if (error) {
+    if (!isLogin && error.message.includes("User already registered")) {
+        errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
+        return; // NO continuar al flujo de verificación
+    }
+    return errPass.textContent = "Error: " + error.message;
+}
+
   // Si es registro y no hubo error, mostrar pantalla de verificación
 if (!error && !isLogin) {
     loginSection.classList.add('hidden');
