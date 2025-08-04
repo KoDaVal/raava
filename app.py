@@ -15,6 +15,13 @@ MAILERSEND_API_KEY = os.getenv("MAILERSEND_API_KEY")
 EMAIL_FROM = os.getenv("EMAIL_FROM", "no-reply@humancores.com")
 EMAIL_FROM_NAME = os.getenv("EMAIL_FROM_NAME", "RaavaX")
 
+import re
+
+def is_strong_password(password):
+    # Al menos 8 caracteres, 1 mayúscula, 1 minúscula, 1 número y 1 caracter especial
+    return bool(re.match(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$', password))
+
+
 def send_mailersend_email(to_email, subject, html_content):
     url = "https://api.mailersend.com/v1/email"
     headers = {
@@ -283,6 +290,10 @@ def reset_password_with_code():
         if not all([email, otp, new_password]):
             return api_error('Datos incompletos')
 
+        # Validar fuerza de la nueva contraseña
+        if not is_strong_password(new_password):
+            return api_error("La contraseña debe tener mínimo 8 caracteres, incluir una mayúscula, una minúscula, un número y un carácter especial.", 400)
+
         # Buscar usuario por email
         user_data = get_user_by_email_admin(email)
         if not user_data:
@@ -294,7 +305,10 @@ def reset_password_with_code():
         if not otp_res.data:
             return api_error("Código inválido.", 400)
         otp_data = otp_res.data[0]
-        if datetime.fromisoformat(otp_data['otp_expires_at']) < datetime.utcnow():
+
+        # FIX: Convertir ambas fechas a UTC para evitar el error naive vs aware
+        otp_expires_at = datetime.fromisoformat(otp_data['otp_expires_at']).astimezone(timezone.utc)
+        if otp_expires_at < datetime.now(timezone.utc):
             return api_error("Código expirado.", 400)
 
         # Cambiar contraseña
@@ -318,7 +332,6 @@ def reset_password_with_code():
         import traceback
         print("Error inesperado en /reset_password_with_code:", traceback.format_exc())
         return api_error("Error interno al cambiar la contraseña.", 500)
-
 @app.route("/create_checkout_session", methods=["POST"])
 def create_checkout_session():
     try:
