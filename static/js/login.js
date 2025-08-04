@@ -98,6 +98,27 @@ document.getElementById('verify-otp-btn').addEventListener('click', async () => 
 function validatePassword(p) {
   return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(p);
 }
+// Feedback visual en vivo para cualquier input de contraseña
+function attachPasswordFeedback(inputId, errorId) {
+  const input = document.getElementById(inputId);
+  const error = document.getElementById(errorId);
+
+  if (!input || !error) return;
+
+  input.addEventListener('input', () => {
+    const value = input.value;
+    if (!value) {
+      error.textContent = "";
+      return;
+    }
+    if (!validatePassword(value)) {
+      error.textContent = "Password must be at least 8 chars, include upper/lowercase, number and symbol.";
+    } else {
+      error.textContent = "";
+    }
+  });
+}
+
 
 // Step 3: Change password
 document.getElementById('reset-password-btn').addEventListener('click', async () => {
@@ -148,6 +169,10 @@ submitBtn.addEventListener('click', async () => {
   errEmail.textContent = errPass.textContent = errConfirm.textContent = '';
   if (!email) return errEmail.textContent = "Email required.";
   if (!pass) return errPass.textContent = "Password required.";
+  if (!isLogin && !validatePassword(pass)) {
+    errPass.textContent = "Weak password: Min 8 chars, 1 upper, 1 lower, 1 number, 1 symbol.";
+    return;
+}
   if (!isLogin && pass !== confirm) return errConfirm.textContent = "Passwords do not match.";
   submitBtn.textContent = "Loading…"; submitBtn.classList.add('loading');
   const { error } = isLogin
@@ -196,6 +221,9 @@ document.getElementById('back-to-login').addEventListener('click', () => {
     loginSection.classList.remove('hidden');
     socialButtons.classList.remove('hidden');
 });
+// Feedback dinámico en campos de contraseña (registro y reset)
+attachPasswordFeedback('auth-password', 'login-password-error'); // Para registro
+attachPasswordFeedback('new-password', 'newpass-error'); // Para cambio de contraseña
 // Social login
 document.getElementById('google-signin').addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
 document.getElementById('github-signin').addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
