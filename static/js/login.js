@@ -247,30 +247,23 @@ attachPasswordFeedback('auth-password', 'login-password-error'); // Para registr
 attachPasswordFeedback('new-password', 'newpass-error'); // Para cambio de contraseña
 // Social login
 document.getElementById('google-signin').addEventListener('click', () => {
-  const redirectParam = new URLSearchParams(window.location.search).get('redirect');
-  if (redirectParam) {
-    localStorage.setItem('oauth_redirect', redirectParam);
-  }
-  supabaseClient.auth.signInWithOAuth({ provider: 'google' });
+  const redirectParam = new URLSearchParams(window.location.search).get('redirect') || '/';
+  localStorage.setItem('oauth_redirect', redirectParam);
+  supabaseClient.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/login?redirect=${encodeURIComponent(redirectParam)}`
+    }
+  });
 });
 
 document.getElementById('github-signin').addEventListener('click', () => {
-  const redirectParam = new URLSearchParams(window.location.search).get('redirect');
-  if (redirectParam) {
-    localStorage.setItem('oauth_redirect', redirectParam);
-  }
-  supabaseClient.auth.signInWithOAuth({ provider: 'github' });
+  const redirectParam = new URLSearchParams(window.location.search).get('redirect') || '/';
+  localStorage.setItem('oauth_redirect', redirectParam);
+  supabaseClient.auth.signInWithOAuth({
+    provider: 'github',
+    options: {
+      redirectTo: `${window.location.origin}/login?redirect=${encodeURIComponent(redirectParam)}`
+    }
+  });
 });
-// Botones para regresar al login desde recuperación
-document.getElementById('return-login-from-email').addEventListener('click', () => {
-  recoverySection.classList.add('hidden');
-  loginSection.classList.remove('hidden');
-  socialButtons.classList.remove('hidden');
-});
-
-document.getElementById('return-login-from-newpass').addEventListener('click', () => {
-  recoverySection.classList.add('hidden');
-  loginSection.classList.remove('hidden');
-  socialButtons.classList.remove('hidden');
-});
-
