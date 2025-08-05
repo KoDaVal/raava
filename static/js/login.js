@@ -191,6 +191,7 @@ submitBtn.addEventListener('click', async () => {
     : await supabaseClient.auth.signUp({ email, password: pass });
   submitBtn.textContent = "Continue"; submitBtn.classList.remove('loading');
   if (error) {
+    console.log("Supabase error:", error); // <-- LOG PARA VER EL MENSAJE EXACTO
     const msg = error.message.toLowerCase();
     if (
       !isLogin && (
