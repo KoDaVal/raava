@@ -16,6 +16,7 @@ body {
 }
 
 .login-card {
+  position: relative; /* prueba */ 
   background: #fff;
   padding: 30px;
   border-radius: 16px;
@@ -174,17 +175,20 @@ button.loading { opacity: 0.7; cursor: wait; }
   width: 100%;
 }
 .back-to-login {
-  color: #4CAF50;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  font-size: 16px;
+  color: #111;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 8px;
-  display: inline-block;
-  transition: color 0.2s ease;
+  transition: color 0.2s;
+}
+.back-to-login i {
+  font-size: 18px;
+}
+.back-to-login:hover {
+  color: #0d6efd;
 }
 
-.back-to-login:hover {
-  color: #388e3c;
-}
 
 
