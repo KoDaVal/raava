@@ -67,7 +67,7 @@ document.getElementById('start-reset-btn').addEventListener('click', async () =>
   showStep('otp');
 });
 
-// Step 2: Verify code (con validación real)
+// Step 2: Verify code
 document.getElementById('verify-otp-btn').addEventListener('click', async () => {
   const otp = document.getElementById('otp-input').value;
   const email = document.getElementById('recover-email').value;
@@ -98,7 +98,6 @@ document.getElementById('verify-otp-btn').addEventListener('click', async () => 
 function validatePassword(p) {
   return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(p);
 }
-// Feedback visual en vivo para cualquier input de contraseña
 function attachPasswordFeedback(inputId, errorId) {
   const input = document.getElementById(inputId);
   const error = document.getElementById(errorId);
@@ -118,7 +117,6 @@ function attachPasswordFeedback(inputId, errorId) {
     }
   });
 }
-
 
 // Step 3: Change password
 document.getElementById('reset-password-btn').addEventListener('click', async () => {
@@ -172,93 +170,102 @@ submitBtn.addEventListener('click', async () => {
   if (!isLogin && !validatePassword(pass)) {
     errPass.textContent = "Weak password: Min 8 chars, 1 upper, 1 lower, 1 number, 1 symbol.";
     return;
-}
+  }
   if (!isLogin && pass !== confirm) return errConfirm.textContent = "Passwords do not match.";
   submitBtn.textContent = "Loading…"; submitBtn.classList.add('loading');
   const { error } = isLogin
     ? await supabaseClient.auth.signInWithPassword({ email, password: pass })
     : await supabaseClient.auth.signUp({ email, password: pass });
   submitBtn.textContent = "Continue"; submitBtn.classList.remove('loading');
-if (error) {
+  if (error) {
     const msg = error.message.toLowerCase();
-    if (!isLogin && (msg.includes("already") || msg.includes("exists"))) {
-        errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
-        return;
+    if (
+      !isLogin && (
+        msg.includes("already") ||
+        msg.includes("exists") ||
+        msg.includes("registered") ||
+        error.status === 400
+      )
+    ) {
+      errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
+      return;
     }
     return errPass.textContent = "Error: " + error.message;
-}
+  }
 
-
-  // Si es registro y no hubo error, mostrar pantalla de verificación
-if (!error && !isLogin) {
+  if (!error && !isLogin) {
     loginSection.classList.add('hidden');
     recoverySection.classList.add('hidden');
     socialButtons.classList.add('hidden');
     document.getElementById('verify-email-step').classList.remove('hidden');
-    return; // Evitar que siga el flujo normal
-}
-// Después de login exitoso
-const urlParams = new URLSearchParams(window.location.search);
-let redirectTo = urlParams.get('redirect');
-// Si viene de Google/GitHub, usa el redirect guardado
-if (!redirectTo || redirectTo === 'undefined' || redirectTo === 'null') {
-  const storedRedirect = localStorage.getItem('oauth_redirect');
-  if (storedRedirect) {
-    redirectTo = storedRedirect;
-    localStorage.removeItem('oauth_redirect');
+    return;
   }
-}
 
-
-if (redirectTo && redirectTo !== 'undefined' && redirectTo !== 'null') {
-    try {
-        // Decodificar completamente para que mantenga los parámetros como ?plan=...
-        redirectTo = decodeURIComponent(redirectTo);
-    } catch (e) {
-        redirectTo = null;
+  const urlParams = new URLSearchParams(window.location.search);
+  let redirectTo = urlParams.get('redirect');
+  if (!redirectTo || redirectTo === 'undefined' || redirectTo === 'null') {
+    const storedRedirect = localStorage.getItem('oauth_redirect');
+    if (storedRedirect) {
+      redirectTo = storedRedirect;
+      localStorage.removeItem('oauth_redirect');
     }
-}
+  }
+  if (redirectTo && redirectTo !== 'undefined' && redirectTo !== 'null') {
+    try { redirectTo = decodeURIComponent(redirectTo); } catch (e) { redirectTo = null; }
+  }
 
-// Redirigir al destino si es interno o pertenece a RaavaX
-if (
+  if (
     redirectTo &&
     (
-        redirectTo.startsWith('/') ||
-        redirectTo.startsWith('https://raavax.humancores.com') ||
-        redirectTo.startsWith('https://raavax.framer.website')
+      redirectTo.startsWith('/') ||
+      redirectTo.startsWith('https://raavax.humancores.com') ||
+      redirectTo.startsWith('https://raavax.framer.website')
     )
-) {
+  ) {
     window.location.href = redirectTo;
-} else {
+  } else {
     window.location.href = "/";
-} 
+  }
 });
+
 // Volver al login desde la pantalla de verificación
 document.getElementById('back-to-login').addEventListener('click', () => {
-    document.getElementById('verify-email-step').classList.add('hidden');
-    loginSection.classList.remove('hidden');
-    socialButtons.classList.remove('hidden');
+  document.getElementById('verify-email-step').classList.add('hidden');
+  loginSection.classList.remove('hidden');
+  socialButtons.classList.remove('hidden');
 });
-// Feedback dinámico en campos de contraseña (registro y reset)
-attachPasswordFeedback('auth-password', 'login-password-error'); // Para registro
-attachPasswordFeedback('new-password', 'newpass-error'); // Para cambio de contraseña
-// Social login
+
+// Feedback dinámico
+attachPasswordFeedback('auth-password', 'login-password-error');
+attachPasswordFeedback('new-password', 'newpass-error');
+
+// Social login con fix de redirect
 document.getElementById('google-signin').addEventListener('click', () => {
   const redirectParam = new URLSearchParams(window.location.search).get('redirect') || '/';
+  localStorage.setItem('oauth_redirect', redirectParam);
   supabaseClient.auth.signInWithOAuth({
     provider: 'google',
-    options: {
-      redirectTo: `${window.location.origin}/login?redirect=${encodeURIComponent(redirectParam)}`
-    }
+    options: { redirectTo: `${window.location.origin}/login` }
+  });
+});
+document.getElementById('github-signin').addEventListener('click', () => {
+  const redirectParam = new URLSearchParams(window.location.search).get('redirect') || '/';
+  localStorage.setItem('oauth_redirect', redirectParam);
+  supabaseClient.auth.signInWithOAuth({
+    provider: 'github',
+    options: { redirectTo: `${window.location.origin}/login` }
   });
 });
 
-document.getElementById('github-signin').addEventListener('click', () => {
-  const redirectParam = new URLSearchParams(window.location.search).get('redirect') || '/';
-  supabaseClient.auth.signInWithOAuth({
-    provider: 'github',
-    options: {
-      redirectTo: `${window.location.origin}/login?redirect=${encodeURIComponent(redirectParam)}`
-    }
-  });
+// Volver desde recuperación
+document.getElementById('return-login-from-email').addEventListener('click', () => {
+  recoverySection.classList.add('hidden');
+  loginSection.classList.remove('hidden');
+  socialButtons.classList.remove('hidden');
 });
+document.getElementById('return-login-from-newpass').addEventListener('click', () => {
+  recoverySection.classList.add('hidden');
+  loginSection.classList.remove('hidden');
+  socialButtons.classList.remove('hidden');
+});
+
