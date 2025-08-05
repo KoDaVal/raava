@@ -245,7 +245,6 @@ attachPasswordFeedback('new-password', 'newpass-error'); // Para cambio de contr
 // Social login
 document.getElementById('google-signin').addEventListener('click', () => {
   const redirectParam = new URLSearchParams(window.location.search).get('redirect') || '/';
-  localStorage.setItem('oauth_redirect', redirectParam);
   supabaseClient.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -256,7 +255,6 @@ document.getElementById('google-signin').addEventListener('click', () => {
 
 document.getElementById('github-signin').addEventListener('click', () => {
   const redirectParam = new URLSearchParams(window.location.search).get('redirect') || '/';
-  localStorage.setItem('oauth_redirect', redirectParam);
   supabaseClient.auth.signInWithOAuth({
     provider: 'github',
     options: {
