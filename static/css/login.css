@@ -173,4 +173,18 @@ button.loading { opacity: 0.7; cursor: wait; }
   margin-top: 20px;
   width: 100%;
 }
+.back-to-login {
+  color: #4CAF50;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: inline-block;
+  transition: color 0.2s ease;
+}
+
+.back-to-login:hover {
+  color: #388e3c;
+}
+
 
