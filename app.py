@@ -340,6 +340,14 @@ def create_checkout_session():
         if not user_data:
             return api_error("No autorizado", 401)
 
+        # Recuperar correo (desde token o perfil)
+        customer_email = user_data.get("email")
+        if not customer_email:
+            profile = get_user_profile(user_data["id"])
+            customer_email = profile.get("email")
+        if not customer_email:
+            return api_error("No se encontró el email del usuario para crear la sesión de Stripe.", 400)
+
         data = request.get_json()
         plan = data.get("plan")
         price_id = {
@@ -352,7 +360,7 @@ def create_checkout_session():
             return api_error("Plan inválido")
 
         session = stripe.checkout.Session.create(
-            customer_email=user_data["email"],
+            customer_email=customer_email,
             line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription",
             success_url=f"https://raavax.humancores.com/success?plan={plan}",
@@ -363,7 +371,6 @@ def create_checkout_session():
     except Exception as e:
         print("Error creando sesión:", e)
         return api_error("Error interno", 500)
-
 # ========== RUTAS ==========
 @app.route('/')
 def index():
@@ -801,5 +808,18 @@ def verify_password_code():
 @app.route('/confirmed')
 def confirmed():
     return render_template('confirmed.html')
+@app.route('/check_email', methods=['POST'])
+def check_email():
+    try:
+        data = request.get_json(force=True)
+        email = data.get('email')
+        if not email:
+            return api_error("Correo requerido")
+        user_data = get_user_by_email_admin(email)
+        return jsonify({"exists": bool(user_data)})
+    except Exception as e:
+        print("Error en /check_email:", e)
+        return api_error("Error verificando el correo.", 500)
+
 
 
