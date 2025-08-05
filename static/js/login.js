@@ -180,10 +180,15 @@ submitBtn.addEventListener('click', async () => {
     : await supabaseClient.auth.signUp({ email, password: pass });
   submitBtn.textContent = "Continue"; submitBtn.classList.remove('loading');
   if (error) {
-    if (!isLogin && error.message.includes("User already registered")) {
-        errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
-        return; // NO continuar al flujo de verificación
-    }
+    if (!isLogin && (
+    error.message.toLowerCase().includes("already registered") ||
+    error.message.toLowerCase().includes("already exists") ||
+    error.message.toLowerCase().includes("email")  // catch-all
+)) {
+    errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
+    return;
+}
+
     return errPass.textContent = "Error: " + error.message;
 }
 
@@ -198,6 +203,15 @@ if (!error && !isLogin) {
 // Después de login exitoso
 const urlParams = new URLSearchParams(window.location.search);
 let redirectTo = urlParams.get('redirect');
+// Si viene de Google/GitHub, usa el redirect guardado
+if (!redirectTo || redirectTo === 'undefined' || redirectTo === 'null') {
+  const storedRedirect = localStorage.getItem('oauth_redirect');
+  if (storedRedirect) {
+    redirectTo = storedRedirect;
+    localStorage.removeItem('oauth_redirect');
+  }
+}
+
 
 if (redirectTo && redirectTo !== 'undefined' && redirectTo !== 'null') {
     try {
@@ -232,5 +246,31 @@ document.getElementById('back-to-login').addEventListener('click', () => {
 attachPasswordFeedback('auth-password', 'login-password-error'); // Para registro
 attachPasswordFeedback('new-password', 'newpass-error'); // Para cambio de contraseña
 // Social login
-document.getElementById('google-signin').addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'google' }));
-document.getElementById('github-signin').addEventListener('click', () => supabaseClient.auth.signInWithOAuth({ provider: 'github' }));
+document.getElementById('google-signin').addEventListener('click', () => {
+  const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+  if (redirectParam) {
+    localStorage.setItem('oauth_redirect', redirectParam);
+  }
+  supabaseClient.auth.signInWithOAuth({ provider: 'google' });
+});
+
+document.getElementById('github-signin').addEventListener('click', () => {
+  const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+  if (redirectParam) {
+    localStorage.setItem('oauth_redirect', redirectParam);
+  }
+  supabaseClient.auth.signInWithOAuth({ provider: 'github' });
+});
+// Botones para regresar al login desde recuperación
+document.getElementById('return-login-from-email').addEventListener('click', () => {
+  recoverySection.classList.add('hidden');
+  loginSection.classList.remove('hidden');
+  socialButtons.classList.remove('hidden');
+});
+
+document.getElementById('return-login-from-newpass').addEventListener('click', () => {
+  recoverySection.classList.add('hidden');
+  loginSection.classList.remove('hidden');
+  socialButtons.classList.remove('hidden');
+});
+
