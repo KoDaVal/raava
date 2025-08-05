@@ -1,6 +1,19 @@
 const SUPABASE_URL = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Si volvemos de Google/GitHub y ya hay sesión, redirigir automáticamente
+(async () => {
+  const { data } = await supabaseClient.auth.getSession();
+  if (data.session) {
+    let redirectTo = localStorage.getItem('oauth_redirect') || '/';
+    localStorage.removeItem('oauth_redirect');
+    if (redirectTo && redirectTo !== 'undefined' && redirectTo !== 'null') {
+      try { redirectTo = decodeURIComponent(redirectTo); } catch (e) { redirectTo = '/'; }
+    }
+    window.location.href = redirectTo;
+  }
+})();
+
 
 let isLogin = true;
 
