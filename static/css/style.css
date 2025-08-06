@@ -1,32 +1,32 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 
-/* Variables CSS para modo oscuro y claro */
+/* ==== VARIABLES BASE ==== */
 :root {
-  /* 🎨 Paleta base */
-  --bg-color: #000;
+  /* 🎨 Paleta por defecto (modo oscuro) */
+  --bg-color: #121212;
   --sidebar-bg: #0a0a0a;
-  --panel-bg: #0a0a0a;
+  --panel-bg: #1e1e1e;
   --chat-bg: #121212;
   --text-color: #e0e0e0;
   --link-color: #bbbbbb;
   --message-bg: #1e1e1e;
   --message-user-bg: #2d2d2d;
   --button-bg: #1e1e1e;
-  --border-color: #1e1e1e;
+  --border-color: #333;
   --hover-color: #292929;
   --button-text-color: #cccccc;
   --avatar-name-color: #f0f0f0;
   --quote-color: #aaaaaa;
 
   /* 🎯 Detalles UI */
-  --accent-color: #5EF38C; /* NUEVO: Acento fresco para hover, botones y highlights */
-  --accent-hover: #4EE57C; /* Versión hover */
-  --radius: 8px; /* NUEVO: Border radius base */
+  --accent-color: #4CAF50;
+  --accent-hover: #45A049;
+  --radius: 8px;
 
   /* 🪟 Modales y ajustes */
   --header-bg: var(--chat-bg);
   --settings-modal-bg: rgba(0, 0, 0, 0.7);
-  --settings-content-bg: #1e1e1e;
+  --settings-content-bg: #1E1E1E;
   --settings-border-color: #333;
   --settings-text-color: #e0e0e0;
   --settings-nav-hover: #292929;
@@ -37,6 +37,7 @@
   --select-border: #444;
 }
 
+/* ==== MODO CLARO ==== */
 body.light-mode {
   --bg-color: #f2f2f2;
   --sidebar-bg: #ffffff;
@@ -44,7 +45,7 @@ body.light-mode {
   --chat-bg: #ffffff;
   --text-color: #111;
   --link-color: #333;
-  --message-bg: #dddddd;
+  --message-bg: #f1f1f1;
   --message-user-bg: #c1c1c1;
   --button-bg: #dddddd;
   --border-color: #d1d1d1;
@@ -52,18 +53,36 @@ body.light-mode {
   --button-text-color: #555;
   --avatar-name-color: #333;
   --quote-color: #555;
-  --header-bg: #ffffff; /* Ahora color del header del chat central */
-  --settings-modal-bg: rgba(0, 0, 0, 0.5); /* Nuevo */
-  --settings-content-bg: #f2f2f2; /* Nuevo */
-  --settings-border-color: #d1d1d1; /* Nuevo */
-  --settings-text-color: #111; /* Nuevo */
-  --settings-nav-hover: #e0e0e0; /* Nuevo */
-  --switch-bg: #bbb; /* Nuevo */
-  --switch-checked-bg: #8a2be2; /* Nuevo */
-  --slider-bg: #ffffff; /* Nuevo */
-  --select-bg: #e0e0e0; /* Nuevo */
-  --select-border: #ccc; /* Nuevo */
+
+  --header-bg: #ffffff;
+  --settings-modal-bg: rgba(0, 0, 0, 0.5);
+  --settings-content-bg: #ffffff;
+  --settings-border-color: #d1d1d1;
+  --settings-text-color: #111;
+  --settings-nav-hover: #e0e0e0;
+  --switch-bg: #bbb;
+  --switch-checked-bg: #8a2be2;
+  --slider-bg: #ffffff;
+  --select-bg: #e0e0e0;
+  --select-border: #ccc;
 }
+
+/* Aplicar colores */
+body {
+  background-color: var(--bg-color);
+  color: var(--settings-text-color);
+}
+
+.settings-content,
+.settings-pane {
+  background: var(--settings-content-bg);
+  border-radius: 10px;
+}
+
+.account-info {
+  background: var(--message-bg);
+}
+
 
 * {
   box-sizing: border-box;
