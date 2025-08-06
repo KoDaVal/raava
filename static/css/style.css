@@ -1339,6 +1339,44 @@ input:checked + .slider:before {
   color: var(--link-color, #aaa);
   margin: 12px 0 6px 0;
 }
+/* ==================== AVATAR TRANSITION ==================== */
+#header-profile-pic,
+#account-avatar-img {
+    transition: opacity 0.3s ease, transform 0.2s ease;
+    border-radius: 50%;
+}
+#header-profile-pic:hover,
+#account-avatar-img:hover {
+    transform: scale(1.05);
+}
+
+/* ==================== CANCEL PLAN BUTTON LOADER ==================== */
+#cancel-plan-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    position: relative;
+}
+
+#cancel-plan-btn:disabled::after {
+    content: "…";
+    position: absolute;
+    right: 10px;
+    animation: dots 1s infinite;
+}
+
+@keyframes dots {
+    0%, 20% { content: "."; }
+    40% { content: ".."; }
+    60%, 100% { content: "..."; }
+}
+
+/* ==================== THEME ICONS ==================== */
+.theme-icon {
+    transition: opacity 0.3s ease;
+    opacity: 1;
+    width: 24px;
+    height: 24px;
+}
 
 
 
