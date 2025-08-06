@@ -1339,6 +1339,56 @@ input:checked + .slider:before {
   color: var(--link-color, #aaa);
   margin: 12px 0 6px 0;
 }
+/* --- PANEL ACCOUNT --- */
+.account-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  text-align: center;
+}
+
+.account-avatar img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid var(--border-color);
+  object-fit: cover;
+}
+
+.account-avatar button {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background-color: var(--accent-color);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.account-avatar button:hover {
+  background-color: var(--accent-hover);
+}
+
+.account-info p {
+  font-size: 15px;
+  color: var(--settings-text-color);
+}
+
+.account-actions .danger-btn {
+  background-color: #d9534f;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.account-actions .danger-btn:hover {
+  background-color: #c9302c;
+}
 
 
 
