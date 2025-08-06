@@ -43,15 +43,73 @@
         <button class="close-settings-btn" id="close-settings-btn">&times;</button>
       </div>
       <div class="settings-body">
-        <div class="settings-nav">
-          <div class="settings-nav-item active">General</div>
-          <div class="settings-nav-item">Notifications</div>
-          <div class="settings-nav-item">Personalization</div>
-          <div class="settings-nav-item">Connected apps</div>
-          <div class="settings-nav-item">Data controls</div>
-          <div class="settings-nav-item">Account</div>
-        </div>
-        <!-- PANE NUEVO PARA ACCOUNT -->
+       <div class="settings-nav">
+  <div class="settings-nav-item active">General</div>
+  <div class="settings-nav-item">Notifications</div>
+  <div class="settings-nav-item">Personalization</div>
+  <div class="settings-nav-item">Connected apps</div>
+  <div class="settings-nav-item">Data controls</div>
+  <div class="settings-nav-item">Account</div>
+</div>
+
+<!-- PANEL GENERAL -->
+<div class="settings-pane" id="general-pane">
+  <div class="setting-row">
+    <label>Theme</label>
+    <select id="theme-select">
+      <option value="dark">Dark</option>
+      <option value="light">Light</option>
+    </select>
+  </div>
+  <div class="setting-row">
+    <label>Language</label>
+    <select>
+      <option value="auto">Auto-detect</option>
+    </select>
+  </div>
+  <div class="setting-row">
+    <label>Spoken language</label>
+    <select>
+      <option value="auto">Auto-detect</option>
+    </select>
+  </div>
+  <div class="setting-row">
+    <label>Voice</label>
+    <div class="voice-controls">
+      <button><i class="fas fa-play"></i></button>
+      <span>Ember</span>
+    </div>
+  </div>
+  <div class="setting-row toggle-row">
+    <label>Show follow up suggestions in chats</label>
+    <label class="switch">
+      <input type="checkbox" checked>
+      <span class="slider round"></span>
+    </label>
+  </div>
+</div>
+
+<!-- PANEL NOTIFICATIONS -->
+<div class="settings-pane" id="notifications-pane" style="display:none;">
+  <p style="color: var(--settings-text-color);">Notificaciones (en construcción)</p>
+</div>
+
+<!-- PANEL PERSONALIZATION -->
+<div class="settings-pane" id="personalization-pane" style="display:none;">
+  <p style="color: var(--settings-text-color);">Personalización (en construcción)</p>
+</div>
+
+<!-- PANEL CONNECTED APPS -->
+<div class="settings-pane" id="connected-pane" style="display:none;">
+  <p style="color: var(--settings-text-color);">Apps conectadas (en construcción)</p>
+</div>
+
+<!-- PANEL DATA CONTROLS -->
+<div class="settings-pane" id="data-pane" style="display:none;">
+  <p style="color: var(--settings-text-color);">Controles de datos (en construcción)</p>
+</div>
+
+<!-- PANEL ACCOUNT -->
 <div class="settings-pane" id="account-pane" style="display:none;">
   <div class="account-section">
     <div class="account-avatar">
@@ -60,53 +118,16 @@
       <button id="account-avatar-btn">Cambiar foto</button>
     </div>
     <div class="account-info">
+      <p><strong>Email:</strong> <span id="account-email">...</span></p>
       <p><strong>Plan actual:</strong> <span id="account-plan">...</span></p>
       <p><strong>Vencimiento:</strong> <span id="account-expiry">...</span></p>
     </div>
     <div class="account-actions">
       <button id="cancel-plan-btn" class="danger-btn">Cancelar Plan</button>
+      <button id="logout-btn" class="logout-btn">Cerrar sesión</button>
     </div>
   </div>
 </div>
-        <div class="settings-pane">
-          <div class="setting-row">
-            <label>Theme</label>
-            <select id="theme-select">
-              <option value="dark">Dark</option>
-              <option value="light">Light</option>
-            </select>
-          </div>
-          <div class="setting-row">
-            <label>Language</label>
-            <select>
-              <option value="auto">Auto-detect</option>
-              </select>
-          </div>
-          <div class="setting-row">
-            <label>Spoken language</label>
-            <select>
-              <option value="auto">Auto-detect</option>
-              </select>
-          </div>
-          <div class="setting-row">
-            <label>Voice</label>
-            <div class="voice-controls">
-              <button><i class="fas fa-play"></i></button>
-              <span>Ember</span>
-            </div>
-          </div>
-          <div class="setting-row toggle-row">
-            <label>Show follow up suggestions in chats</label>
-            <label class="switch">
-              <input type="checkbox" checked>
-              <span class="slider round"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div class="main-container">
     <div class="sidebar">
   <div class="sidebar-header">
