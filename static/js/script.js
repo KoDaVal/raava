@@ -55,6 +55,17 @@ if (newChatBtn) {
     const settingsModal = document.getElementById('settings-modal');
     const closeSettingsBtn = document.getElementById('close-settings-btn');
     const themeSelect = document.getElementById('theme-select'); // Nuevo selector de tema en ajustes
+    // --- ELEMENTOS NUEVOS PARA ACCOUNT ---
+const accountNavItem = [...document.querySelectorAll('.settings-nav-item')].find(i => i.textContent === 'Account');
+const generalPane = document.querySelector('.settings-pane'); 
+const accountPane = document.getElementById('account-pane');
+const accountAvatarImg = document.getElementById('account-avatar-img');
+const accountAvatarBtn = document.getElementById('account-avatar-btn');
+const accountAvatarInput = document.getElementById('account-avatar-input');
+const accountPlan = document.getElementById('account-plan');
+const accountExpiry = document.getElementById('account-expiry');
+const cancelPlanBtn = document.getElementById('cancel-plan-btn');
+
 
     // --- NUEVAS variables para la instrucción inamovible ---
     let uploadedInfoFileContent = ""; // Contenido del archivo de info subido (temporal)
@@ -881,6 +892,75 @@ chatSearchInput.addEventListener('input', () => {
   });
 });
 
+// --- CAMBIO DE PANE ---
+if (accountNavItem) {
+  accountNavItem.addEventListener('click', async () => {
+    document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
+    accountNavItem.classList.add('active');
+    generalPane.style.display = 'none';
+    accountPane.style.display = 'block';
+    await loadAccountData();
+  });
+}
+
+// --- CARGAR DATOS DE PERFIL ---
+async function loadAccountData() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('avatar_url, plan, plan_expiry')
+    .eq('id', session.user.id)
+    .single();
+
+  // Foto
+  if (profile?.avatar_url) {
+    accountAvatarImg.src = profile.avatar_url;
+    document.getElementById('header-profile-pic').src = profile.avatar_url; // <-- Actualiza header también
+  } else {
+    accountAvatarImg.src = '/static/person.jpg';
+  }
+
+  // Plan y vencimiento
+  accountPlan.textContent = profile?.plan || 'Essence';
+  accountExpiry.textContent = profile?.plan_expiry 
+    ? new Date(profile.plan_expiry).toLocaleDateString() 
+    : 'Sin fecha';
+
+  // Deshabilitar cancelar si es Essence
+  cancelPlanBtn.disabled = (profile?.plan || 'essence') === 'essence';
+}
+
+// --- CAMBIO DE AVATAR ---
+accountAvatarBtn.addEventListener('click', () => accountAvatarInput.click());
+accountAvatarInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const { data, error } = await supabaseClient.storage
+    .from('avatars')
+    .upload(`public/${Date.now()}_${file.name}`, file, { upsert: true });
+  if (error) return alert('Error al subir imagen.');
+
+  const publicUrl = supabaseClient.storage.from('avatars').getPublicUrl(data.path).data.publicUrl;
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  await supabaseClient.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
+  accountAvatarImg.src = publicUrl;
+  document.getElementById('header-profile-pic').src = publicUrl; // <-- Refresca header
+});
+
+// --- CANCELAR PLAN ---
+cancelPlanBtn.addEventListener('click', async () => {
+  if (!confirm('¿Seguro que deseas cancelar tu plan?')) return;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  await fetch('/cancel_subscription', { 
+    method: 'POST', 
+    headers: { 'Authorization': `Bearer ${session.access_token}` } 
+  });
+  alert('Tu plan ha sido cancelado.');
+  loadAccountData();
+});
 
 
 });
