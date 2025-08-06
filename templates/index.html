@@ -51,6 +51,23 @@
           <div class="settings-nav-item">Data controls</div>
           <div class="settings-nav-item">Account</div>
         </div>
+        <!-- PANE NUEVO PARA ACCOUNT -->
+<div class="settings-pane" id="account-pane" style="display:none;">
+  <div class="account-section">
+    <div class="account-avatar">
+      <img id="account-avatar-img" src="/static/person.jpg" alt="Avatar">
+      <input type="file" id="account-avatar-input" accept="image/*" hidden>
+      <button id="account-avatar-btn">Cambiar foto</button>
+    </div>
+    <div class="account-info">
+      <p><strong>Plan actual:</strong> <span id="account-plan">...</span></p>
+      <p><strong>Vencimiento:</strong> <span id="account-expiry">...</span></p>
+    </div>
+    <div class="account-actions">
+      <button id="cancel-plan-btn" class="danger-btn">Cancelar Plan</button>
+    </div>
+  </div>
+</div>
         <div class="settings-pane">
           <div class="setting-row">
             <label>Theme</label>
