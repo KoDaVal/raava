@@ -1339,13 +1339,14 @@ input:checked + .slider:before {
   color: var(--link-color, #aaa);
   margin: 12px 0 6px 0;
 }
-/* --- PANEL ACCOUNT --- */
+/* ====== ESTILOS PANEL ACCOUNT ====== */
 .account-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
+  gap: 20px;
   text-align: center;
+  padding: 20px;
 }
 
 .account-avatar img {
@@ -1354,11 +1355,11 @@ input:checked + .slider:before {
   border-radius: 50%;
   border: 3px solid var(--border-color);
   object-fit: cover;
+  margin-bottom: 10px;
 }
 
 .account-avatar button {
-  margin-top: 8px;
-  padding: 6px 12px;
+  padding: 8px 16px;
   background-color: var(--accent-color);
   color: #fff;
   border: none;
@@ -1366,28 +1367,55 @@ input:checked + .slider:before {
   cursor: pointer;
   transition: background-color 0.3s;
 }
-
 .account-avatar button:hover {
   background-color: var(--accent-hover);
 }
 
+.account-info {
+  width: 100%;
+  background: var(--message-bg);
+  padding: 15px;
+  border-radius: var(--radius);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  text-align: left;
+}
 .account-info p {
   font-size: 15px;
+  margin: 8px 0;
   color: var(--settings-text-color);
+}
+
+.account-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
 }
 
 .account-actions .danger-btn {
   background-color: #d9534f;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 10px;
   border-radius: var(--radius);
   cursor: pointer;
   transition: background-color 0.3s;
 }
-
 .account-actions .danger-btn:hover {
   background-color: #c9302c;
+}
+
+.account-actions .logout-btn {
+  background-color: #444;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.account-actions .logout-btn:hover {
+  background-color: #222;
 }
 
 
