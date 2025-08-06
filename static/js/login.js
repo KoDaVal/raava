@@ -1,19 +1,25 @@
 const SUPABASE_URL = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Guardar redirect si viene en la URL
+const urlRedirect = new URLSearchParams(window.location.search).get('redirect');
+if (urlRedirect) {
+  localStorage.setItem('oauth_redirect', urlRedirect);
+}
+
 // Si volvemos de Google/GitHub y ya hay sesión, redirigir automáticamente
 (async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (data.session) {
     let redirectTo = localStorage.getItem('oauth_redirect') || '/';
-    localStorage.removeItem('oauth_redirect');
     if (redirectTo && redirectTo !== 'undefined' && redirectTo !== 'null') {
       try { redirectTo = decodeURIComponent(redirectTo); } catch (e) { redirectTo = '/'; }
     }
+    localStorage.removeItem('oauth_redirect');
     window.location.href = redirectTo;
   }
 })();
-
 
 let isLogin = true;
 
@@ -187,26 +193,26 @@ submitBtn.addEventListener('click', async () => {
   if (!isLogin && pass !== confirm) return errConfirm.textContent = "Passwords do not match.";
   submitBtn.textContent = "Loading…"; submitBtn.classList.add('loading');
   // === Verificar si el correo ya existe antes de registrar ===
-if (!isLogin) {
-  const checkRes = await fetch('/check_email', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email })
-  });
-  const checkData = await checkRes.json();
-  if (checkData.exists) {
-    errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
-    submitBtn.textContent = "Continue";
-    submitBtn.classList.remove('loading');
-    return; // Detener el flujo si el correo existe
+  if (!isLogin) {
+    const checkRes = await fetch('/check_email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const checkData = await checkRes.json();
+    if (checkData.exists) {
+      errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
+      submitBtn.textContent = "Continue";
+      submitBtn.classList.remove('loading');
+      return;
+    }
   }
-}
   const { error } = isLogin
     ? await supabaseClient.auth.signInWithPassword({ email, password: pass })
     : await supabaseClient.auth.signUp({ email, password: pass });
   submitBtn.textContent = "Continue"; submitBtn.classList.remove('loading');
   if (error) {
-    console.log("Supabase error:", error); // <-- LOG PARA VER EL MENSAJE EXACTO
+    console.log("Supabase error:", error);
     const msg = error.message.toLowerCase();
     if (
       !isLogin && (
@@ -230,17 +236,14 @@ if (!isLogin) {
     return;
   }
 
-  const urlParams = new URLSearchParams(window.location.search);
-  let redirectTo = urlParams.get('redirect');
+  let redirectTo = localStorage.getItem('oauth_redirect');
   if (!redirectTo || redirectTo === 'undefined' || redirectTo === 'null') {
-    const storedRedirect = localStorage.getItem('oauth_redirect');
-    if (storedRedirect) {
-      redirectTo = storedRedirect;
-      localStorage.removeItem('oauth_redirect');
-    }
+    const urlParams = new URLSearchParams(window.location.search);
+    redirectTo = urlParams.get('redirect');
   }
-  if (redirectTo && redirectTo !== 'undefined' && redirectTo !== 'null') {
+  if (redirectTo) {
     try { redirectTo = decodeURIComponent(redirectTo); } catch (e) { redirectTo = null; }
+    localStorage.removeItem('oauth_redirect');
   }
 
   if (
@@ -297,4 +300,3 @@ document.getElementById('return-login-from-newpass').addEventListener('click', (
   loginSection.classList.remove('hidden');
   socialButtons.classList.remove('hidden');
 });
-
