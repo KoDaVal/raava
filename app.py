@@ -55,9 +55,34 @@ def verify_token(token):
             "apikey": supabase_key
         }
         r = requests.get(url, headers=headers)
-        if r.status_code == 200:
-            return r.json()
-        return None
+        if r.status_code != 200:
+            return None
+        user_data = r.json()
+
+        # Si no trae email, buscar en profiles
+        if not user_data.get("email"):
+            profile = supabase.table("profiles").select("email").eq("id", user_data["id"]).execute()
+            if profile.data and profile.data[0].get("email"):
+                user_data["email"] = profile.data[0]["email"]
+
+        # Si sigue vacío, buscar usando Admin API
+        if not user_data.get("email"):
+            try:
+                admin_url = f"{supabase_url}/auth/v1/admin/users/{user_data['id']}"
+                admin_headers = {
+                    "apikey": supabase_key,
+                    "Authorization": f"Bearer {supabase_key}",
+                    "Content-Type": "application/json"
+                }
+                r2 = requests.get(admin_url, headers=admin_headers)
+                if r2.status_code == 200:
+                    admin_user = r2.json()
+                    if admin_user.get("email"):
+                        user_data["email"] = admin_user["email"]
+            except Exception as e:
+                print("Error buscando email en Admin API:", e)
+
+        return user_data
     except Exception as e:
         print("Error verificando token:", e)
         return None
