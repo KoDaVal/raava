@@ -86,6 +86,27 @@
             </label>
           </div>
         </div>
+        <!-- PANE: Account -->
+<div id="settings-account-pane" class="hidden">
+  <div class="account-section">
+    <div class="account-avatar">
+      <img id="account-avatar-img" src="/static/person.jpg" alt="Avatar">
+      <input type="file" id="account-avatar-upload" accept="image/*" hidden>
+      <button id="change-avatar-btn" class="btn-secondary">Cambiar foto</button>
+    </div>
+    <div class="account-info">
+      <p><strong>Correo:</strong> <span id="account-email">Cargando...</span></p>
+      <p><strong>Plan:</strong> <span id="account-plan">Cargando...</span></p>
+      <p><strong>Renovación:</strong> <span id="account-renewal">Cargando...</span></p>
+    </div>
+    <div class="account-actions">
+      <button id="change-plan-btn" class="btn-primary">Cambiar plan</button>
+      <button id="cancel-plan-btn" class="btn-danger">Cancelar plan</button>
+      <button id="logout-btn" class="btn-secondary">Cerrar sesión</button>
+    </div>
+  </div>
+</div>
+
       </div>
     </div>
   </div>
