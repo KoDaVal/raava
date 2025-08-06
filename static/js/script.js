@@ -813,6 +813,16 @@ document.getElementById('sidebar-backdrop').addEventListener('click', () => {
 }
     // --- Cargar perfil al iniciar sesión ---
 async function loadUserProfile(user) {
+    if (!user.user_metadata?.avatar_url) {
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('avatar_url')
+      .eq('id', user.id)
+      .single();
+    if (profile?.avatar_url && avatar) {
+      avatar.src = profile.avatar_url;
+    }
+  }
   const avatar = document.getElementById('header-profile-pic');
   if (user.user_metadata?.avatar_url && avatar) {
     avatar.src = user.user_metadata.avatar_url;
