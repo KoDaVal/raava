@@ -892,36 +892,33 @@ chatSearchInput.addEventListener('input', () => {
   });
 });
 
-// --- CAMBIO DE PANE ---
-if (accountNavItem) {
-  accountNavItem.addEventListener('click', async () => {
-    // Quitar "active" de todos los tabs
-    document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
-    accountNavItem.classList.add('active');
-
-    // Ocultar todos los paneles
-    document.querySelectorAll('.settings-pane').forEach(p => p.style.display = 'none');
-
-    // Mostrar SOLO el de Account
-    accountPane.style.display = 'block';
-    await loadAccountData();
-  });
+// --- CAMBIO DE PANE GENERICO ---
+function setupPaneSwitch(tabText, paneId, onClick = null) {
+  const navItem = [...document.querySelectorAll('.settings-nav-item')].find(i => i.textContent === tabText);
+  const pane = document.getElementById(paneId);
+  if (navItem && pane) {
+    navItem.addEventListener('click', async () => {
+      // Quitar "active" de todos los tabs
+      document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
+      navItem.classList.add('active');
+      // Ocultar todos los paneles
+      document.querySelectorAll('.settings-pane').forEach(p => p.style.display = 'none');
+      // Mostrar solo el que corresponde
+      pane.style.display = 'block';
+      // Ejecutar lógica adicional si existe
+      if (onClick) await onClick();
+    });
+  }
 }
 
-// --- CAMBIO A GENERAL ---
-const generalNavItem = [...document.querySelectorAll('.settings-nav-item')].find(i => i.textContent === 'General');
-if (generalNavItem) {
-  generalNavItem.addEventListener('click', () => {
-    document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
-    generalNavItem.classList.add('active');
+// Configurar pestañas
+setupPaneSwitch('General', 'general-pane');
+setupPaneSwitch('Notifications', 'notifications-pane');
+setupPaneSwitch('Personalization', 'personalization-pane');
+setupPaneSwitch('Connected apps', 'connected-pane');
+setupPaneSwitch('Data controls', 'data-pane');
+setupPaneSwitch('Account', 'account-pane', loadAccountData);
 
-    // Ocultar todos los paneles
-    document.querySelectorAll('.settings-pane').forEach(p => p.style.display = 'none');
-
-    // Mostrar SOLO el de General
-    generalPane.style.display = 'block';
-  });
-}
 
 // --- CARGAR DATOS DE PERFIL ---
 async function loadAccountData() {
