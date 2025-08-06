@@ -927,6 +927,9 @@ async function loadAccountData() {
   accountExpiry.textContent = profile?.plan_expiry 
     ? new Date(profile.plan_expiry).toLocaleDateString() 
     : 'Sin fecha';
+    // También refrescar el plan en el menú del header
+document.getElementById('user-plan-label').textContent = `Plan: ${profile?.plan || 'Essence'}`;
+
 
   // Deshabilitar cancelar si es Essence
   cancelPlanBtn.disabled = (profile?.plan || 'essence') === 'essence';
