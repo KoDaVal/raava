@@ -66,8 +66,11 @@
   const plan = "{{ plan }}";
 
   async function redirectToStripe(session) {
-    const token = session.access_token;
     try {
+      // Forzar recarga del usuario para asegurar que el email está listo
+      await supabaseClient.auth.getUser();
+
+      const token = session.access_token;
       const res = await fetch("/create_checkout_session", {
         method: "POST",
         headers: {
@@ -87,16 +90,13 @@
   async function init() {
     const { data } = await supabaseClient.auth.getSession();
     if (data.session) {
-      // Si ya hay sesión, ir directo a Stripe
       redirectToStripe(data.session);
     } else {
-      // Si NO hay sesión, esperar el login social
       supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === "SIGNED_IN" && session) {
           redirectToStripe(session);
         }
       });
-      // Si no hay sesión aún, redirigir a login con redirect
       window.location.href = `/login?redirect=/subscribe?plan=${plan}`;
     }
   }
@@ -104,3 +104,4 @@
 </script>
 </body>
 </html>
+
