@@ -65,27 +65,38 @@
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const plan = "{{ plan }}";
 
-  async function redirectToStripe(session) {
-    try {
-      // Forzar recarga del usuario para asegurar que el email está listo
-      await supabaseClient.auth.getUser();
-
-      const token = session.access_token;
-      const res = await fetch("/create_checkout_session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ plan })
-      });
-      const dataRes = await res.json();
-      if (!res.ok) throw new Error(dataRes.error || "Error creando sesión");
-      window.location.href = dataRes.url;
-    } catch (err) {
-      alert("Error al iniciar el checkout: " + err.message);
+ async function redirectToStripe(session) {
+  try {
+    let user = null;
+    // Reintentar hasta 5 veces para asegurar que el email está disponible
+    for (let i = 0; i < 5; i++) {
+      const { data: userData } = await supabaseClient.auth.getUser();
+      user = userData?.user;
+      if (user?.email) break;
+      await new Promise(r => setTimeout(r, 500)); // esperar 0.5s antes de reintentar
     }
+
+    if (!user || !user.email) {
+      throw new Error("No se pudo obtener el correo del usuario.");
+    }
+
+    const token = session.access_token;
+    const res = await fetch("/create_checkout_session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ plan })
+    });
+    const dataRes = await res.json();
+    if (!res.ok) throw new Error(dataRes.error || "Error creando sesión");
+    window.location.href = dataRes.url;
+  } catch (err) {
+    alert("Error al iniciar el checkout: " + err.message);
   }
+}
+
 
   async function init() {
     const { data } = await supabaseClient.auth.getSession();
