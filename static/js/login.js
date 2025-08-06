@@ -186,6 +186,21 @@ submitBtn.addEventListener('click', async () => {
   }
   if (!isLogin && pass !== confirm) return errConfirm.textContent = "Passwords do not match.";
   submitBtn.textContent = "Loading…"; submitBtn.classList.add('loading');
+  // === Verificar si el correo ya existe antes de registrar ===
+if (!isLogin) {
+  const checkRes = await fetch('/check_email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  const checkData = await checkRes.json();
+  if (checkData.exists) {
+    errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
+    submitBtn.textContent = "Continue";
+    submitBtn.classList.remove('loading');
+    return; // Detener el flujo si el correo existe
+  }
+}
   const { error } = isLogin
     ? await supabaseClient.auth.signInWithPassword({ email, password: pass })
     : await supabaseClient.auth.signUp({ email, password: pass });
