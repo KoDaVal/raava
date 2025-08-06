@@ -820,6 +820,34 @@ def check_email():
     except Exception as e:
         print("Error en /check_email:", e)
         return api_error("Error verificando el correo.", 500)
+@app.route('/cancel_subscription', methods=['POST'])
+def cancel_subscription():
+    try:
+        token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        user_data = verify_token(token)
+        if not user_data:
+            return api_error("No autorizado", 401)
+        user_id = user_data["id"]
+
+        profile = get_user_profile(user_id)
+        customer_id = profile.get("stripe_customer_id")
+        if not customer_id:
+            return api_error("No tienes suscripción activa.")
+
+        subs = stripe.Subscription.list(customer=customer_id, status='active')
+        for s in subs.auto_paging_iter():
+            stripe.Subscription.modify(s.id, cancel_at_period_end=True)
+
+        supabase.table('profiles').update({
+            'plan': 'essence',
+            'plan_expiry': None
+        }).eq('id', user_id).execute()
+
+        return jsonify({"message": "Suscripción cancelada"})
+    except Exception as e:
+        print("Error cancelando suscripción:", e)
+        return api_error("Error al cancelar suscripción", 500)
+
 
 
 
