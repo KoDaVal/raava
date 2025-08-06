@@ -55,7 +55,114 @@ if (newChatBtn) {
     const settingsModal = document.getElementById('settings-modal');
     const closeSettingsBtn = document.getElementById('close-settings-btn');
     const themeSelect = document.getElementById('theme-select'); // Nuevo selector de tema en ajustes
+    // --- Control de pestañas del modal ---
+const navItems = document.querySelectorAll('.settings-nav-item');
+const generalPane = document.querySelector('.settings-pane');
+const accountPane = document.getElementById('settings-account-pane');
 
+navItems.forEach(item => {
+  item.addEventListener('click', () => {
+    navItems.forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+
+    if (item.textContent.trim() === 'Account') {
+      generalPane.classList.add('hidden');
+      accountPane.classList.remove('hidden');
+      loadAccountData();
+    } else {
+      generalPane.classList.remove('hidden');
+      accountPane.classList.add('hidden');
+    }
+  });
+});
+// --- Cargar datos del usuario en Account ---
+async function loadAccountData() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+
+  document.getElementById('account-email').textContent = session.user.email;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('plan, subscription_renewal, avatar_url')
+    .eq('id', session.user.id)
+    .single();
+
+  if (profile) {
+    document.getElementById('account-plan').textContent = profile.plan || 'Essence';
+    document.getElementById('account-renewal').textContent = profile.subscription_renewal || 'N/A';
+    if (profile.avatar_url) {
+      document.getElementById('account-avatar-img').src = profile.avatar_url;
+    }
+  }
+}
+// --- Cambiar foto de perfil ---
+const changeAvatarBtn = document.getElementById('change-avatar-btn');
+const accountAvatarUpload = document.getElementById('account-avatar-upload');
+if (changeAvatarBtn && accountAvatarUpload) {
+  changeAvatarBtn.addEventListener('click', () => accountAvatarUpload.click());
+
+accountAvatarUpload.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file || !file.type.startsWith('image/')) {
+        alert('Por favor, selecciona un archivo de imagen válido.');
+        return;
+    }
+    if (file.size > 2 * 1024 * 1024) { // 2MB
+        alert('La imagen no debe superar los 2MB.');
+        return;
+    }
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return;
+
+    const filePath = `avatars/${session.user.id}/${file.name}`;
+    const { error } = await supabaseClient.storage.from('avatars').upload(filePath, file, { upsert: true });
+    if (error) {
+      alert('Error al subir la imagen');
+      return;
+    }
+
+    const { data: { publicUrl } } = supabaseClient.storage.from('avatars').getPublicUrl(filePath);
+    await supabaseClient.from('profiles').update({ avatar_url: publicUrl }).eq('id', session.user.id);
+    document.getElementById('account-avatar-img').src = publicUrl;
+    alert('Foto actualizada');
+    // También actualizar el avatar del header
+const headerPic = document.getElementById('header-profile-pic');
+if (headerPic) headerPic.src = publicUrl;
+  });
+}
+// --- Botón cambiar plan ---
+const changePlanBtn = document.getElementById('change-plan-btn');
+if (changePlanBtn) {
+  changePlanBtn.addEventListener('click', () => {
+    window.location.href = '/pricing';
+  });
+}
+
+// --- Botón cancelar plan ---
+const cancelPlanBtn = document.getElementById('cancel-plan-btn');
+if (cancelPlanBtn) {
+  cancelPlanBtn.addEventListener('click', async () => {
+    if (!confirm('¿Seguro que quieres cancelar tu suscripción?')) return;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return alert('Debes iniciar sesión');
+    cancelPlanBtn.disabled = true;
+cancelPlanBtn.textContent = 'Cancelando...';
+    const res = await fetch('/cancel_subscription', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${session.access_token}` }
+});
+if (res.ok) {
+    alert('Suscripción cancelada.');
+    loadAccountData();
+} else {
+    alert('Error al cancelar la suscripción.');
+}
+      cancelPlanBtn.disabled = false;
+cancelPlanBtn.textContent = 'Cancelar plan';
+
+  });
+}
     // --- NUEVAS variables para la instrucción inamovible ---
     let uploadedInfoFileContent = ""; // Contenido del archivo de info subido (temporal)
     let activePersistentInstruction = ""; // La instrucción activa para Gemini
@@ -126,19 +233,19 @@ const mobileInfoLabel = document.querySelector('.mobile-only .file-button');
 
     // --- NUEVO: Cambiar tema desde el selector dentro del modal de ajustes ---
     if (themeSelect) {
-        themeSelect.addEventListener('change', (event) => {
-            if (event.target.value === 'light') {
-                document.body.classList.add('light-mode');
-                document.body.classList.remove('dark-mode'); // Asegúrate de remover el dark-mode si existe
-            } else {
-                document.body.classList.add('dark-mode'); // Añade dark-mode si es tema oscuro
-                document.body.classList.remove('light-mode'); // Asegúrate de remover el light-mode
-            }
-            // Llama a la función para actualizar los iconos después de cambiar el tema
-            applyIconTheme();
-        });
-    }
-
+    themeSelect.addEventListener('change', (event) => {
+        const selected = event.target.value;
+        if (selected === 'light') {
+            document.body.classList.add('light-mode');
+            document.body.classList.remove('dark-mode');
+        } else {
+            document.body.classList.add('dark-mode');
+            document.body.classList.remove('light-mode');
+        }
+        localStorage.setItem('theme', selected); // Guardar preferencia
+        applyIconTheme();
+    });
+}
     // --- NUEVA FUNCIÓN: Aplicar el tema a los iconos PNG ---
     function applyIconTheme() {
         // Selecciona todos los elementos de imagen con la clase 'theme-icon'
