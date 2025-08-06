@@ -52,19 +52,28 @@
           <div class="settings-nav-item">Account</div>
         </div>
         <!-- PANE NUEVO PARA ACCOUNT -->
+<!-- PANE REDISEÑADO PARA ACCOUNT -->
 <div class="settings-pane" id="account-pane" style="display:none;">
   <div class="account-section">
     <div class="account-avatar">
       <img id="account-avatar-img" src="/static/person.jpg" alt="Avatar">
       <input type="file" id="account-avatar-input" accept="image/*" hidden>
-      <button id="account-avatar-btn">Cambiar foto</button>
+      <button id="account-avatar-btn" class="account-btn">Change photo</button>
     </div>
-    <div class="account-info">
-      <p><strong>Plan actual:</strong> <span id="account-plan">...</span></p>
-      <p><strong>Vencimiento:</strong> <span id="account-expiry">...</span></p>
+    <div class="account-details">
+      <div class="account-field">
+        <label>Email</label>
+        <input type="text" id="account-email" disabled value="...">
+      </div>
+      <div class="account-field">
+        <label>Plan</label>
+        <input type="text" id="account-plan" disabled value="...">
+        <small id="account-expiry">Expires: N/A</small>
+      </div>
     </div>
     <div class="account-actions">
-      <button id="cancel-plan-btn" class="danger-btn">Cancelar Plan</button>
+      <button id="cancel-plan-btn" class="cancel-btn">Cancel plan</button>
+      <button id="logout-btn" class="logout-btn">Log out</button>
     </div>
   </div>
 </div>
