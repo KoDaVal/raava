@@ -930,30 +930,32 @@ async function loadAccountData() {
 
   const { data: profile } = await supabaseClient
     .from('profiles')
-    .select('avatar_url, plan, plan_expiry')
+    .select('avatar_url, plan, subscription_renewal')
     .eq('id', session.user.id)
     .single();
 
-  // Foto
-  if (profile?.avatar_url) {
-    accountAvatarImg.src = profile.avatar_url;
-    document.getElementById('header-profile-pic').src = profile.avatar_url; // <-- Actualiza header también
-  } else {
-    accountAvatarImg.src = '/static/person.jpg';
-  }
+  // --- Foto ---
+  const avatarUrl = profile?.avatar_url || '/static/person.jpg';
+  accountAvatarImg.src = avatarUrl;
+  document.getElementById('header-profile-pic').src = avatarUrl;
 
-  // Plan y vencimiento
+  // --- Plan ---
   accountPlan.textContent = profile?.plan || 'Essence';
-  accountExpiry.textContent = profile?.plan_expiry 
-    ? new Date(profile.plan_expiry).toLocaleDateString() 
+  document.getElementById('user-plan-label').textContent = `Plan: ${profile?.plan || 'Essence'}`;
+
+  // --- Fecha de renovación ---
+  accountExpiry.textContent = profile?.subscription_renewal
+    ? new Date(profile.subscription_renewal).toLocaleDateString()
     : 'Sin fecha';
-    // También refrescar el plan en el menú del header
-document.getElementById('user-plan-label').textContent = `Plan: ${profile?.plan || 'Essence'}`;
 
+  // --- Email ---
+  const accountEmail = document.getElementById('account-email');
+  if (accountEmail) accountEmail.value = session.user.email || 'Sin correo';
 
-  // Deshabilitar cancelar si es Essence
+  // --- Botón cancelar ---
   cancelPlanBtn.disabled = (profile?.plan || 'essence') === 'essence';
 }
+
 
 // --- CAMBIO DE AVATAR ---
 accountAvatarBtn.addEventListener('click', () => accountAvatarInput.click());
