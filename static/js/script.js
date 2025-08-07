@@ -892,116 +892,100 @@ chatSearchInput.addEventListener('input', () => {
   });
 });
 
-// ═════════════ AJUSTES (MODAL) ═════════════
-const accountAvatarImg = document.getElementById('account-avatar-img');
-const accountAvatarBtn = document.getElementById('account-avatar-btn');
-const accountAvatarInput = document.getElementById('account-avatar-input');
-const accountPlan = document.getElementById('account-plan');
-const accountExpiry = document.getElementById('account-expiry');
-const accountEmail = document.getElementById('account-email');
+// --- CAMBIO DE PANE ---
+if (accountNavItem) {
+  accountNavItem.addEventListener('click', async () => {
+    // Quitar "active" de todos los tabs
+    document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
+    accountNavItem.classList.add('active');
 
-// Cambiar entre pestañas del modal
-const settingsNavItems = document.querySelectorAll('.settings-nav-item');
-const settingsPanes = document.querySelectorAll('.settings-pane');
+    // Ocultar todos los paneles
+    document.querySelectorAll('.settings-pane').forEach(p => p.style.display = 'none');
 
-settingsNavItems.forEach((item, index) => {
-  item.addEventListener('click', () => {
-    settingsNavItems.forEach(i => i.classList.remove('active'));
-    settingsPanes.forEach(p => p.style.display = 'none');
-    item.classList.add('active');
-    settingsPanes[index].style.display = 'block';
-
-    // Si es la pestaña de cuenta, cargar datos
-    if (item.id === 'nav-account') populateAccountSection();
+    // Mostrar SOLO el de Account
+    accountPane.style.display = 'block';
+    await loadAccountData();
   });
-});
+}
 
-// Obtener y mostrar datos del usuario en modal
-async function populateAccountSection() {
+// --- CAMBIO A GENERAL ---
+const generalNavItem = [...document.querySelectorAll('.settings-nav-item')].find(i => i.textContent === 'General');
+if (generalNavItem) {
+  generalNavItem.addEventListener('click', () => {
+    document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
+    generalNavItem.classList.add('active');
+
+    // Ocultar todos los paneles
+    document.querySelectorAll('.settings-pane').forEach(p => p.style.display = 'none');
+
+    // Mostrar SOLO el de General
+    generalPane.style.display = 'block';
+  });
+}
+
+// --- CARGAR DATOS DE PERFIL ---
+async function loadAccountData() {
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session?.user) return;
-
-  const user = session.user;
-  if (accountEmail) accountEmail.value = user.email || 'Sin correo';
+  if (!session) return;
 
   const { data: profile } = await supabaseClient
     .from('profiles')
     .select('avatar_url, plan, subscription_renewal')
-    .eq('id', user.id)
+    .eq('id', session.user.id)
     .single();
 
-  // Avatar
+  // --- Foto ---
   const avatarUrl = profile?.avatar_url || '/static/person.jpg';
-  if (accountAvatarImg) accountAvatarImg.src = avatarUrl;
-  const headerAvatar = document.getElementById('header-profile-pic');
-  if (headerAvatar) headerAvatar.src = avatarUrl;
+  accountAvatarImg.src = avatarUrl;
+  document.getElementById('header-profile-pic').src = avatarUrl;
 
-  // Plan
-  const plan = profile?.plan || 'Essence';
-  if (accountPlan) accountPlan.value = plan;
-  const planLabel = document.getElementById('user-plan-label');
-  if (planLabel) planLabel.textContent = `Plan: ${plan}`;
+  // --- Plan ---
+  accountPlan.textContent = profile?.plan || 'Essence';
+  document.getElementById('user-plan-label').textContent = `Plan: ${profile?.plan || 'Essence'}`;
 
-  // Fecha de renovación
-  if (accountExpiry) {
-    accountExpiry.textContent = profile?.subscription_renewal
-      ? `Renueva: ${new Date(profile.subscription_renewal).toLocaleDateString()}`
-      : 'Sin fecha';
-  }
+  // --- Fecha de renovación ---
+  accountExpiry.textContent = profile?.subscription_renewal
+    ? new Date(profile.subscription_renewal).toLocaleDateString()
+    : 'Sin fecha';
 
-  // Activar / desactivar botón cancelar plan
-  const cancelPlanBtn = document.getElementById('cancel-plan-btn');
-  if (cancelPlanBtn) cancelPlanBtn.disabled = plan.toLowerCase() === 'essence';
+  // --- Email ---
+  const accountEmail = document.getElementById('account-email');
+  if (accountEmail) accountEmail.value = session.user.email || 'Sin correo';
+
+  // --- Botón cancelar ---
+  cancelPlanBtn.disabled = (profile?.plan || 'essence') === 'essence';
 }
 
-// Cambiar avatar
-accountAvatarBtn?.addEventListener('click', () => accountAvatarInput?.click());
 
-accountAvatarInput?.addEventListener('change', async (e) => {
+// --- CAMBIO DE AVATAR ---
+accountAvatarBtn.addEventListener('click', () => accountAvatarInput.click());
+accountAvatarInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-
-  const filename = `public/${Date.now()}_${file.name}`;
   const { data, error } = await supabaseClient.storage
     .from('avatars')
-    .upload(filename, file, { upsert: true });
+    .upload(`public/${Date.now()}_${file.name}`, file, { upsert: true });
+  if (error) return alert('Error al subir imagen.');
 
-  if (error) return alert('Error al subir la imagen.');
-
-  const { data: { publicUrl } } = supabaseClient
-    .storage.from('avatars')
-    .getPublicUrl(filename);
-
+  const publicUrl = supabaseClient.storage.from('avatars').getPublicUrl(data.path).data.publicUrl;
   const { data: { user } } = await supabaseClient.auth.getUser();
   await supabaseClient.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
-
   accountAvatarImg.src = publicUrl;
-  const headerAvatar = document.getElementById('header-profile-pic');
-  if (headerAvatar) headerAvatar.src = publicUrl;
+  document.getElementById('header-profile-pic').src = publicUrl; // <-- Refresca header
 });
 
-// Cancelar plan
-document.getElementById('cancel-plan-btn')?.addEventListener('click', async () => {
+// --- CANCELAR PLAN ---
+cancelPlanBtn.addEventListener('click', async () => {
   if (!confirm('¿Seguro que deseas cancelar tu plan?')) return;
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) return;
-
-  await fetch('/cancel_subscription', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${session.access_token}` }
+  await fetch('/cancel_subscription', { 
+    method: 'POST', 
+    headers: { 'Authorization': `Bearer ${session.access_token}` } 
   });
-
   alert('Tu plan ha sido cancelado.');
-  populateAccountSection();
+  loadAccountData();
 });
 
-// Logout desde ajustes y menú principal
-["logout-btn", "logout-option"].forEach(id => {
-  document.getElementById(id)?.addEventListener("click", async () => {
-    await supabaseClient.auth.signOut();
-    window.location.reload();
-  });
-});
 
 });
-
