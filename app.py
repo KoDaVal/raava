@@ -479,6 +479,8 @@ def chat():
             )
             tokens_out = len(response_message) // 4
         else:
+            print("[DEBUG GPT] MODEL:", plan_model)
+            print("[DEBUG GPT] SYSTEM PROMPT:", base_instruction)
             gpt_response = gpt4o_mini_generate(conversation_history, base_instruction)
             response_message = gpt_response["text"]
             tokens_in = gpt_response["tokens_in"]
