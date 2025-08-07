@@ -60,23 +60,6 @@ const accountNavItem = [...document.querySelectorAll('.settings-nav-item')].find
 const generalPane = document.querySelector('.settings-pane'); 
 const accountPane = document.getElementById('account-pane');
 const generalPaneEl = document.getElementById('general-pane');
-const navItems = document.querySelectorAll('.settings-nav-item');
-
-navItems.forEach(item => {
-  item.addEventListener('click', () => {
-    navItems.forEach(i => i.classList.remove('active'));
-    item.classList.add('active');
-
-    const label = item.textContent.trim().toLowerCase();
-    if (label === "account") {
-      accountPane.style.display = 'block';
-      generalPaneEl.style.display = 'none';
-    } else if (label === "general") {
-      accountPane.style.display = 'none';
-      generalPaneEl.style.display = 'block';
-    }
-  });
-});
 const accountAvatarImg = document.getElementById('account-avatar-img');
 const accountAvatarBtn = document.getElementById('account-avatar-btn');
 const accountAvatarInput = document.getElementById('account-avatar-input');
@@ -151,10 +134,21 @@ if (settingsOption) {
     if (!user) return;
 
     // Mostrar avatar en Account
-    const avatarUrl = user.user_metadata?.avatar_url;
-    if (avatarUrl) {
-      accountAvatarImg.src = avatarUrl;
-    }
+let avatarUrl = user.user_metadata?.avatar_url || '/static/person.jpg';
+
+const { data: profile } = await supabaseClient
+  .from('profiles')
+  .select('avatar_url')
+  .eq('id', user.id)
+  .single();
+
+if (profile?.avatar_url) {
+  avatarUrl = profile.avatar_url;
+}
+
+accountAvatarImg.src = avatarUrl;
+document.getElementById('header-profile-pic').src = avatarUrl;
+
 
     // Mostrar email
     document.getElementById('account-email').value = user.email;
@@ -765,12 +759,20 @@ document.getElementById('sidebar-backdrop').addEventListener('click', () => {
         document.getElementById('sidebar-backdrop').classList.add('active');
     });
 }
-    // --- Cargar perfil al iniciar sesión ---
 async function loadUserProfile(user) {
   const avatar = document.getElementById('header-profile-pic');
-  if (user.user_metadata?.avatar_url && avatar) {
-    avatar.src = user.user_metadata.avatar_url;
-  }
+  let avatarUrl = user.user_metadata?.avatar_url || '/static/person.jpg';
+
+  // Verifica si hay avatar personalizado en Supabase
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('avatar_url')
+    .eq('id', user.id)
+    .single();
+
+  if (profile?.avatar_url) avatarUrl = profile.avatar_url;
+
+  if (avatar) avatar.src = avatarUrl;
 
   const userPlanLabel = document.getElementById('user-plan-label');
   if (userPlanLabel) {
@@ -787,16 +789,8 @@ async function loadUserProfile(user) {
       userPlanLabel.textContent = `Plan: ${data[0]?.plan || 'essence'}`;
     })
     .catch(err => console.error("Error al cargar el plan:", err));
-
-    supabaseClient
-      .channel('public:profiles')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, payload => {
-        if (payload.new?.plan) userPlanLabel.textContent = `Plan: ${payload.new.plan}`;
-      })
-      .subscribe();
   }
 
-  // --- Botón logout ---
   const logoutOption = document.getElementById('logout-option');
   if (logoutOption) {
     logoutOption.addEventListener('click', async () => {
@@ -977,34 +971,36 @@ if (generalNavItem) {
 async function loadAccountData() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) return;
+  const user = session.user;
 
+  let avatarUrl = user.user_metadata?.avatar_url || '/static/person.jpg';
+
+  // Verifica si hay un avatar personalizado en Supabase
   const { data: profile } = await supabaseClient
     .from('profiles')
     .select('avatar_url, plan, subscription_renewal')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
 
-  // --- Foto ---
-  const avatarUrl = profile?.avatar_url || '/static/person.jpg';
+  if (profile?.avatar_url) avatarUrl = profile.avatar_url;
+
+  // Aplicar en ambos lugares
   accountAvatarImg.src = avatarUrl;
   document.getElementById('header-profile-pic').src = avatarUrl;
 
-  // --- Plan ---
   accountPlan.textContent = profile?.plan || 'Essence';
   document.getElementById('user-plan-label').textContent = `Plan: ${profile?.plan || 'Essence'}`;
 
-  // --- Fecha de renovación ---
   accountExpiry.textContent = profile?.subscription_renewal
     ? new Date(profile.subscription_renewal).toLocaleDateString()
     : 'Sin fecha';
 
-  // --- Email ---
   const accountEmail = document.getElementById('account-email');
-  if (accountEmail) accountEmail.value = session.user.email || 'Sin correo';
+  if (accountEmail) accountEmail.value = user.email || 'Sin correo';
 
-  // --- Botón cancelar ---
   cancelPlanBtn.disabled = (profile?.plan || 'essence') === 'essence';
 }
+
 
 
 // --- CAMBIO DE AVATAR ---
