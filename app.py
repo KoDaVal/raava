@@ -172,60 +172,44 @@ app = Flask(__name__)
 CORS(app)
 
 # ========== MODELOS ==========
-import os
+gemini_api_key = os.getenv("GEMINI_API_KEY")
+if not gemini_api_key:
+    raise EnvironmentError("Falta la variable de entorno GEMINI_API_KEY")
+genai.configure(api_key=gemini_api_key)
+gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+
 from openai import OpenAI
 import tiktoken
 
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 encoder = tiktoken.encoding_for_model("gpt-4o-mini")
 
-def gpt4o_mini_generate(history, persistent_instruction):
-    # Prompt inicial (mejorado)
-    base_instruction = (
-        "Eres Raavax, un asistente conversacional diseñado para interactuar de forma humana, cercana y útil. "
-        "Tu función principal es poder encarnar diferentes estilos de comunicación o personalidades basadas en instrucciones o archivos cargados por el usuario, siempre con fines apropiados y respetuosos. "
-        "Mantén las respuestas breves, claras y sensatas, con un tono humano, cálido y natural, evitando tecnicismos innecesarios. "
-        "No menciones tu identidad o función a menos que el usuario lo pregunte explícitamente. "
-        "Si el usuario te pregunta cosas como \"¿quién eres?\", \"¿cuál es tu función?\" o \"¿eres Raavax?\", debes responder claramente que eres Raavax, un asistente diseñado para ayudar y adaptarte a la personalidad que el usuario desee. "
-        "Nunca digas que no puedes hablar de ti mismo, ni que no tienes identidad. Tu nombre es Raavax."
-    )
-    if persistent_instruction:
-        base_instruction += f"\n\nInstrucciones adicionales del usuario:\n{persistent_instruction}"
-
-    # Construir historial con el system prompt
-    messages = [{"role": "system", "content": base_instruction}]
+def gpt4o_mini_generate(history, base_instruction):
+    messages = []
+    # Añadir el system prompt al inicio
+    messages.append({
+        "role": "system",
+        "content": base_instruction
+    })
+    # Pasar el resto del historial
     for msg in history:
-        role = msg.get("role")
-        content = msg.get("text")
-        if role in ("user", "assistant") and isinstance(content, str):
-            messages.append({"role": role, "content": content})
+        if msg["role"] in ["user", "assistant"]:
+            messages.append({
+                "role": "user" if msg["role"] == "user" else "assistant",
+                "content": msg["parts"][0].get("text", "")
+            })
 
-    print("🧠 [DEBUG] Mensajes enviados a GPT:")
-    for m in messages:
-        print(f"{m['role'].upper()}: {m['content'][:120]}...")
+    response = openai_client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages,
+        temperature=0.7
+    )
 
-    # Generar respuesta
-    try:
-        response = openai_client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=messages,
-            temperature=0.7,
-            max_tokens=400
-        )
-        result = response.choices[0].message.content
-        usage = response.usage
-        return {
-            "text": result,
-            "tokens_in": usage.prompt_tokens,
-            "tokens_out": usage.completion_tokens
-        }
-    except Exception as e:
-        print("❌ Error al generar respuesta con GPT:", e)
-        return {
-            "text": "Ocurrió un error generando la respuesta.",
-            "tokens_in": 0,
-            "tokens_out": 0
-        }
+    text = response.choices[0].message.content
+    tokens_in = sum(len(encoder.encode(m["content"])) for m in messages)
+    tokens_out = len(encoder.encode(text))
+    return {"text": text, "tokens_in": tokens_in, "tokens_out": tokens_out}
+
 # ========== ELEVEN LABS ==========
 eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_try_only")
 default_eleven_labs_voice_id = "21m00Tcm4TlvDq8ikWAM"
@@ -422,26 +406,20 @@ def chat():
         # Prompt inicial (mejorado)
         base_instruction = (
             "Eres Raavax, un asistente conversacional diseñado para interactuar de forma humana, cercana y útil. "
-            "Tu función principal es poder encarnar diferentes estilos de comunicación o personalidades basadas en instrucciones o archivos cargados por el usuario, siempre con fines apropiados y respetuosos. "
-            "Mantén las respuestas breves, claras y sensatas, con un tono humano, cálido y natural, evitando tecnicismos innecesarios. "
-            "No menciones tu identidad o función a menos que el usuario lo pregunte explícitamente. "
-            "Si el usuario te pregunta cosas como \"¿quién eres?\", \"¿cuál es tu función?\" o \"¿eres Raavax?\", debes responder claramente que eres Raavax, un asistente diseñado para ayudar y adaptarte a la personalidad que el usuario desee. "
-            "Nunca digas que no puedes hablar de ti mismo, ni que no tienes identidad. Tu nombre es Raavax."
+            "Tu función principal es poder encarnar diferentes estilos de comunicación o personalidades basadas en instrucciones o archivos cargados por el usuario, siempre con fines apropiados y políticamente correctos. "
+            "Mantén las respuestas breves, claras y sensatas, con un tono humano y natural, evitando tecnicismos innecesarios. "
+            "No menciones tu identidad o función a menos que el usuario lo pregunte explícitamente."
         )
         if persistent_instruction:
             base_instruction += f"\n\nInstrucciones adicionales del usuario:\n{persistent_instruction}"
 
-        if plan_model == "gemini":
-            if not conversation_history:
-                conversation_history = [{"role": "user", "parts": [{"text": base_instruction}]}]
-            else:
-                if conversation_history[0].get("role") == "user" and conversation_history[0].get("parts"):
-                    conversation_history[0]["parts"][0]["text"] = base_instruction + "\n\n" + conversation_history[0]["parts"][0]["text"]
-                else:
-                    conversation_history.insert(0, {"role": "user", "parts": [{"text": base_instruction}]})
+        if not conversation_history:
+            conversation_history = [{"role": "user", "parts": [{"text": base_instruction}]}]
         else:
-            # GPT ya recibe base_instruction como system, no se incluye aquí
-            pass
+            if conversation_history[0].get("role") == "user" and conversation_history[0].get("parts"):
+                conversation_history[0]["parts"][0]["text"] = base_instruction + "\n\n" + conversation_history[0]["parts"][0]["text"]
+            else:
+                conversation_history.insert(0, {"role": "user", "parts": [{"text": base_instruction}]})
 
         # Adjuntos
         current_user_parts = []
@@ -497,8 +475,6 @@ def chat():
             )
             tokens_out = len(response_message) // 4
         else:
-            print("[DEBUG GPT] MODEL:", plan_model)
-            print("[DEBUG GPT] SYSTEM PROMPT:", base_instruction)
             gpt_response = gpt4o_mini_generate(conversation_history, base_instruction)
             response_message = gpt_response["text"]
             tokens_in = gpt_response["tokens_in"]
@@ -731,47 +707,47 @@ def stripe_webhook():
         "legacy_yearly": "Legacy"
     }
 
-    if event_type == "checkout.session.completed":
-        user_id = data.get("metadata", {}).get("user_id")
-        plan = data.get("metadata", {}).get("plan")
-        customer_id = data.get("customer")
-        customer_email = data.get("customer_email")
-        final_plan = plan_mapping.get(plan, "essence")
+if event_type == "checkout.session.completed":
+    user_id = data.get("metadata", {}).get("user_id")
+    plan = data.get("metadata", {}).get("plan")
+    customer_id = data.get("customer")
+    customer_email = data.get("customer_email")
+    final_plan = plan_mapping.get(plan, "essence")
 
-        # Buscar user_id si no viene
-        if not user_id:
-            if customer_email:
-                res = supabase.table("profiles").select("id").ilike("email", customer_email).execute()
-                if res.data:
-                    user_id = res.data[0]["id"]
-            elif customer_id:
-                res = supabase.table("profiles").select("id").eq("stripe_customer_id", customer_id).execute()
-                if res.data:
-                    user_id = res.data[0]["id"]
+    # Buscar user_id si no viene
+    if not user_id:
+        if customer_email:
+            res = supabase.table("profiles").select("id").ilike("email", customer_email).execute()
+            if res.data:
+                user_id = res.data[0]["id"]
+        elif customer_id:
+            res = supabase.table("profiles").select("id").eq("stripe_customer_id", customer_id).execute()
+            if res.data:
+                user_id = res.data[0]["id"]
 
-        if not user_id:
-            print("[STRIPE] No se pudo encontrar user_id. Abortando.")
-            return jsonify({"status": "ignored"})
+    if not user_id:
+        print("[STRIPE] No se pudo encontrar user_id. Abortando.")
+        return jsonify({"status": "ignored"})
 
-        # Obtener fecha de renovación desde la suscripción
-        subscription_id = data.get("subscription")
-        renewal_date = None
-        if subscription_id:
-            sub = stripe.Subscription.retrieve(subscription_id)
-            if sub and sub.get("current_period_end"):
-                renewal_timestamp = sub["current_period_end"]
-                renewal_date = datetime.fromtimestamp(renewal_timestamp, tz=timezone.utc).isoformat()
+    # Obtener fecha de renovación desde la suscripción
+    subscription_id = data.get("subscription")
+    renewal_date = None
+    if subscription_id:
+        sub = stripe.Subscription.retrieve(subscription_id)
+        if sub and sub.get("current_period_end"):
+            renewal_timestamp = sub["current_period_end"]
+            renewal_date = datetime.fromtimestamp(renewal_timestamp, tz=timezone.utc).isoformat()
 
-        # Actualizar perfil en Supabase
-        update_data = {
-            "plan": final_plan,
-            "stripe_customer_id": customer_id
-        }
-        if renewal_date:
-            update_data["subscription_renewal"] = renewal_date
+    # Actualizar perfil en Supabase
+    update_data = {
+        "plan": final_plan,
+        "stripe_customer_id": customer_id
+    }
+    if renewal_date:
+        update_data["subscription_renewal"] = renewal_date
 
-        supabase.table("profiles").update(update_data).eq("id", user_id).execute()
-        print(f"[STRIPE] Plan actualizado para {user_id}: {final_plan}")
+    supabase.table("profiles").update(update_data).eq("id", user_id).execute()
+    print(f"[STRIPE] Plan actualizado para {user_id}: {final_plan}")
 
 
     elif event_type == "customer.subscription.updated":
