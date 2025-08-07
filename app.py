@@ -185,17 +185,24 @@ openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 encoder = tiktoken.encoding_for_model("gpt-4o-mini")
 
 def gpt4o_mini_generate(history, base_instruction):
-    # Reestructurar historial para asegurar compatibilidad
-    messages = [{"role": "system", "content": base_instruction}]
+    from openai import OpenAI
+    openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+    messages = []
+
+    # Asegurar que el prompt de sistema esté primero
+    messages.append({"role": "system", "content": base_instruction})
+
+    # Asegurar compatibilidad con GPT-4o-mini
     for msg in history:
         role = msg.get("role")
-        content = msg.get("text") if isinstance(msg.get("text"), str) else ""
-        if role and content:
+        content = msg.get("text")
+        if role in ("user", "assistant") and isinstance(content, str):
             messages.append({"role": role, "content": content})
 
-    print("🧠 [GPT DEBUG] Mensajes enviados:")
+    print("🧠 [DEBUG] Mensajes enviados a GPT:")
     for m in messages:
-        print(f"{m['role'].upper()}: {m['content'][:120]}...")
+        print(f"{m['role'].upper()}: {m['content'][:100]}...")
 
     try:
         response = openai_client.chat.completions.create(
