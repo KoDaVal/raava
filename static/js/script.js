@@ -766,7 +766,7 @@ async function loadUserProfile(user) {
   // Buscar en Supabase si hay un avatar personalizado
   const { data: profile } = await supabaseClient
     .from('profiles')
-    .select('avatar_url')
+    .select('avatar_url, plan')
     .eq('id', user.id)
     .single();
 
