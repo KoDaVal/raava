@@ -59,7 +59,7 @@ if (newChatBtn) {
 const accountNavItem = [...document.querySelectorAll('.settings-nav-item')].find(i => i.textContent === 'Account');
 const generalPane = document.querySelector('.settings-pane'); 
 const accountPane = document.getElementById('account-pane');
-const generalPaneEl = document.getElementById('general-pane');
+const generalPane = document.getElementById('general-pane');
 const accountAvatarImg = document.getElementById('account-avatar-img');
 const accountAvatarBtn = document.getElementById('account-avatar-btn');
 const accountAvatarInput = document.getElementById('account-avatar-input');
