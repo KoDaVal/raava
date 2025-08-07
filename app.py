@@ -413,13 +413,6 @@ def chat():
         if persistent_instruction:
             base_instruction += f"\n\nInstrucciones adicionales del usuario:\n{persistent_instruction}"
 
-        # 👉 Instrucción system para modelos GPT
-        if model_name.startswith("gpt") and base_instruction:
-            messages.insert(0, {
-                "role": "system",
-                "content": base_instruction
-            })
-
         if not conversation_history:
             conversation_history = [{"role": "user", "parts": [{"text": base_instruction}]}]
         else:
@@ -736,24 +729,10 @@ def stripe_webhook():
             print("[STRIPE] No se pudo encontrar user_id. Abortando.")
             return jsonify({"status": "ignored"})
 
-        # Obtener fecha de renovación desde la suscripción
-        subscription_id = data.get("subscription")
-        renewal_date = None
-        if subscription_id:
-            sub = stripe.Subscription.retrieve(subscription_id)
-            if sub and sub.get("current_period_end"):
-                renewal_timestamp = sub["current_period_end"]
-                renewal_date = datetime.fromtimestamp(renewal_timestamp, tz=timezone.utc).isoformat()
-
-        # Actualizar perfil en Supabase
-        update_data = {
+        supabase.table("profiles").update({
             "plan": final_plan,
             "stripe_customer_id": customer_id
-        }
-        if renewal_date:
-            update_data["subscription_renewal"] = renewal_date
-
-        supabase.table("profiles").update(update_data).eq("id", user_id).execute()
+        }).eq("id", user_id).execute()
         print(f"[STRIPE] Plan actualizado para {user_id}: {final_plan}")
 
     elif event_type == "customer.subscription.updated":
@@ -764,41 +743,7 @@ def stripe_webhook():
         if status in ["canceled", "unpaid", "incomplete", "incomplete_expired"]:
             supabase.table("profiles").update({"plan": "essence"}).eq("stripe_customer_id", customer_id).execute()
             print(f"[STRIPE] Suscripción cancelada. Cliente {customer_id} vuelto a essence.")
-    elif event_type == "invoice.paid":
-        customer_id = data.get("customer")
-        subscription_id = data.get("subscription")
 
-        if not customer_id or not subscription_id:
-            print("[STRIPE] invoice.paid sin customer_id o subscription_id")
-        else:
-            try:
-                # Obtener la suscripción desde Stripe
-                sub = stripe.Subscription.retrieve(subscription_id)
-                if sub and sub.get("current_period_end"):
-                    renewal_timestamp = sub["current_period_end"]
-                    renewal_date = datetime.fromtimestamp(renewal_timestamp, tz=timezone.utc).isoformat()
-
-                    # Actualizar fecha en Supabase
-                    supabase.table("profiles").update({
-                        "subscription_renewal": renewal_date
-                    }).eq("stripe_customer_id", customer_id).execute()
-
-                    print(f"[STRIPE] Renovación actualizada para cliente {customer_id}: {renewal_date}")
-            except Exception as e:
-                print(f"[STRIPE] Error al obtener la suscripción: {e}")
-    elif event_type == "invoice.payment_failed":
-        customer_id = data.get("customer")
-
-        if not customer_id:
-            print("[STRIPE] invoice.payment_failed sin customer_id")
-        else:
-            # Reestablecer a 'essence' si el pago falla
-            supabase.table("profiles").update({
-                "plan": "essence",
-                "subscription_renewal": None
-            }).eq("stripe_customer_id", customer_id).execute()
-            print(f"[STRIPE] Pago fallido. Cliente {customer_id} cambiado a plan essence.")
-            
     return jsonify({"status": "success"})
     
 @app.route('/load_chat/<chat_id>', methods=['GET'])
@@ -902,9 +847,3 @@ def cancel_subscription():
     except Exception as e:
         print("Error cancelando suscripción:", e)
         return api_error("Error al cancelar suscripción", 500)
-
-
-
-
-
-
