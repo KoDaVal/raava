@@ -413,13 +413,6 @@ def chat():
         if persistent_instruction:
             base_instruction += f"\n\nInstrucciones adicionales del usuario:\n{persistent_instruction}"
 
-        # 👉 Instrucción system para modelos GPT
-        if plan_model.startswith("gpt") and base_instruction:
-            messages.insert(0, {
-                "role": "system",
-                "content": base_instruction
-            })
-
         if not conversation_history:
             conversation_history = [{"role": "user", "parts": [{"text": base_instruction}]}]
         else:
@@ -756,6 +749,7 @@ def stripe_webhook():
         supabase.table("profiles").update(update_data).eq("id", user_id).execute()
         print(f"[STRIPE] Plan actualizado para {user_id}: {final_plan}")
 
+
     elif event_type == "customer.subscription.updated":
         customer_id = data.get("customer")
         status = data.get("status")
@@ -902,7 +896,6 @@ def cancel_subscription():
     except Exception as e:
         print("Error cancelando suscripción:", e)
         return api_error("Error al cancelar suscripción", 500)
-
 
 
 
