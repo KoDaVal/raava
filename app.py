@@ -413,6 +413,13 @@ def chat():
         if persistent_instruction:
             base_instruction += f"\n\nInstrucciones adicionales del usuario:\n{persistent_instruction}"
 
+        # 👉 Instrucción system para modelos GPT
+        if model_name.startswith("gpt") and base_instruction:
+            messages.insert(0, {
+                "role": "system",
+                "content": base_instruction
+            })
+
         if not conversation_history:
             conversation_history = [{"role": "user", "parts": [{"text": base_instruction}]}]
         else:
