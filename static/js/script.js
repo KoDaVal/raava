@@ -55,18 +55,111 @@ if (newChatBtn) {
     const settingsModal = document.getElementById('settings-modal');
     const closeSettingsBtn = document.getElementById('close-settings-btn');
     const themeSelect = document.getElementById('theme-select'); // Nuevo selector de tema en ajustes
-    // --- ELEMENTOS NUEVOS PARA ACCOUNT ---
-const accountNavItem = [...document.querySelectorAll('.settings-nav-item')].find(i => i.textContent === 'Account');
-const generalPane = document.querySelector('.settings-pane'); 
-const accountPane = document.getElementById('account-pane');
+    // ═════════════ AJUSTES (MODAL) ═════════════
 const accountAvatarImg = document.getElementById('account-avatar-img');
 const accountAvatarBtn = document.getElementById('account-avatar-btn');
 const accountAvatarInput = document.getElementById('account-avatar-input');
 const accountPlan = document.getElementById('account-plan');
 const accountExpiry = document.getElementById('account-expiry');
+const accountEmail = document.getElementById('account-email');
 const cancelPlanBtn = document.getElementById('cancel-plan-btn');
 
+const navGeneral = document.getElementById('nav-general');
+const navAccount = document.getElementById('nav-account');
+const generalPane = document.getElementById('general-pane');
+const accountPane = document.getElementById('account-pane');
+navGeneral?.addEventListener('click', () => {
+  navGeneral.classList.add('active');
+  navAccount.classList.remove('active');
+  generalPane.style.display = 'block';
+  accountPane.style.display = 'none';
+});
 
+navAccount?.addEventListener('click', () => {
+  navAccount.classList.add('active');
+  navGeneral.classList.remove('active');
+  generalPane.style.display = 'none';
+  accountPane.style.display = 'block';
+  populateAccountSection();
+});
+
+// Obtener y mostrar datos del usuario
+async function populateAccountSection() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session || !session.user) return;
+  const user = session.user;
+
+  if (accountEmail) accountEmail.value = user.email || 'Sin correo';
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('avatar_url, plan, subscription_renewal')
+    .eq('id', user.id)
+    .single();
+
+  const avatarUrl = profile?.avatar_url || '/static/person.jpg';
+  if (accountAvatarImg) accountAvatarImg.src = avatarUrl;
+  const headerAvatar = document.getElementById('header-profile-pic');
+  if (headerAvatar) headerAvatar.src = avatarUrl;
+
+  const plan = profile?.plan || 'Essence';
+  if (accountPlan) accountPlan.value = plan;
+  const planLabel = document.getElementById('user-plan-label');
+  if (planLabel) planLabel.textContent = `Plan: ${plan}`;
+
+  if (accountExpiry) {
+    accountExpiry.textContent = profile?.subscription_renewal
+      ? `Expira: ${new Date(profile.subscription_renewal).toLocaleDateString()}`
+      : 'Sin fecha';
+  }
+
+  if (cancelPlanBtn)
+    cancelPlanBtn.disabled = plan.toLowerCase() === 'essence';
+}
+
+// Cambiar avatar
+accountAvatarBtn?.addEventListener('click', () => accountAvatarInput.click());
+
+accountAvatarInput?.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const { data, error } = await supabaseClient.storage
+    .from('avatars')
+    .upload(`public/${Date.now()}_${file.name}`, file, { upsert: true });
+
+  if (error) return alert('Error al subir imagen.');
+
+  const publicUrl = supabaseClient.storage.from('avatars').getPublicUrl(data.path).data.publicUrl;
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  await supabaseClient.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
+
+  if (accountAvatarImg) accountAvatarImg.src = publicUrl;
+  const headerAvatar = document.getElementById('header-profile-pic');
+  if (headerAvatar) headerAvatar.src = publicUrl;
+});
+
+// Cancelar plan
+cancelPlanBtn?.addEventListener('click', async () => {
+  if (!confirm('¿Seguro que deseas cancelar tu plan?')) return;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  await fetch('/cancel_subscription', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${session.access_token}` }
+  });
+  alert('Tu plan ha sido cancelado.');
+  populateAccountSection();
+});
+
+// Logout desde ajustes o menú
+['logout-btn', 'logout-option'].forEach(id => {
+  document.getElementById(id)?.addEventListener('click', async () => {
+    await supabaseClient.auth.signOut();
+    window.location.reload();
+  });
+});
     // --- NUEVAS variables para la instrucción inamovible ---
     let uploadedInfoFileContent = ""; // Contenido del archivo de info subido (temporal)
     let activePersistentInstruction = ""; // La instrucción activa para Gemini
@@ -1096,6 +1189,27 @@ cancelPlanBtn?.addEventListener('click', async () => {
   document.getElementById(id)?.addEventListener('click', async () => {
     await supabaseClient.auth.signOut();
     window.location.reload();
+  });
+});
+// ═════════════ Modal de Ajustes: Navegación interna ═════════════
+const settingsNavItems = document.querySelectorAll('.settings-nav-item');
+const settingsPanes = document.querySelectorAll('.settings-pane');
+
+settingsNavItems.forEach(item => {
+  item.addEventListener('click', () => {
+    // Quitar la clase activa de todos
+    settingsNavItems.forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+
+    // Ocultar todos los panes
+    settingsPanes.forEach(pane => pane.style.display = 'none');
+
+    // Mostrar el pane correspondiente
+    if (item.id === 'nav-general') {
+      document.getElementById('general-pane').style.display = 'block';
+    } else if (item.id === 'nav-account') {
+      document.getElementById('account-pane').style.display = 'block';
+    }
   });
 });
 });
