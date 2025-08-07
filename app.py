@@ -413,6 +413,13 @@ def chat():
         if persistent_instruction:
             base_instruction += f"\n\nInstrucciones adicionales del usuario:\n{persistent_instruction}"
 
+        # 👉 Instrucción system para modelos GPT
+        if model_name.startswith("gpt") and base_instruction:
+            messages.insert(0, {
+                "role": "system",
+                "content": base_instruction
+            })
+
         if not conversation_history:
             conversation_history = [{"role": "user", "parts": [{"text": base_instruction}]}]
         else:
@@ -707,48 +714,47 @@ def stripe_webhook():
         "legacy_yearly": "Legacy"
     }
 
-if event_type == "checkout.session.completed":
-    user_id = data.get("metadata", {}).get("user_id")
-    plan = data.get("metadata", {}).get("plan")
-    customer_id = data.get("customer")
-    customer_email = data.get("customer_email")
-    final_plan = plan_mapping.get(plan, "essence")
+    if event_type == "checkout.session.completed":
+        user_id = data.get("metadata", {}).get("user_id")
+        plan = data.get("metadata", {}).get("plan")
+        customer_id = data.get("customer")
+        customer_email = data.get("customer_email")
+        final_plan = plan_mapping.get(plan, "essence")
 
-    # Buscar user_id si no viene
-    if not user_id:
-        if customer_email:
-            res = supabase.table("profiles").select("id").ilike("email", customer_email).execute()
-            if res.data:
-                user_id = res.data[0]["id"]
-        elif customer_id:
-            res = supabase.table("profiles").select("id").eq("stripe_customer_id", customer_id).execute()
-            if res.data:
-                user_id = res.data[0]["id"]
+        # Buscar user_id si no viene
+        if not user_id:
+            if customer_email:
+                res = supabase.table("profiles").select("id").ilike("email", customer_email).execute()
+                if res.data:
+                    user_id = res.data[0]["id"]
+            elif customer_id:
+                res = supabase.table("profiles").select("id").eq("stripe_customer_id", customer_id).execute()
+                if res.data:
+                    user_id = res.data[0]["id"]
 
-    if not user_id:
-        print("[STRIPE] No se pudo encontrar user_id. Abortando.")
-        return jsonify({"status": "ignored"})
+        if not user_id:
+            print("[STRIPE] No se pudo encontrar user_id. Abortando.")
+            return jsonify({"status": "ignored"})
 
-    # Obtener fecha de renovación desde la suscripción
-    subscription_id = data.get("subscription")
-    renewal_date = None
-    if subscription_id:
-        sub = stripe.Subscription.retrieve(subscription_id)
-        if sub and sub.get("current_period_end"):
-            renewal_timestamp = sub["current_period_end"]
-            renewal_date = datetime.fromtimestamp(renewal_timestamp, tz=timezone.utc).isoformat()
+        # Obtener fecha de renovación desde la suscripción
+        subscription_id = data.get("subscription")
+        renewal_date = None
+        if subscription_id:
+            sub = stripe.Subscription.retrieve(subscription_id)
+            if sub and sub.get("current_period_end"):
+                renewal_timestamp = sub["current_period_end"]
+                renewal_date = datetime.fromtimestamp(renewal_timestamp, tz=timezone.utc).isoformat()
 
-    # Actualizar perfil en Supabase
-    update_data = {
-        "plan": final_plan,
-        "stripe_customer_id": customer_id
-    }
-    if renewal_date:
-        update_data["subscription_renewal"] = renewal_date
+        # Actualizar perfil en Supabase
+        update_data = {
+            "plan": final_plan,
+            "stripe_customer_id": customer_id
+        }
+        if renewal_date:
+            update_data["subscription_renewal"] = renewal_date
 
-    supabase.table("profiles").update(update_data).eq("id", user_id).execute()
-    print(f"[STRIPE] Plan actualizado para {user_id}: {final_plan}")
-
+        supabase.table("profiles").update(update_data).eq("id", user_id).execute()
+        print(f"[STRIPE] Plan actualizado para {user_id}: {final_plan}")
 
     elif event_type == "customer.subscription.updated":
         customer_id = data.get("customer")
@@ -896,6 +902,7 @@ def cancel_subscription():
     except Exception as e:
         print("Error cancelando suscripción:", e)
         return api_error("Error al cancelar suscripción", 500)
+
 
 
 
