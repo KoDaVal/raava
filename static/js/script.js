@@ -892,100 +892,115 @@ chatSearchInput.addEventListener('input', () => {
   });
 });
 
-// --- CAMBIO DE PANE ---
-if (accountNavItem) {
-  accountNavItem.addEventListener('click', async () => {
-    // Quitar "active" de todos los tabs
-    document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
-    accountNavItem.classList.add('active');
+// ═════════════ AJUSTES (MODAL) ═════════════
+const accountAvatarImg = document.getElementById('account-avatar-img');
+const accountPlan = document.getElementById('account-plan');
+const accountExpiry = document.getElementById('account-expiry');
+const accountEmail = document.getElementById('account-email');
 
-    // Ocultar todos los paneles
-    document.querySelectorAll('.settings-pane').forEach(p => p.style.display = 'none');
+// Cambiar entre pestañas del modal
+const settingsNavItems = document.querySelectorAll('.settings-nav-item');
+const settingsPanes = document.querySelectorAll('.settings-pane');
 
-    // Mostrar SOLO el de Account
-    accountPane.style.display = 'block';
-    await loadAccountData();
+settingsNavItems.forEach((item, index) => {
+  item.addEventListener('click', () => {
+    settingsNavItems.forEach(i => i.classList.remove('active'));
+    settingsPanes.forEach(p => p.style.display = 'none');
+    item.classList.add('active');
+    settingsPanes[index].style.display = 'block';
+    if (item.textContent.trim().toLowerCase() === "account") {
+      populateAccountSection();
+    }
   });
-}
+});
 
-// --- CAMBIO A GENERAL ---
-const generalNavItem = [...document.querySelectorAll('.settings-nav-item')].find(i => i.textContent === 'General');
-if (generalNavItem) {
-  generalNavItem.addEventListener('click', () => {
-    document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
-    generalNavItem.classList.add('active');
-
-    // Ocultar todos los paneles
-    document.querySelectorAll('.settings-pane').forEach(p => p.style.display = 'none');
-
-    // Mostrar SOLO el de General
-    generalPane.style.display = 'block';
-  });
-}
-
-// --- CARGAR DATOS DE PERFIL ---
-async function loadAccountData() {
+// Obtener y mostrar datos del usuario
+async function populateAccountSection() {
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session) return;
+  if (!session || !session.user) return;
+  const user = session.user;
 
+  // Email
+  if (accountEmail) accountEmail.value = user.email || 'Sin correo';
+
+  // Obtener perfil
   const { data: profile } = await supabaseClient
     .from('profiles')
     .select('avatar_url, plan, subscription_renewal')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
 
-  // --- Foto ---
+  // Avatar
   const avatarUrl = profile?.avatar_url || '/static/person.jpg';
-  accountAvatarImg.src = avatarUrl;
-  document.getElementById('header-profile-pic').src = avatarUrl;
+  if (accountAvatarImg) accountAvatarImg.src = avatarUrl;
+  const headerAvatar = document.getElementById('header-profile-pic');
+  if (headerAvatar) headerAvatar.src = avatarUrl;
 
-  // --- Plan ---
-  accountPlan.textContent = profile?.plan || 'Essence';
-  document.getElementById('user-plan-label').textContent = `Plan: ${profile?.plan || 'Essence'}`;
+  // Plan
+  const plan = profile?.plan || 'Essence';
+  if (accountPlan) accountPlan.textContent = plan;
+  const planLabel = document.getElementById('user-plan-label');
+  if (planLabel) planLabel.textContent = `Plan: ${plan}`;
 
-  // --- Fecha de renovación ---
-  accountExpiry.textContent = profile?.subscription_renewal
-    ? new Date(profile.subscription_renewal).toLocaleDateString()
-    : 'Sin fecha';
+  // Fecha de expiración
+  if (accountExpiry) {
+    accountExpiry.textContent = profile?.subscription_renewal
+      ? new Date(profile.subscription_renewal).toLocaleDateString()
+      : 'Sin fecha';
+  }
 
-  // --- Email ---
-  const accountEmail = document.getElementById('account-email');
-  if (accountEmail) accountEmail.value = session.user.email || 'Sin correo';
-
-  // --- Botón cancelar ---
-  cancelPlanBtn.disabled = (profile?.plan || 'essence') === 'essence';
+  // Activar / desactivar botón cancelar plan
+  const cancelPlanBtn = document.getElementById('cancel-plan-btn');
+  if (cancelPlanBtn) cancelPlanBtn.disabled = plan.toLowerCase() === 'essence';
 }
 
-
-// --- CAMBIO DE AVATAR ---
+// Cambiar avatar
 accountAvatarBtn.addEventListener('click', () => accountAvatarInput.click());
+
 accountAvatarInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
+
   const { data, error } = await supabaseClient.storage
     .from('avatars')
     .upload(`public/${Date.now()}_${file.name}`, file, { upsert: true });
+
   if (error) return alert('Error al subir imagen.');
 
   const publicUrl = supabaseClient.storage.from('avatars').getPublicUrl(data.path).data.publicUrl;
   const { data: { user } } = await supabaseClient.auth.getUser();
+
   await supabaseClient.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
-  accountAvatarImg.src = publicUrl;
-  document.getElementById('header-profile-pic').src = publicUrl; // <-- Refresca header
+
+  if (accountAvatarImg) accountAvatarImg.src = publicUrl;
+  const headerAvatar = document.getElementById('header-profile-pic');
+  if (headerAvatar) headerAvatar.src = publicUrl;
 });
 
-// --- CANCELAR PLAN ---
-cancelPlanBtn.addEventListener('click', async () => {
-  if (!confirm('¿Seguro que deseas cancelar tu plan?')) return;
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session) return;
-  await fetch('/cancel_subscription', { 
-    method: 'POST', 
-    headers: { 'Authorization': `Bearer ${session.access_token}` } 
+// Cancelar plan
+const cancelPlanBtn = document.getElementById('cancel-plan-btn');
+if (cancelPlanBtn) {
+  cancelPlanBtn.addEventListener('click', async () => {
+    if (!confirm('¿Seguro que deseas cancelar tu plan?')) return;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return;
+    await fetch('/cancel_subscription', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${session.access_token}` }
+    });
+    alert('Tu plan ha sido cancelado.');
+    populateAccountSection(); // refrescar info
   });
-  alert('Tu plan ha sido cancelado.');
-  loadAccountData();
+}
+
+// Logout desde ajustes o menú
+["logout-btn", "logout-option"].forEach(id => {
+  document.getElementById(id)?.addEventListener("click", async () => {
+    await supabaseClient.auth.signOut();
+    window.location.reload();
+  });
 });
+
 
 
 });
