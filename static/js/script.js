@@ -763,34 +763,29 @@ async function loadUserProfile(user) {
   const avatar = document.getElementById('header-profile-pic');
   let avatarUrl = user.user_metadata?.avatar_url || '/static/person.jpg';
 
-  // Verifica si hay avatar personalizado en Supabase
+  // Buscar en Supabase si hay un avatar personalizado
   const { data: profile } = await supabaseClient
     .from('profiles')
     .select('avatar_url')
     .eq('id', user.id)
     .single();
 
-  if (profile?.avatar_url) avatarUrl = profile.avatar_url;
-
-  if (avatar) avatar.src = avatarUrl;
-
-  const userPlanLabel = document.getElementById('user-plan-label');
-  if (userPlanLabel) {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    const token = session?.access_token;
-    fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`, {
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${token}`
-      }
-    })
-    .then(res => res.json())
-    .then(data => { 
-      userPlanLabel.textContent = `Plan: ${data[0]?.plan || 'essence'}`;
-    })
-    .catch(err => console.error("Error al cargar el plan:", err));
+  if (profile?.avatar_url) {
+    avatarUrl = profile.avatar_url;
   }
 
+  // Establecer avatar prioritario
+  if (avatar) {
+    avatar.src = avatarUrl;
+  }
+
+  // Mostrar plan en header
+  const userPlanLabel = document.getElementById('user-plan-label');
+  if (userPlanLabel) {
+    userPlanLabel.textContent = `Plan: ${profile?.plan || 'Essence'}`;
+  }
+
+  // Logout
   const logoutOption = document.getElementById('logout-option');
   if (logoutOption) {
     logoutOption.addEventListener('click', async () => {
@@ -799,7 +794,6 @@ async function loadUserProfile(user) {
     });
   }
 }
-
 // --- Verificar sesión al cargar ---
 (async () => {
   const { data: { session } } = await supabaseClient.auth.getSession();
