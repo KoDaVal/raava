@@ -714,7 +714,7 @@ def stripe_webhook():
         "legacy_yearly": "Legacy"
     }
 
-if event_type == "checkout.session.completed":
+    if event_type == "checkout.session.completed":
     user_id = data.get("metadata", {}).get("user_id")
     plan = data.get("metadata", {}).get("plan")
     customer_id = data.get("customer")
