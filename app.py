@@ -172,28 +172,28 @@ app = Flask(__name__)
 CORS(app)
 
 # ========== MODELOS ==========
-gemini_api_key = os.getenv("GEMINI_API_KEY")
-if not gemini_api_key:
-    raise EnvironmentError("Falta la variable de entorno GEMINI_API_KEY")
-genai.configure(api_key=gemini_api_key)
-gemini_model = genai.GenerativeModel('gemini-1.5-flash')
-
+import os
 from openai import OpenAI
 import tiktoken
 
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 encoder = tiktoken.encoding_for_model("gpt-4o-mini")
 
-def gpt4o_mini_generate(history, base_instruction):
-    from openai import OpenAI
-    openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+def gpt4o_mini_generate(history, persistent_instruction):
+    # Prompt inicial (mejorado)
+    base_instruction = (
+        "Eres Raavax, un asistente conversacional diseñado para interactuar de forma humana, cercana y útil. "
+        "Tu función principal es poder encarnar diferentes estilos de comunicación o personalidades basadas en instrucciones o archivos cargados por el usuario, siempre con fines apropiados y respetuosos. "
+        "Mantén las respuestas breves, claras y sensatas, con un tono humano, cálido y natural, evitando tecnicismos innecesarios. "
+        "No menciones tu identidad o función a menos que el usuario lo pregunte explícitamente. "
+        "Si el usuario te pregunta cosas como \"¿quién eres?\", \"¿cuál es tu función?\" o \"¿eres Raavax?\", debes responder claramente que eres Raavax, un asistente diseñado para ayudar y adaptarte a la personalidad que el usuario desee. "
+        "Nunca digas que no puedes hablar de ti mismo, ni que no tienes identidad. Tu nombre es Raavax."
+    )
+    if persistent_instruction:
+        base_instruction += f"\n\nInstrucciones adicionales del usuario:\n{persistent_instruction}"
 
-    messages = []
-
-    # Asegurar que el prompt de sistema esté primero
-    messages.append({"role": "system", "content": base_instruction})
-
-    # Asegurar compatibilidad con GPT-4o-mini
+    # Construir historial con el system prompt
+    messages = [{"role": "system", "content": base_instruction}]
     for msg in history:
         role = msg.get("role")
         content = msg.get("text")
@@ -202,8 +202,9 @@ def gpt4o_mini_generate(history, base_instruction):
 
     print("🧠 [DEBUG] Mensajes enviados a GPT:")
     for m in messages:
-        print(f"{m['role'].upper()}: {m['content'][:100]}...")
+        print(f"{m['role'].upper()}: {m['content'][:120]}...")
 
+    # Generar respuesta
     try:
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
@@ -220,7 +221,11 @@ def gpt4o_mini_generate(history, base_instruction):
         }
     except Exception as e:
         print("❌ Error al generar respuesta con GPT:", e)
-        return {"text": "Ocurrió un error generando la respuesta.", "tokens_in": 0, "tokens_out": 0}
+        return {
+            "text": "Ocurrió un error generando la respuesta.",
+            "tokens_in": 0,
+            "tokens_out": 0
+        }
 # ========== ELEVEN LABS ==========
 eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_try_only")
 default_eleven_labs_voice_id = "21m00Tcm4TlvDq8ikWAM"
