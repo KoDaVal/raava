@@ -894,6 +894,8 @@ chatSearchInput.addEventListener('input', () => {
 
 // ═════════════ AJUSTES (MODAL) ═════════════
 const accountAvatarImg = document.getElementById('account-avatar-img');
+const accountAvatarBtn = document.getElementById('account-avatar-btn');
+const accountAvatarInput = document.getElementById('account-avatar-input');
 const accountPlan = document.getElementById('account-plan');
 const accountExpiry = document.getElementById('account-expiry');
 const accountEmail = document.getElementById('account-email');
@@ -908,22 +910,20 @@ settingsNavItems.forEach((item, index) => {
     settingsPanes.forEach(p => p.style.display = 'none');
     item.classList.add('active');
     settingsPanes[index].style.display = 'block';
-    if (item.textContent.trim().toLowerCase() === "account") {
-      populateAccountSection();
-    }
+
+    // Si es la pestaña de cuenta, cargar datos
+    if (item.id === 'nav-account') populateAccountSection();
   });
 });
 
-// Obtener y mostrar datos del usuario
+// Obtener y mostrar datos del usuario en modal
 async function populateAccountSection() {
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session || !session.user) return;
-  const user = session.user;
+  if (!session?.user) return;
 
-  // Email
+  const user = session.user;
   if (accountEmail) accountEmail.value = user.email || 'Sin correo';
 
-  // Obtener perfil
   const { data: profile } = await supabaseClient
     .from('profiles')
     .select('avatar_url, plan, subscription_renewal')
@@ -938,14 +938,14 @@ async function populateAccountSection() {
 
   // Plan
   const plan = profile?.plan || 'Essence';
-  if (accountPlan) accountPlan.textContent = plan;
+  if (accountPlan) accountPlan.value = plan;
   const planLabel = document.getElementById('user-plan-label');
   if (planLabel) planLabel.textContent = `Plan: ${plan}`;
 
-  // Fecha de expiración
+  // Fecha de renovación
   if (accountExpiry) {
     accountExpiry.textContent = profile?.subscription_renewal
-      ? new Date(profile.subscription_renewal).toLocaleDateString()
+      ? `Renueva: ${new Date(profile.subscription_renewal).toLocaleDateString()}`
       : 'Sin fecha';
   }
 
@@ -955,45 +955,47 @@ async function populateAccountSection() {
 }
 
 // Cambiar avatar
-accountAvatarBtn.addEventListener('click', () => accountAvatarInput.click());
+accountAvatarBtn?.addEventListener('click', () => accountAvatarInput?.click());
 
-accountAvatarInput.addEventListener('change', async (e) => {
+accountAvatarInput?.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
+  const filename = `public/${Date.now()}_${file.name}`;
   const { data, error } = await supabaseClient.storage
     .from('avatars')
-    .upload(`public/${Date.now()}_${file.name}`, file, { upsert: true });
+    .upload(filename, file, { upsert: true });
 
-  if (error) return alert('Error al subir imagen.');
+  if (error) return alert('Error al subir la imagen.');
 
-  const publicUrl = supabaseClient.storage.from('avatars').getPublicUrl(data.path).data.publicUrl;
+  const { data: { publicUrl } } = supabaseClient
+    .storage.from('avatars')
+    .getPublicUrl(filename);
+
   const { data: { user } } = await supabaseClient.auth.getUser();
-
   await supabaseClient.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
 
-  if (accountAvatarImg) accountAvatarImg.src = publicUrl;
+  accountAvatarImg.src = publicUrl;
   const headerAvatar = document.getElementById('header-profile-pic');
   if (headerAvatar) headerAvatar.src = publicUrl;
 });
 
 // Cancelar plan
-const cancelPlanBtn = document.getElementById('cancel-plan-btn');
-if (cancelPlanBtn) {
-  cancelPlanBtn.addEventListener('click', async () => {
-    if (!confirm('¿Seguro que deseas cancelar tu plan?')) return;
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) return;
-    await fetch('/cancel_subscription', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${session.access_token}` }
-    });
-    alert('Tu plan ha sido cancelado.');
-    populateAccountSection(); // refrescar info
-  });
-}
+document.getElementById('cancel-plan-btn')?.addEventListener('click', async () => {
+  if (!confirm('¿Seguro que deseas cancelar tu plan?')) return;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
 
-// Logout desde ajustes o menú
+  await fetch('/cancel_subscription', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${session.access_token}` }
+  });
+
+  alert('Tu plan ha sido cancelado.');
+  populateAccountSection();
+});
+
+// Logout desde ajustes y menú principal
 ["logout-btn", "logout-option"].forEach(id => {
   document.getElementById(id)?.addEventListener("click", async () => {
     await supabaseClient.auth.signOut();
