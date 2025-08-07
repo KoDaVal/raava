@@ -59,6 +59,24 @@ if (newChatBtn) {
 const accountNavItem = [...document.querySelectorAll('.settings-nav-item')].find(i => i.textContent === 'Account');
 const generalPane = document.querySelector('.settings-pane'); 
 const accountPane = document.getElementById('account-pane');
+const generalPaneEl = document.getElementById('general-pane');
+const navItems = document.querySelectorAll('.settings-nav-item');
+
+navItems.forEach(item => {
+  item.addEventListener('click', () => {
+    navItems.forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+
+    const label = item.textContent.trim().toLowerCase();
+    if (label === "account") {
+      accountPane.style.display = 'block';
+      generalPaneEl.style.display = 'none';
+    } else if (label === "general") {
+      accountPane.style.display = 'none';
+      generalPaneEl.style.display = 'block';
+    }
+  });
+});
 const accountAvatarImg = document.getElementById('account-avatar-img');
 const accountAvatarBtn = document.getElementById('account-avatar-btn');
 const accountAvatarInput = document.getElementById('account-avatar-input');
@@ -115,18 +133,50 @@ const mobileInfoLabel = document.querySelector('.mobile-only .file-button');
     }
 
     // --- NUEVO: Manejo del clic en "Ajustes" para abrir el modal de ajustes ---
-    if (settingsOption) {
-        settingsOption.addEventListener('click', () => {
-            settingsModal.classList.add('active');
-            settingsMenu.classList.remove('active'); // Cierra el menú de perfil
-            // Sincroniza el selector de tema con el modo actual del body
-            if (document.body.classList.contains('light-mode')) {
-                themeSelect.value = 'light';
-            } else {
-                themeSelect.value = 'dark';
-            }
-        });
+if (settingsOption) {
+  settingsOption.addEventListener('click', async () => {
+    settingsModal.classList.add('active');
+    settingsMenu.classList.remove('active');
+
+    // Tema visual
+    if (document.body.classList.contains('light-mode')) {
+      themeSelect.value = 'light';
+    } else {
+      themeSelect.value = 'dark';
     }
+
+    // Obtener sesión Supabase
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const user = session?.user;
+    if (!user) return;
+
+    // Mostrar avatar en Account
+    const avatarUrl = user.user_metadata?.avatar_url;
+    if (avatarUrl) {
+      accountAvatarImg.src = avatarUrl;
+    }
+
+    // Mostrar email
+    document.getElementById('account-email').value = user.email;
+
+    // Mostrar plan desde Supabase
+    try {
+      const { data: profileData } = await supabaseClient
+        .from("profiles")
+        .select("plan, plan_expiry")
+        .eq("id", user.id)
+        .single();
+
+      if (profileData) {
+        accountPlan.value = profileData.plan;
+        accountExpiry.textContent = "Expires: " + (profileData.plan_expiry || "N/A");
+        document.getElementById("user-plan-label").textContent = "Plan: " + profileData.plan;
+      }
+    } catch (error) {
+      console.error("Error cargando plan del usuario:", error);
+    }
+  });
+}
 
     // --- NUEVO: Cerrar el modal de ajustes ---
     if (closeSettingsBtn) {
@@ -986,6 +1036,14 @@ cancelPlanBtn.addEventListener('click', async () => {
   alert('Tu plan ha sido cancelado.');
   loadAccountData();
 });
+document.getElementById('logout-option')?.addEventListener('click', async () => {
+  await supabaseClient.auth.signOut();
+  location.reload();
+});
 
+document.getElementById('logout-btn')?.addEventListener('click', async () => {
+  await supabaseClient.auth.signOut();
+  location.reload();
+});
 
 });
