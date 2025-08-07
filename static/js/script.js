@@ -1001,7 +1001,5 @@ if (cancelPlanBtn) {
   });
 });
 
-
-
 });
 
