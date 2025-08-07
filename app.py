@@ -185,31 +185,35 @@ openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 encoder = tiktoken.encoding_for_model("gpt-4o-mini")
 
 def gpt4o_mini_generate(history, base_instruction):
-    messages = []
-    # Añadir el system prompt al inicio
-    messages.append({
-        "role": "system",
-        "content": base_instruction
-    })
-    # Pasar el resto del historial
+    # Reestructurar historial para asegurar compatibilidad
+    messages = [{"role": "system", "content": base_instruction}]
     for msg in history:
-        if msg["role"] in ["user", "assistant"]:
-            messages.append({
-                "role": "user" if msg["role"] == "user" else "assistant",
-                "content": msg["parts"][0].get("text", "")
-            })
+        role = msg.get("role")
+        content = msg.get("text") if isinstance(msg.get("text"), str) else ""
+        if role and content:
+            messages.append({"role": role, "content": content})
 
-    response = openai_client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages,
-        temperature=0.7
-    )
+    print("🧠 [GPT DEBUG] Mensajes enviados:")
+    for m in messages:
+        print(f"{m['role'].upper()}: {m['content'][:120]}...")
 
-    text = response.choices[0].message.content
-    tokens_in = sum(len(encoder.encode(m["content"])) for m in messages)
-    tokens_out = len(encoder.encode(text))
-    return {"text": text, "tokens_in": tokens_in, "tokens_out": tokens_out}
-
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            temperature=0.7,
+            max_tokens=400
+        )
+        result = response.choices[0].message.content
+        usage = response.usage
+        return {
+            "text": result,
+            "tokens_in": usage.prompt_tokens,
+            "tokens_out": usage.completion_tokens
+        }
+    except Exception as e:
+        print("❌ Error al generar respuesta con GPT:", e)
+        return {"text": "Ocurrió un error generando la respuesta.", "tokens_in": 0, "tokens_out": 0}
 # ========== ELEVEN LABS ==========
 eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_try_only")
 default_eleven_labs_voice_id = "21m00Tcm4TlvDq8ikWAM"
@@ -409,6 +413,7 @@ def chat():
             "Tu función principal es poder encarnar diferentes estilos de comunicación o personalidades basadas en instrucciones o archivos cargados por el usuario, siempre con fines apropiados y políticamente correctos. "
             "Mantén las respuestas breves, claras y sensatas, con un tono humano y natural, evitando tecnicismos innecesarios. "
             "No menciones tu identidad o función a menos que el usuario lo pregunte explícitamente."
+            "Si te hacen preguntas sobre tu identidad, ejemplo \"quién eres\" o \"cuál es tu función\", respóndelas en base a lo mencionado."
         )
         if persistent_instruction:
             base_instruction += f"\n\nInstrucciones adicionales del usuario:\n{persistent_instruction}"
