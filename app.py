@@ -413,13 +413,17 @@ def chat():
         if persistent_instruction:
             base_instruction += f"\n\nInstrucciones adicionales del usuario:\n{persistent_instruction}"
 
-        if not conversation_history:
-            conversation_history = [{"role": "user", "parts": [{"text": base_instruction}]}]
-        else:
-            if conversation_history[0].get("role") == "user" and conversation_history[0].get("parts"):
-                conversation_history[0]["parts"][0]["text"] = base_instruction + "\n\n" + conversation_history[0]["parts"][0]["text"]
+        if plan_model == "gemini":
+            if not conversation_history:
+                conversation_history = [{"role": "user", "parts": [{"text": base_instruction}]}]
             else:
-                conversation_history.insert(0, {"role": "user", "parts": [{"text": base_instruction}]})
+                if conversation_history[0].get("role") == "user" and conversation_history[0].get("parts"):
+                    conversation_history[0]["parts"][0]["text"] = base_instruction + "\n\n" + conversation_history[0]["parts"][0]["text"]
+                else:
+                    conversation_history.insert(0, {"role": "user", "parts": [{"text": base_instruction}]})
+        else:
+            # GPT ya recibe base_instruction como system, no se incluye aquí
+            pass
 
         # Adjuntos
         current_user_parts = []
