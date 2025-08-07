@@ -67,27 +67,16 @@ navItems.forEach(item => {
     navItems.forEach(i => i.classList.remove('active'));
     item.classList.add('active');
 
-const navItems = document.querySelectorAll('.settings-nav-item');
-const panes = {
-  "general": document.getElementById('general-pane'),
-  "account": document.getElementById('account-pane'),
-};
-
-navItems.forEach(item => {
-  item.addEventListener('click', () => {
-    const selected = item.id?.replace("nav-", ""); // nav-account → account
-    if (!selected || !panes[selected]) return;
-
-    // Quitar activo de todos
-    navItems.forEach(i => i.classList.remove('active'));
-    Object.values(panes).forEach(p => p.style.display = 'none');
-
-    // Activar el seleccionado
-    item.classList.add('active');
-    panes[selected].style.display = 'block';
+    const label = item.textContent.trim().toLowerCase();
+    if (label === "account") {
+      accountPane.style.display = 'block';
+      generalPaneEl.style.display = 'none';
+    } else if (label === "general") {
+      accountPane.style.display = 'none';
+      generalPaneEl.style.display = 'block';
+    }
   });
 });
-
 const accountAvatarImg = document.getElementById('account-avatar-img');
 const accountAvatarBtn = document.getElementById('account-avatar-btn');
 const accountAvatarInput = document.getElementById('account-avatar-input');
@@ -162,31 +151,10 @@ if (settingsOption) {
     if (!user) return;
 
     // Mostrar avatar en Account
-// Obtener avatar desde la tabla profiles, no desde metadata
-const { data: profileData } = await supabaseClient
-  .from("profiles")
-  .select("plan, plan_expiry, avatar_url")
-  .eq("id", user.id)
-  .single();
-
-if (profileData) {
-  const fallbackAvatar = user.user_metadata?.avatar_url;
-  const avatarFinal = profileData.avatar_url || fallbackAvatar;
-
-  if (avatarFinal) {
-    accountAvatarImg.src = avatarFinal;
-    document.getElementById("header-profile-pic").src = avatarFinal;
-  }
-
-  accountPlan.value = profileData.plan;
-  accountExpiry.textContent = "Expires: " + (profileData.plan_expiry || "N/A");
-  document.getElementById("user-plan-label").textContent = "Plan: " + profileData.plan;
-}
-
-  accountPlan.value = profileData.plan;
-  accountExpiry.textContent = "Expires: " + (profileData.plan_expiry || "N/A");
-  document.getElementById("user-plan-label").textContent = "Plan: " + profileData.plan;
-}
+    const avatarUrl = user.user_metadata?.avatar_url;
+    if (avatarUrl) {
+      accountAvatarImg.src = avatarUrl;
+    }
 
     // Mostrar email
     document.getElementById('account-email').value = user.email;
