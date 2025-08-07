@@ -1349,7 +1349,15 @@ input:checked + .slider:before {
   gap: 24px;
 }
 
-/* Avatar grande */
+/* Contenedor de avatar y texto */
+.account-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Imagen circular centrada */
 .account-avatar img {
   width: 120px;
   height: 120px;
@@ -1358,41 +1366,51 @@ input:checked + .slider:before {
   object-fit: cover;
 }
 
-/* Texto simple debajo de la foto */
+/* Texto debajo de la imagen sin bordes ni fondo */
 .account-avatar button {
   all: unset;
   font-size: 14px;
   color: var(--settings-text-color);
   cursor: pointer;
-  margin-top: 8px;
+  margin-top: 6px;
+  text-align: center;
 }
 
-/* Recuadro de datos */
+/* Tabla de datos */
 .account-details {
   background: var(--message-bg);
-  padding: 20px;
+  padding: 24px;
   border-radius: 16px;
   width: 100%;
   max-width: 400px;
-  text-align: left;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* Campo individual */
+.account-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .account-field label {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--settings-text-color);
-  margin-bottom: 4px;
+  font-weight: 500;
 }
 
 .account-field input {
   width: 100%;
-  padding: 10px 0;
-  font-size: 16px;
+  padding: 10px 12px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--settings-text-color);
-  border: none;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
   background: transparent;
   pointer-events: none;
 }
@@ -1401,7 +1419,6 @@ input:checked + .slider:before {
   opacity: 1;
 }
 
-/* Texto pequeño debajo (sin fecha) */
 .account-field small {
   font-size: 12px;
   color: var(--settings-text-color);
@@ -1417,9 +1434,9 @@ input:checked + .slider:before {
 }
 
 .cancel-btn {
-  background: none;
+  background: transparent;
   border: 2px solid #d9534f;
-  color: white;
+  color: #d9534f;
   padding: 10px 24px;
   border-radius: 999px;
   font-weight: 500;
@@ -1429,16 +1446,16 @@ input:checked + .slider:before {
 
 .cancel-btn:hover {
   background-color: #d9534f;
+  color: white;
 }
 
 .logout-btn {
-  background: none;
+  background: #fff;
   border: 2px solid #fff;
   color: #000;
   padding: 10px 24px;
   border-radius: 999px;
   font-weight: 500;
-  background-color: #fff;
   transition: all 0.3s;
 }
 
