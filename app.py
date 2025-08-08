@@ -698,13 +698,13 @@ def stripe_webhook():
         event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
     except stripe.error.SignatureVerificationError:
         print("[STRIPE] Firma inválida")
-        return api_error("Webhook inválido", 400)
+        return jsonify({"error": "Webhook inválido"}), 400
 
     event_type = event["type"]
     data = event["data"]["object"]
     print(f"[STRIPE] Evento recibido: {event_type}")
 
-    # Mapeo de planes (mensual y anual → mismo plan)
+    # Mapeo de planes (mensual y anual → mismo plan lógico)
     plan_mapping = {
         "plus_monthly": "Plus",
         "plus_yearly": "Plus",
@@ -734,11 +734,38 @@ def stripe_webhook():
             print("[STRIPE] No se pudo encontrar user_id. Abortando.")
             return jsonify({"status": "ignored"})
 
-        supabase.table("profiles").update({
+        # Obtener fecha de renovación desde la suscripción
+        subscription_id = data.get("subscription")
+        renewal_date = None
+        if subscription_id:
+            sub = stripe.Subscription.retrieve(subscription_id)
+            if sub and sub.get("current_period_end"):
+                renewal_timestamp = sub["current_period_end"]
+                renewal_date = datetime.fromtimestamp(renewal_timestamp, tz=timezone.utc).isoformat()
+
+        # Actualizar perfil en Supabase
+        update_data = {
             "plan": final_plan,
             "stripe_customer_id": customer_id
-        }).eq("id", user_id).execute()
+        }
+        if renewal_date:
+            update_data["subscription_renewal"] = renewal_date
+
+        supabase.table("profiles").update(update_data).eq("id", user_id).execute()
         print(f"[STRIPE] Plan actualizado para {user_id}: {final_plan}")
+
+    elif event_type == "invoice.payment_failed":
+        customer_id = data.get("customer")
+
+        if not customer_id:
+            print("[STRIPE] invoice.payment_failed sin customer_id")
+        else:
+            # Reestablecer a 'essence' si el pago falla
+            supabase.table("profiles").update({
+                "plan": "essence",
+                "subscription_renewal": None
+            }).eq("stripe_customer_id", customer_id).execute()
+            print(f"[STRIPE] Pago fallido. Cliente {customer_id} cambiado a plan essence.")
 
     elif event_type == "customer.subscription.updated":
         customer_id = data.get("customer")
