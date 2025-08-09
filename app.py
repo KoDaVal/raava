@@ -647,7 +647,8 @@ def generate_audio():
 
     try:
         # Si viene un voice_id explícito, úsalo; si no, usa el clon global; si no, usa el default
-        current_voice_id = voice_id if voice_id else cloned_voice_id if cloned_voice_id else default_eleven_labs_voice_id
+        #current_voice_id = voice_id if voice_id else cloned_voice_id if cloned_voice_id else default_eleven_labs_voice_id
+        current_voice_id = voice_id or default_eleven_labs_voice_id
         tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{current_voice_id}/stream"
         tts_headers = {
             "xi-api-key": eleven_labs_api_key,
