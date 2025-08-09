@@ -614,7 +614,7 @@ def start_mind():
         response = requests.post(url, headers=headers, data=data, files=files)
         response.raise_for_status()
         voice_data = response.json()
-       # cloned_voice_id = voice_data.get('voice_id')
+        cloned_voice_id = voice_data.get('voice_id')
 
         # --- Respuesta ---
         return jsonify({
