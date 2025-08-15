@@ -632,22 +632,55 @@ def start_mind():
 
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
-    text = request.form.get('text', '')
-    voice_id = request.form.get('voice_id')  # Puede venir del frontend
-    
-    # --- Autenticación ---
-    token = request.headers.get("Authorization", "").replace("Bearer ", "")
-    user_data = verify_token(token)
-    if not user_data:
-        return jsonify({"error": "No autorizado"}), 401
-    user_id = user_data["id"]
-
-    if not text:
-        return jsonify({"error": "Texto vacío para generar audio."}), 400
-
+    """
+    Genera audio TTS con ElevenLabs y cuenta tokens REALES:
+    - Verifica saldo local antes (voice_tokens_used vs. PLAN_LIMITS).
+    - Lee character_count de ElevenLabs ANTES y DESPUÉS del TTS.
+    - Suma el delta real a voice_tokens_used con update_usage(..., voice_tokens=delta).
+    - Devuelve audio + métricas (delta, usados, límite, restante).
+    """
     try:
-        # Si viene un voice_id explícito, úsalo; si no, usa el clon global; si no, usa el default
-        #current_voice_id = voice_id if voice_id else cloned_voice_id if cloned_voice_id else default_eleven_labs_voice_id
+        text = request.form.get('text', '') or ''
+        voice_id = request.form.get('voice_id')  # Puede venir del frontend
+
+        # --- Autenticación ---
+        token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        user_data = verify_token(token)
+        if not user_data:
+            return jsonify({"error": "No autorizado"}), 401
+        user_id = user_data["id"]
+
+        if not text.strip():
+            return jsonify({"error": "Texto vacío para generar audio."}), 400
+
+        if not eleven_labs_api_key or eleven_labs_api_key == "sk_try_only":
+            return jsonify({"error": "tts_failed", "details": "API key de ElevenLabs inválida o ausente."}), 500
+
+        # === Checar límites locales ANTES de pedir TTS ===
+        profile = get_user_profile(user_id)
+        profile = reset_monthly_usage(profile, user_id)
+        limits = check_plan_limits(profile)  # lanza excepción si no hay cupo (texto/voz)
+        # Si hay límite de voz y ya está alcanzado, corta
+        voice_limit = limits.get("voice_tokens", 0)
+        voice_used = int(profile.get("voice_tokens_used", 0))
+        if voice_limit is not None and voice_limit > 0 and voice_used >= voice_limit:
+            return jsonify({"error": "voice_limit"}), 429
+
+        # === Lectura de uso "ANTES" en ElevenLabs ===
+        sub_url = "https://api.elevenlabs.io/v1/user/subscription"
+        sub_headers = {"xi-api-key": eleven_labs_api_key}
+        try:
+            sub_before = requests.get(sub_url, headers=sub_headers, timeout=15)
+            sub_before.raise_for_status()
+            sub_before_json = sub_before.json()
+            char_before = int(sub_before_json.get("character_count", 0))
+            # (opcional) char_limit_api = int(sub_before_json.get("character_limit", 0))
+        except Exception as e:
+            # Si falla la lectura previa, no bloqueamos el TTS, pero NO podremos medir delta:
+            print("[VOICE USAGE WARN] Falló lectura 'before' de ElevenLabs:", e)
+            char_before = None
+
+        # === Preparar TTS ===
         current_voice_id = voice_id or default_eleven_labs_voice_id
         tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{current_voice_id}/stream"
         tts_headers = {
@@ -664,18 +697,70 @@ def generate_audio():
             }
         }
 
-        # Streaming para evitar problemas con audios largos
-        tts_response = requests.post(tts_url, headers=tts_headers, json=tts_data, stream=True)
+        # === Llamada TTS ===
+        tts_response = requests.post(tts_url, headers=tts_headers, json=tts_data, stream=True, timeout=60)
         tts_response.raise_for_status()
-        audio_content = b''
-        for chunk in tts_response.iter_content(chunk_size=4096):
-            audio_content += chunk
 
+        # Validar que realmente vino audio (no JSON de error)
+        ctype = tts_response.headers.get("Content-Type", "")
+        if "audio" not in ctype.lower():
+            try:
+                err_json = tts_response.json()
+            except Exception:
+                err_json = {"message": tts_response.text[:500]}
+            return jsonify({"error": "tts_failed", "details": err_json}), 502
+
+        audio_content = b""
+        for chunk in tts_response.iter_content(chunk_size=4096):
+            if chunk:
+                audio_content += chunk
+
+        # === Lectura de uso "DESPUÉS" en ElevenLabs ===
+        try:
+            sub_after = requests.get(sub_url, headers=sub_headers, timeout=15)
+            sub_after.raise_for_status()
+            sub_after_json = sub_after.json()
+            char_after = int(sub_after_json.get("character_count", 0))
+        except Exception as e:
+            print("[VOICE USAGE WARN] Falló lectura 'after' de ElevenLabs:", e)
+            char_after = None
+
+        # === Delta real y persistencia ===
+        voice_delta = 0
+        if (char_before is not None) and (char_after is not None):
+            voice_delta = max(char_after - char_before, 0)
+            try:
+                update_usage(user_id, voice_tokens=voice_delta)
+            except Exception as _e:
+                print("[VOICE USAGE WARN] No se pudo actualizar voice_tokens:", _e)
+        else:
+            # Si no se pudo medir, al menos logueamos
+            print("[VOICE USAGE WARN] No se pudo calcular delta real de ElevenLabs (char_before/char_after none).")
+
+        # === Métricas para UI ===
+        new_profile = get_user_profile(user_id)
+        voice_used = int(new_profile.get("voice_tokens_used", 0))
+        voice_remaining = (voice_limit - voice_used) if (voice_limit and voice_limit > 0) else None
+
+        # === Respuesta ===
         audio_base64 = base64.b64encode(audio_content).decode('utf-8')
-        return jsonify({"audio": audio_base64})
+        return jsonify({
+            "audio": audio_base64,
+            "voice_tokens_delta": voice_delta,
+            "voice_tokens_used": voice_used,
+            "voice_tokens_limit": voice_limit,
+            "voice_tokens_remaining": max(voice_remaining, 0) if voice_remaining is not None else None
+        })
+
     except requests.exceptions.HTTPError as e:
-        print(f"Error de conexión o API con Eleven Labs al generar audio: {e.response.status_code} - {e.response.text}")
-        return jsonify({"error": f"Error al generar el audio: {e.response.text}"}), e.response.status_code
+        # Errores HTTP en llamada TTS
+        try:
+            details = e.response.json()
+        except Exception:
+            details = {"message": getattr(e.response, "text", "")[:500]}
+        print(f"Error de conexión o API con ElevenLabs al generar audio: {e.response.status_code} - {details}")
+        return jsonify({"error": "tts_failed", "details": details}), e.response.status_code
+
     except Exception as e:
         import traceback
         print("Error inesperado en /generate_audio:", traceback.format_exc())
