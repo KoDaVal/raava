@@ -177,7 +177,8 @@ function startOtpTimer(seconds) {
 
 // Login/signup
 submitBtn.addEventListener('click', async () => {
-  const email = document.getElementById('auth-email').value;
+  const rawEmail = document.getElementById('auth-email').value || "";
+  const email = rawEmail.trim().toLowerCase();
   const pass = document.getElementById('auth-password').value;
   const confirm = document.getElementById('auth-confirm').value;
   const errEmail = document.getElementById('login-email-error');
@@ -193,20 +194,30 @@ submitBtn.addEventListener('click', async () => {
   if (!isLogin && pass !== confirm) return errConfirm.textContent = "Passwords do not match.";
   submitBtn.textContent = "Loading…"; submitBtn.classList.add('loading');
   // === Verificar si el correo ya existe antes de registrar ===
-  if (!isLogin) {
+// === Verificar si el correo ya existe antes de registrar ===
+if (!isLogin) {
+  try {
     const checkRes = await fetch('/check_email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email })     // email ya normalizado
     });
-    const checkData = await checkRes.json();
-    if (checkData.exists) {
-      errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
-      submitBtn.textContent = "Continue";
-      submitBtn.classList.remove('loading');
-      return;
+
+    if (checkRes.ok) {
+      const payload = await checkRes.json();
+      // Bloquea SOLO si el backend afirma explícitamente que existe
+      if (payload && payload.exists === true) {
+        errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
+        submitBtn.textContent = "Continue";
+        submitBtn.classList.remove('loading');
+        return;
+      }
     }
+    // Si no es ok o la forma no es la esperada, NO bloquees: seguimos al signUp.
+  } catch (e) {
+    // Silencioso: falló el pre-check → no bloquea, continúa al signUp.
   }
+}
 const { error } = isLogin
   ? await supabaseClient.auth.signInWithPassword({ email, password: pass })
   : await supabaseClient.auth.signUp({ email, password: pass });
