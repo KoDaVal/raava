@@ -181,42 +181,70 @@ submitBtn.addEventListener('click', async () => {
   const email = rawEmail.trim().toLowerCase();
   const pass = document.getElementById('auth-password').value;
   const confirm = document.getElementById('auth-confirm').value;
+
   const errEmail = document.getElementById('login-email-error');
-  const errPass = document.getElementById('login-password-error');
+  const errPass  = document.getElementById('login-password-error');
   const errConfirm = document.getElementById('login-confirm-error');
+
+  // limpia errores
   errEmail.textContent = errPass.textContent = errConfirm.textContent = '';
+
+  // validaciones básicas
   if (!email) return errEmail.textContent = "Email required.";
-  if (!pass) return errPass.textContent = "Password required.";
+  if (!pass)  return errPass.textContent  = "Password required.";
   if (!isLogin && !validatePassword(pass)) {
     errPass.textContent = "Weak password: Min 8 chars, 1 upper, 1 lower, 1 number, 1 symbol.";
     return;
   }
-  if (!isLogin && pass !== confirm) return errConfirm.textContent = "Passwords do not match.";
-  submitBtn.textContent = "Loading…"; submitBtn.classList.add('loading');
-const { error } = isLogin
-  ? await supabaseClient.auth.signInWithPassword({ email, password: pass })
-  : await supabaseClient.auth.signUp({ email, password: pass });
-
-// restablece UI
-submitBtn.textContent = "Continue";
-submitBtn.classList.remove('loading');
-
-if (error) {
-  console.log("Supabase error:", { status: error.status, message: error.message });
-  const msg = (error.message || '').toLowerCase();
-
-  // SOLO detecta colisión por mensaje, NO por status 400 genérico
-  if (!isLogin && (msg.includes("already") || msg.includes("exists") || msg.includes("registered"))) {
-    errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
+  if (!isLogin && pass !== confirm) {
+    errConfirm.textContent = "Passwords do not match.";
     return;
   }
 
-  // Otros errores (password débil, rate limit, etc.)
-  errPass.textContent = "Error: " + (error.message || "Intenta de nuevo.");
-  return;
-}
+  submitBtn.textContent = "Loading…";
+  submitBtn.classList.add('loading');
 
-  if (!error && !isLogin) {
+  // ⬇️ OBTÉN { data, error } (no solo error)
+  const authRes = isLogin
+    ? await supabaseClient.auth.signInWithPassword({ email, password: pass })
+    : await supabaseClient.auth.signUp({ email, password: pass });
+
+  const { data, error } = authRes;
+
+  // restaura UI
+  submitBtn.textContent = "Continue";
+  submitBtn.classList.remove('loading');
+
+  // manejo de errores explícitos
+  if (error) {
+    console.log("Supabase error:", { status: error.status, message: error.message });
+    const msg = (error.message || '').toLowerCase();
+
+    // colisión de correo por mensaje
+    if (!isLogin && (msg.includes("already") || msg.includes("exists") || msg.includes("registered"))) {
+      errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
+      return;
+    }
+
+    // contraseña débil
+    if (msg.includes("password") && (msg.includes("weak") || msg.includes("at least") || msg.includes("short"))) {
+      errPass.textContent = "Tu contraseña es demasiado débil. Usa al menos 8 caracteres, con número, mayúscula, minúscula y símbolo.";
+      return;
+    }
+
+    // genérico
+    errPass.textContent = "Error: " + (error.message || "Intenta de nuevo.");
+    return;
+  }
+
+  // ✅ caso SIGN UP sin error, pero correo YA EXISTE (Supabase anti-enumeración)
+  if (!isLogin) {
+    if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      // usuario ya existía
+      errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
+      return;
+    }
+    // registro normal → mostrar pantalla de verificación
     loginSection.classList.add('hidden');
     recoverySection.classList.add('hidden');
     socialButtons.classList.add('hidden');
@@ -224,6 +252,7 @@ if (error) {
     return;
   }
 
+  // login OK → redirige
   let redirectTo = localStorage.getItem('oauth_redirect');
   if (!redirectTo || redirectTo === 'undefined' || redirectTo === 'null') {
     const urlParams = new URLSearchParams(window.location.search);
@@ -247,6 +276,7 @@ if (error) {
     window.location.href = "/";
   }
 });
+
 
 // Volver al login desde la pantalla de verificación
 document.getElementById('back-to-login').addEventListener('click', () => {
