@@ -207,26 +207,28 @@ submitBtn.addEventListener('click', async () => {
       return;
     }
   }
-  const { error } = isLogin
-    ? await supabaseClient.auth.signInWithPassword({ email, password: pass })
-    : await supabaseClient.auth.signUp({ email, password: pass });
-  submitBtn.textContent = "Continue"; submitBtn.classList.remove('loading');
-  if (error) {
-    console.log("Supabase error:", error);
-    const msg = error.message.toLowerCase();
-    if (
-      !isLogin && (
-        msg.includes("already") ||
-        msg.includes("exists") ||
-        msg.includes("registered") ||
-        error.status === 400
-      )
-    ) {
-      errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
-      return;
-    }
-    return errPass.textContent = "Error: " + error.message;
+const { error } = isLogin
+  ? await supabaseClient.auth.signInWithPassword({ email, password: pass })
+  : await supabaseClient.auth.signUp({ email, password: pass });
+
+// restablece UI
+submitBtn.textContent = "Continue";
+submitBtn.classList.remove('loading');
+
+if (error) {
+  console.log("Supabase error:", { status: error.status, message: error.message });
+  const msg = (error.message || '').toLowerCase();
+
+  // SOLO detecta colisión por mensaje, NO por status 400 genérico
+  if (!isLogin && (msg.includes("already") || msg.includes("exists") || msg.includes("registered"))) {
+    errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
+    return;
   }
+
+  // Otros errores (password débil, rate limit, etc.)
+  errPass.textContent = "Error: " + (error.message || "Intenta de nuevo.");
+  return;
+}
 
   if (!error && !isLogin) {
     loginSection.classList.add('hidden');
