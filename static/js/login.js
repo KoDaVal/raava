@@ -69,7 +69,7 @@ function showStep(step) {
 
 // Step 1: Send code
 document.getElementById('start-reset-btn').addEventListener('click', async () => {
-  const email = document.getElementById('recover-email').value;
+  const email = (document.getElementById('recover-email').value || "").trim().toLowerCase();
   const err = document.getElementById('recover-email-error');
   err.textContent = '';
   if (!email) return err.textContent = "Email required.";
@@ -89,7 +89,7 @@ document.getElementById('start-reset-btn').addEventListener('click', async () =>
 // Step 2: Verify code
 document.getElementById('verify-otp-btn').addEventListener('click', async () => {
   const otp = document.getElementById('otp-input').value;
-  const email = document.getElementById('recover-email').value;
+  const email = (document.getElementById('recover-email').value || "").trim().toLowerCase();
   const err = document.getElementById('otp-error');
   err.textContent = '';
   if (!otp) return err.textContent = "Code required.";
@@ -139,7 +139,7 @@ function attachPasswordFeedback(inputId, errorId) {
 
 // Step 3: Change password
 document.getElementById('reset-password-btn').addEventListener('click', async () => {
-  const email = document.getElementById('recover-email').value;
+  const email = (document.getElementById('recover-email').value || "").trim().toLowerCase();
   const otp = document.getElementById('otp-input').value;
   const newPass = document.getElementById('new-password').value;
   const confirm = document.getElementById('confirm-new-password').value;
@@ -193,31 +193,6 @@ submitBtn.addEventListener('click', async () => {
   }
   if (!isLogin && pass !== confirm) return errConfirm.textContent = "Passwords do not match.";
   submitBtn.textContent = "Loading…"; submitBtn.classList.add('loading');
-  // === Verificar si el correo ya existe antes de registrar ===
-// === Verificar si el correo ya existe antes de registrar ===
-if (!isLogin) {
-  try {
-    const checkRes = await fetch('/check_email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })     // email ya normalizado
-    });
-
-    if (checkRes.ok) {
-      const payload = await checkRes.json();
-      // Bloquea SOLO si el backend afirma explícitamente que existe
-      if (payload && payload.exists === true) {
-        errEmail.textContent = "Este correo ya está registrado. Por favor, inicia sesión.";
-        submitBtn.textContent = "Continue";
-        submitBtn.classList.remove('loading');
-        return;
-      }
-    }
-    // Si no es ok o la forma no es la esperada, NO bloquees: seguimos al signUp.
-  } catch (e) {
-    // Silencioso: falló el pre-check → no bloquea, continúa al signUp.
-  }
-}
 const { error } = isLogin
   ? await supabaseClient.auth.signInWithPassword({ email, password: pass })
   : await supabaseClient.auth.signUp({ email, password: pass });
