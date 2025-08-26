@@ -2,7 +2,39 @@
 const SUPABASE_URL     = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
 const SUPABASE_ANON_KEY= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
 const supabaseClient   = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════
+// ═══════════════ Resto de la lógica de Raavax (sin cambios) ═══════════════// ===== Reproductor global: asegura que solo 1 mensaje suene a la vez =====
+window._rxAudioState = {
+  audio: null,   // HTMLAudioElement sonando
+  button: null   // <button> asociado al audio en reproducción
+};
+
+function rxStopGlobalPlayer() {
+  try { window._rxAudioState.audio?.pause(); } catch {}
+  if (window._rxAudioState.button) {
+    window._rxAudioState.button.classList.remove('loading', 'playing');
+    window._rxAudioState.button.innerHTML = '<i class="fas fa-play"></i>';
+    window._rxAudioState.button.title = 'Reproducir audio';
+  }
+  window._rxAudioState = { audio: null, button: null };
+}
+
+function rxBtnPlay(btn) {
+  btn.classList.remove('loading', 'playing');
+  btn.innerHTML = '<i class="fas fa-play"></i>';
+  btn.title = 'Reproducir audio';
+}
+function rxBtnPause(btn) {
+  btn.classList.remove('loading');
+  btn.classList.add('playing');
+  btn.innerHTML = '<i class="fas fa-pause"></i>';
+  btn.title = 'Pausar audio';
+}
+function rxBtnLoading(btn) {
+  btn.classList.add('loading');
+  btn.classList.remove('playing');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  btn.title = 'Generando audio...';
+}
 document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const newChatBtn = document.getElementById('new-chat-btn');
@@ -465,87 +497,109 @@ startMindButtons.forEach(btn => {
             });
             actionsContainer.appendChild(copyButton);
 
-            // Botón Reproducir Audio
-            // Botón Reproducir Audio
+// --- Botón Play/Pause (iconos: play → spinner → pause)
 const playAudioButton = document.createElement('button');
 playAudioButton.classList.add('message-action-btn', 'play-audio-btn');
-playAudioButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+playAudioButton.innerHTML = '<i class="fas fa-play"></i>';
 playAudioButton.title = 'Reproducir audio';
 
-let currentAudioInstance = null;
+let currentAudioInstance = null; // Audio específico de ESTE mensaje
 
 playAudioButton.addEventListener('click', async () => {
-    const messageText = messageElement.innerText || messageElement.textContent;
-    if (!messageText) {
-        console.warn('No hay texto disponible para generar audio.');
-        return;
+  const messageText = text; // usa el texto puro del mensaje del bot
+  if (!messageText.trim()) return;
+
+  // Si hay otro audio sonando en la app, deténlo y resetea su botón
+  if (window._rxAudioState.button && window._rxAudioState.button !== playAudioButton) {
+    rxStopGlobalPlayer();
+  }
+
+  // Si ya creamos el audio para este mensaje → T O G G L E
+  if (currentAudioInstance) {
+    if (currentAudioInstance.paused) {
+      await currentAudioInstance.play();
+      rxBtnPause(playAudioButton);
+      window._rxAudioState = { audio: currentAudioInstance, button: playAudioButton };
+    } else {
+      currentAudioInstance.pause(); // mantener posición para reanudar
+      rxBtnPlay(playAudioButton);
+      if (window._rxAudioState.button === playAudioButton) {
+        window._rxAudioState = { audio: null, button: null };
+      }
     }
+    return;
+  }
+
+  // Primera vez: pedir el audio al backend (mostrar spinner mientras genera)
+  try {
+    rxBtnLoading(playAudioButton);
 
     // Recuperar token del usuario autenticado
     const { data } = await supabaseClient.auth.getSession();
     const token = data.session?.access_token;
     if (!token) {
-        alert("Debes iniciar sesión para usar TTS.");
-        return;
+      alert("Debes iniciar sesión para usar TTS.");
+      rxBtnPlay(playAudioButton);
+      return;
     }
 
-    // Si ya hay audio reproduciéndose, deténlo
-    if (currentAudioInstance && !currentAudioInstance.paused) {
-        currentAudioInstance.pause();
-        currentAudioInstance.currentTime = 0;
-        playAudioButton.classList.remove('playing');
+    // Generar audio (tu endpoint devuelve base64 en "audio")
+    const response = await fetch('/generate_audio', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Bearer ${token}` // <-- IMPORTANTE
+      },
+      body: new URLSearchParams({
+        text: messageText,
+        voice_id: clonedVoiceId || ''  // <-- Envia la voz clonada si existe
+      })
+    });
+
+    const dataRes = await response.json();
+    if (!response.ok || !dataRes.audio) {
+      console.error('Fallo generate_audio:', response.status, dataRes);
+      rxBtnPlay(playAudioButton);
+      return;
     }
 
-    try {
-        playAudioButton.classList.add('loading');
-        playAudioButton.classList.remove('playing');
+    // Crear el audio desde base64 que devuelve el backend
+    currentAudioInstance = new Audio(`data:audio/mpeg;base64,${dataRes.audio}`);
 
-        // Enviar el texto + token al backend
-        const response = await fetch('/generate_audio', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization': `Bearer ${token}` // <-- IMPORTANTE
-            },
-           body: new URLSearchParams({ 
-    text: messageText,
-    voice_id: clonedVoiceId || ''  // <-- Envia la voz clonada si existe
-})
-        });
+    currentAudioInstance.onplay = () => {
+      rxBtnPause(playAudioButton);
+      window._rxAudioState = { audio: currentAudioInstance, button: playAudioButton };
+    };
+    currentAudioInstance.onpause = () => {
+      rxBtnPlay(playAudioButton);
+      if (window._rxAudioState.button === playAudioButton) {
+        window._rxAudioState = { audio: null, button: null };
+      }
+    };
+    currentAudioInstance.onended = () => {
+      rxBtnPlay(playAudioButton);
+      if (window._rxAudioState.button === playAudioButton) {
+        window._rxAudioState = { audio: null, button: null };
+      }
+    };
+    currentAudioInstance.onerror = (e) => {
+      console.error('Error en el audio:', e);
+      rxBtnPlay(playAudioButton);
+      if (window._rxAudioState.button === playAudioButton) {
+        window._rxAudioState = { audio: null, button: null };
+      }
+    };
 
-        const data = await response.json();
-        if (!data.audio) {
-            console.warn('No se recibió audio desde el backend.');
-            playAudioButton.classList.remove('loading');
-            return;
-        }
+    await currentAudioInstance.play(); // onplay → cambia a Pause
 
-        currentAudioInstance = new Audio(`data:audio/mpeg;base64,${data.audio}`);
-
-        currentAudioInstance.onplay = () => {
-            playAudioButton.classList.remove('loading');
-            playAudioButton.classList.add('playing');
-        };
-
-        currentAudioInstance.onended = () => {
-            playAudioButton.classList.remove('playing');
-        };
-
-        currentAudioInstance.onerror = (e) => {
-            console.error('Error al cargar o reproducir el audio:', e);
-            playAudioButton.classList.remove('loading', 'playing');
-        };
-
-        await currentAudioInstance.play();
-
-    } catch (error) {
-        console.error('Error al generar o reproducir el audio:', error);
-        playAudioButton.classList.remove('loading', 'playing');
-    }
+  } catch (err) {
+    console.error('Error generando/reproduciendo:', err);
+    rxBtnPlay(playAudioButton);
+  }
 });
 
+// Montar el botón
 actionsContainer.appendChild(playAudioButton);
-
             // Añadir el contenedor de acciones al messageElement (FUERA DEL GLOBO)
             messageElement.appendChild(actionsContainer);
         }
