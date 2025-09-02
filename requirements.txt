@@ -8,3 +8,6 @@ supabase
 openai>=1.30.0
 tiktoken>=0.7.0
 loguru>=0.7.0
+gTTS>=2.5.1
+
+
