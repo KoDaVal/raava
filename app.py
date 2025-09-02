@@ -7,7 +7,8 @@ import google.generativeai as genai
 import base64
 import json
 import requests
-from gtts import gTTS
+import asyncio
+import edge_tts
 from io import BytesIO
 import random
 from datetime import date, datetime, timedelta, timezone
@@ -228,49 +229,33 @@ def truncate_history(history, max_messages=20):
     summary_text = f"Resumen de la conversación anterior:\n{ ' '.join(old_msgs)[:1000] }..."
     summarized_entry = {"role": "system", "parts": [{"text": summary_text}]}
     return [summarized_entry] + history[-max_messages:]
-def _parse_lang_for_gtts(language_code: str):
+async def _edge_tts_async(text: str, voice: str = "es-MX-DaliaNeural", rate: str = "+0%", volume: str = "+0%"):
     """
-    Convierte BCP-47 (es-MX, es-ES, en-US, pt-BR, etc.) al par (lang, tld) para gTTS.
+    Genera MP3 con Microsoft Edge TTS (neural, sin API key).
+    Voces útiles:
+      - es-MX-DaliaNeural, es-MX-JorgeNeural
+      - es-ES-ElviraNeural, es-ES-AlvaroNeural
+      - en-US-JennyNeural, en-US-GuyNeural
+      - pt-BR-FranciscaNeural, pt-BR-AntonioNeural
+    rate: ej. "+5%", "-10%"; volume: "+0%", "+3dB"
     """
-    if not language_code:
-        return "es", "com.mx"
-    code = language_code.lower()
-    base = code.split("-")[0]
+    communicate = edge_tts.Communicate(text, voice=voice, rate=rate, volume=volume)
+    audio_chunks = []
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio":
+            audio_chunks.append(chunk["data"])
+    return b"".join(audio_chunks)
 
-    region_map = {
-        "es-mx": ("es", "com.mx"),
-        "es-es": ("es", "es"),
-        "en-us": ("en", "com"),
-        "en-gb": ("en", "co.uk"),
-        "pt-br": ("pt", "com.br"),
-        "fr-fr": ("fr", "fr"),
-        "de-de": ("de", "de"),
-        "it-it": ("it", "it"),
+def synthesize_with_edge_tts(text: str, lang_code: str = "es-MX"):
+    # Mapea lang a una voz neural razonable
+    voices = {
+        "es-MX": "es-MX-DaliaNeural",
+        "es-ES": "es-ES-ElviraNeural",
+        "en-US": "en-US-JennyNeural",
+        "pt-BR": "pt-BR-FranciscaNeural",
     }
-    if code in region_map:
-        return region_map[code]
-
-    base_map = {
-        "es": ("es", "com.mx"),
-        "en": ("en", "com"),
-        "pt": ("pt", "com.br"),
-        "fr": ("fr", "fr"),
-        "de": ("de", "de"),
-        "it": ("it", "it"),
-    }
-    return base_map.get(base, (base, "com"))
-
-def synthesize_with_gtts(text, language_code="es-MX", slow=False):
-    """
-    Devuelve bytes MP3 usando gTTS (Google Translate TTS).
-    language_code: 'es-MX', 'es-ES', 'en-US', 'pt-BR', etc. (lo mapeamos a gTTS).
-    """
-    lang, tld = _parse_lang_for_gtts(language_code)
-    fp = BytesIO()
-    gTTS(text=text, lang=lang, tld=tld, slow=slow).write_to_fp(fp)
-    fp.seek(0)
-    return fp.read()
-
+    voice = voices.get(lang_code, "es-MX-DaliaNeural")
+    return asyncio.run(_edge_tts_async(text, voice=voice))
 
 # ========== RUTAS DE RECUPERACIÓN DE CONTRASEÑA ==========
 @app.route('/request_password_code', methods=['POST'])
@@ -685,12 +670,12 @@ def generate_audio():
     """
     Genera audio TTS:
     - Si viene `voice_id` -> ElevenLabs (cuenta tokens reales).
-    - Si NO viene `voice_id` -> gTTS (gratis, multilenguaje; NO consume voice tokens).
+    - Si NO viene `voice_id` -> Edge TTS (gratis, neural; NO consume voice tokens).
     """
     try:
         text = request.form.get('text', '') or ''
-        voice_id = request.form.get('voice_id')  # Si viene → ElevenLabs; si no → gTTS
-        lang = request.form.get('lang') or 'es-MX'  # BCP-47: 'es-MX', 'es-ES', 'en-US', 'pt-BR', etc.
+        voice_id = request.form.get('voice_id')  # Si viene → ElevenLabs; si no → Edge TTS
+        lang = request.form.get('lang') or 'es-MX'  # 'es-MX', 'es-ES', 'en-US', 'pt-BR', etc.
 
         # --- Autenticación ---
         token = request.headers.get("Authorization", "").replace("Bearer ", "")
@@ -707,28 +692,23 @@ def generate_audio():
         profile = reset_monthly_usage(profile, user_id)
         limits = check_plan_limits(profile)
 
-        # ============ RUTA gTTS (si NO hay voice_id) ============
+        # ============ RUTA EDGE TTS (si NO hay voice_id) ============
         if not voice_id:
             try:
-                audio_bytes = synthesize_with_gtts(
-                    text=text,
-                    language_code=lang,
-                    slow=False
-                )
+                audio_bytes = synthesize_with_edge_tts(text=text, lang_code=lang)
             except Exception as ge2:
                 import traceback
-                print("[gTTS ERROR]", traceback.format_exc())
+                print("[EDGE TTS ERROR]", traceback.format_exc())
                 return jsonify({"error": "tts_failed", "details": str(ge2)}), 500
 
             audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
 
-            # No consumimos voice_tokens al usar gTTS
             voice_limit = limits.get("voice_tokens", None)
             voice_used = int(profile.get("voice_tokens_used", 0))
             voice_remaining = (voice_limit - voice_used) if (voice_limit and voice_limit > 0) else None
 
             return jsonify({
-                "provider": "gtts",
+                "provider": "edge-tts",
                 "audio": audio_base64,
                 "voice_tokens_delta": 0,
                 "voice_tokens_used": voice_used,
@@ -760,7 +740,7 @@ def generate_audio():
             char_before = None
 
         # === Preparar TTS Eleven ===
-        current_voice_id = voice_id  # Ojo: ya NO usamos la default si no viene; para evitar consumo accidental
+        current_voice_id = voice_id  # no default para evitar consumo accidental
         tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{current_voice_id}/stream"
         tts_headers = {
             "xi-api-key": eleven_labs_api_key,
