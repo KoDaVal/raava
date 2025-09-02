@@ -4,10 +4,6 @@ import os
 import stripe
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 import google.generativeai as genai
-from gtts import gTTS
-from io import BytesIO
-from google.cloud import texttospeech as google_tts
-from google.oauth2 import service_account
 import base64
 import json
 import requests
@@ -219,13 +215,6 @@ eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_try_only")
 default_eleven_labs_voice_id = "21m00Tcm4TlvDq8ikWAM"
 cloned_voice_id = None
 
-# ========== Google TTS ==========
-GOOGLE_TTS_CREDENTIALS_JSON = os.getenv("GOOGLE_TTS_CREDENTIALS_JSON")
-google_tts_client = None
-if GOOGLE_TTS_CREDENTIALS_JSON:
-    _creds = service_account.Credentials.from_service_account_info(json.loads(GOOGLE_TTS_CREDENTIALS_JSON))
-    google_tts_client = google_tts.TextToSpeechClient(credentials=_creds)
-
 # ========== HELPERS ==========
 def api_error(message, status=400):
     return jsonify({"error": message}), status
@@ -237,77 +226,6 @@ def truncate_history(history, max_messages=20):
     summary_text = f"Resumen de la conversación anterior:\n{ ' '.join(old_msgs)[:1000] }..."
     summarized_entry = {"role": "system", "parts": [{"text": summary_text}]}
     return [summarized_entry] + history[-max_messages:]
-def synthesize_with_google_tts(text, language_code="es-ES", voice_name=None, ssml=False, speaking_rate=None, pitch=None):
-    """
-    Devuelve bytes MP3 usando Google TTS.
-    - language_code: 'es-ES', 'en-US', 'pt-BR', etc.
-    - voice_name: opcional, p. ej. 'es-ES-Standard-A' o 'en-US-Neural2-F'
-    - ssml: si True, tratamos 'text' como SSML
-    - speaking_rate/pitch: floats opcionales (p.ej. 0.9, +2.0)
-    """
-    if not google_tts_client:
-        raise RuntimeError("Google TTS no está configurado (falta GOOGLE_TTS_CREDENTIALS_JSON).")
-
-    input_ = google_tts.SynthesisInput(ssml=text) if ssml else google_tts.SynthesisInput(text=text)
-
-    if voice_name:
-        voice = google_tts.VoiceSelectionParams(language_code=language_code, name=voice_name)
-    else:
-        voice = google_tts.VoiceSelectionParams(language_code=language_code)
-
-    audio_cfg_kwargs = {"audio_encoding": google_tts.AudioEncoding.MP3}
-    if speaking_rate is not None:
-        audio_cfg_kwargs["speaking_rate"] = speaking_rate
-    if pitch is not None:
-        audio_cfg_kwargs["pitch"] = pitch
-    audio_config = google_tts.AudioConfig(**audio_cfg_kwargs)
-
-    resp = google_tts_client.synthesize_speech(input=input_, voice=voice, audio_config=audio_config)
-    return resp.audio_content
-def _parse_lang_for_gtts(language_code: str):
-    """
-    Convierte un BCP-47 (es-MX, es-ES, en-US, etc.) al par (lang, tld) para gTTS.
-    """
-    if not language_code:
-        return "es", "com.mx"
-    code = language_code.lower()
-    base = code.split("-")[0]
-
-    region_map = {
-        "es-mx": ("es", "com.mx"),
-        "es-es": ("es", "es"),
-        "en-us": ("en", "com"),
-        "en-gb": ("en", "co.uk"),
-        "pt-br": ("pt", "com.br"),
-        "fr-fr": ("fr", "fr"),
-        "de-de": ("de", "de"),
-        "it-it": ("it", "it"),
-    }
-    if code in region_map:
-        return region_map[code]
-
-    base_map = {
-        "es": ("es", "com.mx"),
-        "en": ("en", "com"),
-        "pt": ("pt", "com.br"),
-        "fr": ("fr", "fr"),
-        "de": ("de", "de"),
-        "it": ("it", "it"),
-    }
-    return base_map.get(base, (base, "com"))
-
-
-def synthesize_with_gtts(text, language_code="es-MX", slow=False):
-    """
-    Devuelve bytes MP3 usando gTTS (Google Translate TTS).
-    - language_code: 'es-MX', 'es-ES', 'en-US', etc. (lo mapeamos a gTTS).
-    - slow: lectura pausada (bool).
-    """
-    lang, tld = _parse_lang_for_gtts(language_code)
-    fp = BytesIO()
-    gTTS(text=text, lang=lang, tld=tld, slow=slow).write_to_fp(fp)
-    fp.seek(0)
-    return fp.read()
 
 # ========== RUTAS DE RECUPERACIÓN DE CONTRASEÑA ==========
 @app.route('/request_password_code', methods=['POST'])
@@ -717,23 +635,19 @@ def start_mind():
         print(f"Error inesperado en /start_mind: {e}")
         return jsonify({'error': 'Error interno al iniciar la mente.'}), 500
 
+
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
     """
-    Genera audio TTS con:
-    - ElevenLabs si viene `voice_id` (cuenta tokens REALES en Eleven).
-    - Google Cloud TTS si NO viene `voice_id` (multilenguaje, NO consume tokens de voz).
+    Genera audio TTS con ElevenLabs y cuenta tokens REALES:
+    - Verifica saldo local antes (voice_tokens_used vs. PLAN_LIMITS).
+    - Lee character_count de ElevenLabs ANTES y DESPUÉS del TTS.
+    - Suma el delta real a voice_tokens_used con update_usage(..., voice_tokens=delta).
+    - Devuelve audio + métricas (delta, usados, límite, restante).
     """
     try:
         text = request.form.get('text', '') or ''
-        voice_id = request.form.get('voice_id')  # Si viene → ElevenLabs; si no → Google TTS
-
-        # ---- Parámetros multilenguaje para Google TTS (opcionales) ----
-        lang = request.form.get('lang') or 'es-MX'          # BCP-47: ej. 'es-MX', 'es-ES', 'en-US', 'pt-BR'
-        g_voice_name = request.form.get('g_voice_name')     # ej. 'es-ES-Standard-A', 'en-US-Neural2-F'
-        ssml = (request.form.get('ssml') == 'true')         # 'true'/'false'
-        speaking_rate = request.form.get('speaking_rate')   # float opcional (string)
-        pitch = request.form.get('pitch')                   # float opcional (string)
+        voice_id = request.form.get('voice_id')  # Puede venir del frontend
 
         # --- Autenticación ---
         token = request.headers.get("Authorization", "").replace("Bearer ", "")
@@ -745,70 +659,14 @@ def generate_audio():
         if not text.strip():
             return jsonify({"error": "Texto vacío para generar audio."}), 400
 
-        # === Perfil y límites de plan (solo tokens de TEXTO aquí) ===
-        profile = get_user_profile(user_id)
-        profile = reset_monthly_usage(profile, user_id)
-        limits = check_plan_limits(profile)  # valida límite de tokens generales (texto)
-
-        # ============ RUTA GOOGLE TTS o gTTS (si NO hay voice_id) ============
-        if not voice_id:
-            try:
-                if google_tts_client:
-                    # Intento 1: Google Cloud TTS (si está configurado)
-                    audio_bytes = synthesize_with_google_tts(
-                        text=text,
-                        language_code=lang,
-                        voice_name=g_voice_name,
-                        ssml=ssml,
-                        speaking_rate=float(speaking_rate) if speaking_rate else None,
-                        pitch=float(pitch) if pitch else None,
-                    )
-                    provider = "google_tts"
-                else:
-                    # Si no hay cliente Google, usamos gTTS directo
-                    audio_bytes = synthesize_with_gtts(
-                        text=text,
-                        language_code=lang,
-                        slow=False
-                    )
-                    provider = "gtts"
-            except Exception as ge:
-                # Fallback de emergencia a gTTS si falla Google
-                try:
-                    audio_bytes = synthesize_with_gtts(
-                        text=text,
-                        language_code=lang,
-                        slow=False
-                    )
-                    provider = "gtts"
-                except Exception as ge2:
-                    import traceback
-                    print("[TTS ERROR] Google y gTTS fallaron:\n", traceback.format_exc())
-                    return jsonify({"error": "tts_failed", "details": str(ge2)}), 500
-
-            audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
-
-            # NO actualizamos voice_tokens; regresamos métricas consistentes para UI
-            voice_limit = limits.get("voice_tokens", None)
-            voice_used = int(profile.get("voice_tokens_used", 0))
-            voice_remaining = (voice_limit - voice_used) if (voice_limit and voice_limit > 0) else None
-
-            return jsonify({
-                "provider": provider,  # 'google_tts' o 'gtts'
-                "audio": audio_base64,
-                "voice_tokens_delta": 0,
-                "voice_tokens_used": voice_used,
-                "voice_tokens_limit": voice_limit,
-                "voice_tokens_remaining": max(voice_remaining, 0) if voice_remaining is not None else None
-            })
-
-        # ============ RUTA ELEVENLABS (si hay voice_id) ============
-        # Aquí sí aplican límites de VOZ y dependencia de API key de ElevenLabs
-        eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_try_only")
         if not eleven_labs_api_key or eleven_labs_api_key == "sk_try_only":
             return jsonify({"error": "tts_failed", "details": "API key de ElevenLabs inválida o ausente."}), 500
 
-        # Checar límite de VOZ antes de usar Eleven
+        # === Checar límites locales ANTES de pedir TTS ===
+        profile = get_user_profile(user_id)
+        profile = reset_monthly_usage(profile, user_id)
+        limits = check_plan_limits(profile)  # lanza excepción si no hay cupo (texto/voz)
+        # Si hay límite de voz y ya está alcanzado, corta
         voice_limit = limits.get("voice_tokens", 0)
         voice_used = int(profile.get("voice_tokens_used", 0))
         if voice_limit is not None and voice_limit > 0 and voice_used >= voice_limit:
@@ -822,12 +680,14 @@ def generate_audio():
             sub_before.raise_for_status()
             sub_before_json = sub_before.json()
             char_before = int(sub_before_json.get("character_count", 0))
+            # (opcional) char_limit_api = int(sub_before_json.get("character_limit", 0))
         except Exception as e:
+            # Si falla la lectura previa, no bloqueamos el TTS, pero NO podremos medir delta:
             print("[VOICE USAGE WARN] Falló lectura 'before' de ElevenLabs:", e)
             char_before = None
 
-        # === Preparar TTS Eleven ===
-        current_voice_id = voice_id  # <- ahora SÓLO usamos Eleven si el frontend manda voice_id
+        # === Preparar TTS ===
+        current_voice_id = voice_id or default_eleven_labs_voice_id
         tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{current_voice_id}/stream"
         tts_headers = {
             "xi-api-key": eleven_labs_api_key,
@@ -843,10 +703,11 @@ def generate_audio():
             }
         }
 
-        # === Llamada TTS Eleven ===
+        # === Llamada TTS ===
         tts_response = requests.post(tts_url, headers=tts_headers, json=tts_data, stream=True, timeout=60)
         tts_response.raise_for_status()
 
+        # Validar que realmente vino audio (no JSON de error)
         ctype = tts_response.headers.get("Content-Type", "")
         if "audio" not in ctype.lower():
             try:
@@ -879,16 +740,17 @@ def generate_audio():
             except Exception as _e:
                 print("[VOICE USAGE WARN] No se pudo actualizar voice_tokens:", _e)
         else:
-            print("[VOICE USAGE WARN] No se pudo calcular delta real de ElevenLabs.")
+            # Si no se pudo medir, al menos logueamos
+            print("[VOICE USAGE WARN] No se pudo calcular delta real de ElevenLabs (char_before/char_after none).")
 
         # === Métricas para UI ===
         new_profile = get_user_profile(user_id)
         voice_used = int(new_profile.get("voice_tokens_used", 0))
         voice_remaining = (voice_limit - voice_used) if (voice_limit and voice_limit > 0) else None
 
+        # === Respuesta ===
         audio_base64 = base64.b64encode(audio_content).decode('utf-8')
         return jsonify({
-            "provider": "elevenlabs",
             "audio": audio_base64,
             "voice_tokens_delta": voice_delta,
             "voice_tokens_used": voice_used,
@@ -897,11 +759,12 @@ def generate_audio():
         })
 
     except requests.exceptions.HTTPError as e:
+        # Errores HTTP en llamada TTS
         try:
             details = e.response.json()
         except Exception:
             details = {"message": getattr(e.response, "text", "")[:500]}
-        print(f"Error HTTP con proveedor TTS: {e.response.status_code} - {details}")
+        print(f"Error de conexión o API con ElevenLabs al generar audio: {e.response.status_code} - {details}")
         return jsonify({"error": "tts_failed", "details": details}), e.response.status_code
 
     except Exception as e:
