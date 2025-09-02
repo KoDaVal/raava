@@ -4,6 +4,8 @@ import os
 import stripe
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 import google.generativeai as genai
+from google.cloud import texttospeech as google_tts
+from google.oauth2 import service_account
 import base64
 import json
 import requests
@@ -215,6 +217,13 @@ eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_try_only")
 default_eleven_labs_voice_id = "21m00Tcm4TlvDq8ikWAM"
 cloned_voice_id = None
 
+# ========== Google TTS ==========
+GOOGLE_TTS_CREDENTIALS_JSON = os.getenv("GOOGLE_TTS_CREDENTIALS_JSON")
+google_tts_client = None
+if GOOGLE_TTS_CREDENTIALS_JSON:
+    _creds = service_account.Credentials.from_service_account_info(json.loads(GOOGLE_TTS_CREDENTIALS_JSON))
+    google_tts_client = google_tts.TextToSpeechClient(credentials=_creds)
+
 # ========== HELPERS ==========
 def api_error(message, status=400):
     return jsonify({"error": message}), status
@@ -226,6 +235,34 @@ def truncate_history(history, max_messages=20):
     summary_text = f"Resumen de la conversación anterior:\n{ ' '.join(old_msgs)[:1000] }..."
     summarized_entry = {"role": "system", "parts": [{"text": summary_text}]}
     return [summarized_entry] + history[-max_messages:]
+def synthesize_with_google_tts(text, language_code="es-ES", voice_name=None, ssml=False, speaking_rate=None, pitch=None):
+    """
+    Devuelve bytes MP3 usando Google TTS.
+    - language_code: 'es-ES', 'en-US', 'pt-BR', etc.
+    - voice_name: opcional, p. ej. 'es-ES-Standard-A' o 'en-US-Neural2-F'
+    - ssml: si True, tratamos 'text' como SSML
+    - speaking_rate/pitch: floats opcionales (p.ej. 0.9, +2.0)
+    """
+    if not google_tts_client:
+        raise RuntimeError("Google TTS no está configurado (falta GOOGLE_TTS_CREDENTIALS_JSON).")
+
+    input_ = google_tts.SynthesisInput(ssml=text) if ssml else google_tts.SynthesisInput(text=text)
+
+    if voice_name:
+        voice = google_tts.VoiceSelectionParams(language_code=language_code, name=voice_name)
+    else:
+        voice = google_tts.VoiceSelectionParams(language_code=language_code)
+
+    audio_cfg_kwargs = {"audio_encoding": google_tts.AudioEncoding.MP3}
+    if speaking_rate is not None:
+        audio_cfg_kwargs["speaking_rate"] = speaking_rate
+    if pitch is not None:
+        audio_cfg_kwargs["pitch"] = pitch
+    audio_config = google_tts.AudioConfig(**audio_cfg_kwargs)
+
+    resp = google_tts_client.synthesize_speech(input=input_, voice=voice, audio_config=audio_config)
+    return resp.audio_content
+
 
 # ========== RUTAS DE RECUPERACIÓN DE CONTRASEÑA ==========
 @app.route('/request_password_code', methods=['POST'])
