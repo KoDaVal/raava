@@ -4,6 +4,8 @@ import os
 import stripe
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 import google.generativeai as genai
+from gtts import gTTS
+from io import BytesIO
 from google.cloud import texttospeech as google_tts
 from google.oauth2 import service_account
 import base64
@@ -262,7 +264,50 @@ def synthesize_with_google_tts(text, language_code="es-ES", voice_name=None, ssm
 
     resp = google_tts_client.synthesize_speech(input=input_, voice=voice, audio_config=audio_config)
     return resp.audio_content
+def _parse_lang_for_gtts(language_code: str):
+    """
+    Convierte un BCP-47 (es-MX, es-ES, en-US, etc.) al par (lang, tld) para gTTS.
+    """
+    if not language_code:
+        return "es", "com.mx"
+    code = language_code.lower()
+    base = code.split("-")[0]
 
+    region_map = {
+        "es-mx": ("es", "com.mx"),
+        "es-es": ("es", "es"),
+        "en-us": ("en", "com"),
+        "en-gb": ("en", "co.uk"),
+        "pt-br": ("pt", "com.br"),
+        "fr-fr": ("fr", "fr"),
+        "de-de": ("de", "de"),
+        "it-it": ("it", "it"),
+    }
+    if code in region_map:
+        return region_map[code]
+
+    base_map = {
+        "es": ("es", "com.mx"),
+        "en": ("en", "com"),
+        "pt": ("pt", "com.br"),
+        "fr": ("fr", "fr"),
+        "de": ("de", "de"),
+        "it": ("it", "it"),
+    }
+    return base_map.get(base, (base, "com"))
+
+
+def synthesize_with_gtts(text, language_code="es-MX", slow=False):
+    """
+    Devuelve bytes MP3 usando gTTS (Google Translate TTS).
+    - language_code: 'es-MX', 'es-ES', 'en-US', etc. (lo mapeamos a gTTS).
+    - slow: lectura pausada (bool).
+    """
+    lang, tld = _parse_lang_for_gtts(language_code)
+    fp = BytesIO()
+    gTTS(text=text, lang=lang, tld=tld, slow=slow).write_to_fp(fp)
+    fp.seek(0)
+    return fp.read()
 
 # ========== RUTAS DE RECUPERACIÓN DE CONTRASEÑA ==========
 @app.route('/request_password_code', methods=['POST'])
@@ -705,21 +750,41 @@ def generate_audio():
         profile = reset_monthly_usage(profile, user_id)
         limits = check_plan_limits(profile)  # valida límite de tokens generales (texto)
 
-        # ============ RUTA GOOGLE TTS (si NO hay voice_id) ============
+        # ============ RUTA GOOGLE TTS o gTTS (si NO hay voice_id) ============
         if not voice_id:
             try:
-                audio_bytes = synthesize_with_google_tts(
-                    text=text,
-                    language_code=lang,
-                    voice_name=g_voice_name,
-                    ssml=ssml,
-                    speaking_rate=float(speaking_rate) if speaking_rate else None,
-                    pitch=float(pitch) if pitch else None,
-                )
+                if google_tts_client:
+                    # Intento 1: Google Cloud TTS (si está configurado)
+                    audio_bytes = synthesize_with_google_tts(
+                        text=text,
+                        language_code=lang,
+                        voice_name=g_voice_name,
+                        ssml=ssml,
+                        speaking_rate=float(speaking_rate) if speaking_rate else None,
+                        pitch=float(pitch) if pitch else None,
+                    )
+                    provider = "google_tts"
+                else:
+                    # Si no hay cliente Google, usamos gTTS directo
+                    audio_bytes = synthesize_with_gtts(
+                        text=text,
+                        language_code=lang,
+                        slow=False
+                    )
+                    provider = "gtts"
             except Exception as ge:
-                import traceback
-                print("[GOOGLE TTS ERROR]", traceback.format_exc())
-                return jsonify({"error": "tts_failed", "details": str(ge)}), 500
+                # Fallback de emergencia a gTTS si falla Google
+                try:
+                    audio_bytes = synthesize_with_gtts(
+                        text=text,
+                        language_code=lang,
+                        slow=False
+                    )
+                    provider = "gtts"
+                except Exception as ge2:
+                    import traceback
+                    print("[TTS ERROR] Google y gTTS fallaron:\n", traceback.format_exc())
+                    return jsonify({"error": "tts_failed", "details": str(ge2)}), 500
 
             audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
 
@@ -729,7 +794,7 @@ def generate_audio():
             voice_remaining = (voice_limit - voice_used) if (voice_limit and voice_limit > 0) else None
 
             return jsonify({
-                "provider": "google_tts",
+                "provider": provider,  # 'google_tts' o 'gtts'
                 "audio": audio_base64,
                 "voice_tokens_delta": 0,
                 "voice_tokens_used": voice_used,
