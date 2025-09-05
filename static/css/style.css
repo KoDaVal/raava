@@ -1462,72 +1462,49 @@ input:checked + .slider:before {
 .logout-btn:hover {
   background-color: #eee;
 }
-/* === Bot centrado, user sin cambios === */
+/* === Raavax: estilo tipo ChatGPT (sin burbuja) — Overrides === */
 
-/* Alineaciones */
-.message.bot  { justify-content: center; }
-.message.user { justify-content: flex-end; }
+/* El wrapper del mensaje ocupa el ancho, y centramos el contenido interno */
+.message {
+  width: 100% !important;
+  max-width: none !important;
+  align-self: auto !important;           /* evita empujar mensajes del user a la derecha */
+}
 
-/* Bot sin burbuja pero con texto centrado */
-.message.bot .message-content {
+/* Contenedor de contenido: sin fondo, sin borde, centrado y con ancho legible */
+.message .message-content {
+  max-width: 780px;
+  margin: 0 auto 20px;
+  line-height: 1.6;
+  font-size: 15px;
+  color: var(--text-color);
+
+  /* quitar burbuja */
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
   border-radius: 0 !important;
-
-  max-width: 780px;
-  margin: 0 auto 12px;   /* centra el bloque */
-  text-align: center;    /* centra el texto */
-  line-height: 1.6;
-  font-size: 15px;
 }
 
-/* El user conserva su globo con tu CSS original (no tocamos) */
-
-/* Acciones: debajo del bot, centramos el contenedor y
-   alineamos los botones a la IZQUIERDA dentro del bloque */
-.message .message-actions {
-  max-width: 780px;
-  margin: 4px auto 16px;   /* centra el ancho del bloque de acciones */
-  display: flex;
-  gap: 8px;
-}
-.message.bot  .message-actions { justify-content: flex-start; } /* izquierda del bloque */
-.message.user .message-actions { justify-content: flex-end;   } /* derecha para user */
-
-/* === Typing indicator: solo burbujas, centrado y con margen === */
-.message.typing-indicator {
-  justify-content: center !important;   /* mismo centro que el bot */
-  margin: 6px 0 16px;                   /* margen para que no quede pegado */
+/* Asegura que user/bot ambos queden sin “globo” */
+.message.user .message-content,
+.message.bot  .message-content {
+  background: transparent !important;
 }
 
-.message.typing-indicator span {
-  display: inline-block;
-  width: 8px; height: 8px;
-  margin: 0 4px;
-  background: rgba(255,255,255,0.35);
-  border-radius: 50%;
-  animation: rxTypingBounce 1.2s infinite ease-in-out;
-}
-.message.typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
-.message.typing-indicator span:nth-child(3) { animation-delay: 0.30s; }
-
-@keyframes rxTypingBounce {
-  0%, 80%, 100% { transform: translateY(0); opacity: .65; }
-  40%           { transform: translateY(-4px); opacity: 1; }
-}
-
-/* Markdown compacto (sólo mejora spacing, no toca estilos del user) */
-.message .message-content h1 { font-size: 1.6rem; font-weight: 600; margin: 18px 0 10px; }
-.message .message-content h2 { font-size: 1.35rem; font-weight: 600; margin: 18px 0 10px; }
-.message .message-content h3 { font-size: 1.15rem; font-weight: 600; margin: 16px 0 8px;  }
-.message .message-content h4 { font-size: 1.05rem; font-weight: 600; margin: 12px 0 6px;   }
+/* Titulares y tipografía de markdown compactos */
+.message .message-content h1 { font-size: 1.6rem; font-weight: 600; margin: 18px auto 10px; }
+.message .message-content h2 { font-size: 1.35rem; font-weight: 600; margin: 18px auto 10px; }
+.message .message-content h3 { font-size: 1.15rem; font-weight: 600; margin: 16px auto 8px; }
+.message .message-content h4 { font-size: 1.05rem; font-weight: 600; margin: 12px auto 6px; }
 .message .message-content p  { margin: 10px 0; }
+
 .message .message-content ul,
 .message .message-content ol { margin: 8px 0 12px 22px; }
 .message .message-content li { margin: 4px 0; }
 
+/* Código inline y bloques de código */
 .message .message-content code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.95em;
@@ -1547,3 +1524,39 @@ input:checked + .slider:before {
   background: transparent;
   border-radius: 0;
 }
+
+/* Acciones (copiar / TTS) debajo del bloque y alineadas a la derecha */
+.message .message-actions {
+  max-width: 780px;
+  margin: -8px auto 24px;     /* pegadito al texto */
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;  /* a la derecha */
+  padding-left: 0 !important; /* quitar indent previo */
+}
+
+/* Botones lisos y discretos */
+.message .message-action-btn {
+  border: 1px solid rgba(255,255,255,0.12);
+  background: transparent;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  color: var(--text-color);
+  font-size: 13px;
+}
+.message .message-action-btn:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+/* Ajustes responsive: respeta el ancho legible en móviles */
+@media (max-width: 768px) {
+  .message .message-content,
+  .message .message-actions {
+    max-width: 92%;
+  }
+}
+
+/* Opcional: más aire vertical entre grupos de mensajes largos */
+.messages { padding: 16px 0; }
