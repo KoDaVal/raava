@@ -1462,3 +1462,101 @@ input:checked + .slider:before {
 .logout-btn:hover {
   background-color: #eee;
 }
+/* === Raavax: estilo tipo ChatGPT (sin burbuja) — Overrides === */
+
+/* El wrapper del mensaje ocupa el ancho, y centramos el contenido interno */
+.message {
+  width: 100% !important;
+  max-width: none !important;
+  align-self: auto !important;           /* evita empujar mensajes del user a la derecha */
+}
+
+/* Contenedor de contenido: sin fondo, sin borde, centrado y con ancho legible */
+.message .message-content {
+  max-width: 780px;
+  margin: 0 auto 20px;
+  line-height: 1.6;
+  font-size: 15px;
+  color: var(--text-color);
+
+  /* quitar burbuja */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Asegura que user/bot ambos queden sin “globo” */
+.message.user .message-content,
+.message.bot  .message-content {
+  background: transparent !important;
+}
+
+/* Titulares y tipografía de markdown compactos */
+.message .message-content h1 { font-size: 1.6rem; font-weight: 600; margin: 18px auto 10px; }
+.message .message-content h2 { font-size: 1.35rem; font-weight: 600; margin: 18px auto 10px; }
+.message .message-content h3 { font-size: 1.15rem; font-weight: 600; margin: 16px auto 8px; }
+.message .message-content h4 { font-size: 1.05rem; font-weight: 600; margin: 12px auto 6px; }
+.message .message-content p  { margin: 10px 0; }
+
+.message .message-content ul,
+.message .message-content ol { margin: 8px 0 12px 22px; }
+.message .message-content li { margin: 4px 0; }
+
+/* Código inline y bloques de código */
+.message .message-content code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.95em;
+  padding: 2px 6px;
+  background: rgba(127,127,127,0.15);
+  border-radius: 6px;
+}
+.message .message-content pre {
+  padding: 14px;
+  overflow: auto;
+  background: rgba(127,127,127,0.12);
+  border-radius: 10px;
+  margin: 12px 0;
+}
+.message .message-content pre code {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+/* Acciones (copiar / TTS) debajo del bloque y alineadas a la derecha */
+.message .message-actions {
+  max-width: 780px;
+  margin: -8px auto 24px;     /* pegadito al texto */
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;  /* a la derecha */
+  padding-left: 0 !important; /* quitar indent previo */
+}
+
+/* Botones lisos y discretos */
+.message .message-action-btn {
+  border: 1px solid rgba(255,255,255,0.12);
+  background: transparent;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  color: var(--text-color);
+  font-size: 13px;
+}
+.message .message-action-btn:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+/* Ajustes responsive: respeta el ancho legible en móviles */
+@media (max-width: 768px) {
+  .message .message-content,
+  .message .message-actions {
+    max-width: 92%;
+  }
+}
+
+/* Opcional: más aire vertical entre grupos de mensajes largos */
+.messages { padding: 16px 0; }
