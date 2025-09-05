@@ -1462,49 +1462,72 @@ input:checked + .slider:before {
 .logout-btn:hover {
   background-color: #eee;
 }
-/* === Overrides mínimos: bot sin burbuja, user conserva burbuja === */
+/* === Bot centrado, user sin cambios === */
 
-/* Alineación general de cada mensaje */
-.message {
-  display: flex;
-  margin: 8px 0;
-}
+/* Alineaciones */
+.message.bot  { justify-content: center; }
+.message.user { justify-content: flex-end; }
 
-/* Bot a la izquierda; User a la derecha */
-.message.bot  { justify-content: flex-start; }
-.message.user { justify-content: flex-end;  }
-
-/* Contenido del mensaje: NO tocar la burbuja del user (usa tu CSS original) */
-.message .message-content {
-  max-width: 780px;       /* ancho legible */
-  margin: 0 12px 12px;    /* margen lateral suave + separación inferior */
-  text-align: left;
-  line-height: 1.6;
-  font-size: 15px;
-  color: var(--text-color, #e6e6e6);
-}
-
-/* Bot sin burbuja (solo texto limpio). ¡Ojo! No afectamos al user. */
+/* Bot sin burbuja pero con texto centrado */
 .message.bot .message-content {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
   border-radius: 0 !important;
+
+  max-width: 780px;
+  margin: 0 auto 12px;   /* centra el bloque */
+  text-align: center;    /* centra el texto */
+  line-height: 1.6;
+  font-size: 15px;
 }
 
-/* Tipografía Markdown (aplica a ambos, solo mejora espaciado) */
+/* El user conserva su globo con tu CSS original (no tocamos) */
+
+/* Acciones: debajo del bot, centramos el contenedor y
+   alineamos los botones a la IZQUIERDA dentro del bloque */
+.message .message-actions {
+  max-width: 780px;
+  margin: 4px auto 16px;   /* centra el ancho del bloque de acciones */
+  display: flex;
+  gap: 8px;
+}
+.message.bot  .message-actions { justify-content: flex-start; } /* izquierda del bloque */
+.message.user .message-actions { justify-content: flex-end;   } /* derecha para user */
+
+/* === Typing indicator: solo burbujas, centrado y con margen === */
+.message.typing-indicator {
+  justify-content: center !important;   /* mismo centro que el bot */
+  margin: 6px 0 16px;                   /* margen para que no quede pegado */
+}
+
+.message.typing-indicator span {
+  display: inline-block;
+  width: 8px; height: 8px;
+  margin: 0 4px;
+  background: rgba(255,255,255,0.35);
+  border-radius: 50%;
+  animation: rxTypingBounce 1.2s infinite ease-in-out;
+}
+.message.typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
+.message.typing-indicator span:nth-child(3) { animation-delay: 0.30s; }
+
+@keyframes rxTypingBounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: .65; }
+  40%           { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Markdown compacto (sólo mejora spacing, no toca estilos del user) */
 .message .message-content h1 { font-size: 1.6rem; font-weight: 600; margin: 18px 0 10px; }
 .message .message-content h2 { font-size: 1.35rem; font-weight: 600; margin: 18px 0 10px; }
 .message .message-content h3 { font-size: 1.15rem; font-weight: 600; margin: 16px 0 8px;  }
 .message .message-content h4 { font-size: 1.05rem; font-weight: 600; margin: 12px 0 6px;   }
 .message .message-content p  { margin: 10px 0; }
-
 .message .message-content ul,
 .message .message-content ol { margin: 8px 0 12px 22px; }
 .message .message-content li { margin: 4px 0; }
 
-/* Código */
 .message .message-content code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.95em;
@@ -1524,34 +1547,3 @@ input:checked + .slider:before {
   background: transparent;
   border-radius: 0;
 }
-
-/* Acciones debajo del bloque: izq para bot, der para user */
-.message .message-actions {
-  max-width: 780px;
-  display: flex;
-  gap: 8px;
-  margin: 4px 12px 16px;
-}
-.message.bot  .message-actions { justify-content: flex-start; }
-.message.user .message-actions { justify-content: flex-end;   }
-
-/* Botones */
-.message .message-action-btn {
-  border: 1px solid rgba(255,255,255,0.15);
-  background: transparent;
-  padding: 4px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  color: var(--text-color, #e6e6e6);
-  font-size: 13px;
-  transition: background 0.15s ease;
-}
-.message .message-action-btn:hover {
-  background: rgba(255,255,255,0.08);
-}
-
-/* Typing indicator alineado como bot (izquierda) */
-.message.typing-indicator {
-  justify-content: flex-start !important;
-}
-
