@@ -1463,59 +1463,91 @@ input:checked + .slider:before {
   background-color: #eee;
 }
 /* === Chat alignment overrides (left-aligned bot with side margins) === */
-:root {
-  --chat-side-gap: 18px;   /* margen lateral para bot/typing */
-  --chat-side-gap-right: 22px; /* margen derecho para respiro */
+/* === Raavax Chat: estilo tipo ChatGPT (bot sin burbuja, usuario con globo) === */
+:root{
+  --chat-gap-left: 22px;    /* margen desde el borde izquierdo */
+  --chat-gap-right: 26px;   /* respiro al borde derecho */
+  --chat-max-width: min(780px, 74%); /* ancho legible tipo ChatGPT */
 }
 
-/* evita cualquier centrado accidental de las burbujas */
-.messages {
-  align-items: flex-start !important;
-}
+/* Nunca centrar verticalmente el flujo */
+.messages { align-items: flex-start !important; }
 
-/* límite de ancho consistente y respiro lateral para ambos */
-.message {
-  max-width: min(780px, 70%) !important;
-}
+/* Tamaño máximo de cada mensaje */
+.message { max-width: var(--chat-max-width) !important; }
 
-/* BOT: alineado a la izquierda con margen, botones abajo a la izquierda */
+/* ===== BOT ===== */
+/* bloque del bot a la izquierda con márgenes laterales */
 .message.bot {
   align-self: flex-start !important;
-  margin-left: var(--chat-side-gap) !important;
-  margin-right: var(--chat-side-gap-right) !important;
-  gap: 6px !important; /* separa texto de los botones */
+  margin-left: var(--chat-gap-left) !important;
+  margin-right: var(--chat-gap-right) !important;
 }
 
-/* asegura que el contenedor de acciones quede abajo a la izquierda */
+/* “Sin burbuja”: texto plano, sin fondo, sin borde, sin sombra */
+.message.bot .message-content {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;            /* como ChatGPT: texto “a ras” */
+  border-radius: 0 !important;
+  color: inherit !important;
+}
+
+/* Acciones debajo y a la izquierda, no centradas */
 .message.bot .message-actions {
   position: static !important;
+  display: flex !important;
+  gap: 10px !important;
   align-self: flex-start !important;
   justify-content: flex-start !important;
-  padding-left: 6px !important; /* alinea con el texto */
-  margin-top: 2px !important;
+  margin-top: 6px !important;
+  padding: 0 !important;
+  opacity: 0.9;
 }
 
-/* USER: mantiene globo a la derecha con respiro lateral */
+/* Si tus botones son íconos, que no “floten” sobre el texto */
+.message.bot .message-actions button,
+.message.bot .message-actions .action {
+  position: static !important;
+}
+
+/* ===== USER (con globo a la derecha) ===== */
 .message.user {
   align-self: flex-end !important;
-  margin-right: var(--chat-side-gap) !important;
-  margin-left: var(--chat-side-gap-right) !important;
+  margin-right: var(--chat-gap-left) !important;   /* espejo del bot */
+  margin-left: var(--chat-gap-right) !important;
 }
 
-/* indicador "escribiendo": burbuja a la izquierda con el mismo margen */
+/* Asegura la burbuja del usuario (por si algún override la quitó) */
+.message.user .message-content {
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  border-radius: 14px !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18) !important;
+}
+
+/* ===== Typing indicator (…”escribiendo”) ===== */
 .typing-indicator {
   align-self: flex-start !important;
-  margin-left: var(--chat-side-gap) !important;
-  margin-right: var(--chat-side-gap-right) !important;
-  width: fit-content !important;  /* evita barra larga/centrada */
-  max-width: min(780px, 70%) !important;
+  margin-left: var(--chat-gap-left) !important;
+  margin-right: var(--chat-gap-right) !important;
+  max-width: var(--chat-max-width) !important;
+  width: fit-content !important;
   display: flex !important;
-  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 8px !important;
+  /* píldora discreta (quita estas 4 líneas si lo quieres 100% plano) */
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  border-radius: 14px !important;
+  padding: 8px 12px !important;
 }
 
-/* opcional: suaviza la forma de la burbuja del bot */
-.message.bot .message-content,
-.typing-indicator {
-  border-radius: 12px !important;
-  padding: 12px 16px !important;
+/* Evita centrados/resets que manchen el layout */
+.message, .message-content, .message-actions, .typing-indicator {
+  justify-content: flex-start !important;
+  text-align: left !important;
 }
+
