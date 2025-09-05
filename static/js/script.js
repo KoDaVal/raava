@@ -456,6 +456,20 @@ startMindButtons.forEach(btn => {
             }
         });
     }
+// Render de Markdown seguro para respuestas del bot
+function renderBotMarkdown(markdown) {
+  try {
+    const html = marked.parse(markdown ?? "", {
+      headerIds: false,
+      mangle: false,
+      breaks: true, // respetar saltos de línea
+    });
+    return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+  } catch (e) {
+    console.warn("Markdown render failed:", e);
+    return (markdown ?? "").replace(/\n/g, "<br>");
+  }
+}
 
     // Función para añadir mensajes al contenedor (AHORA CON SOPORTE DE AUDIO Y COPIAR)
     async function addMessage(sender, text, audioBase64 = null) {
@@ -463,16 +477,24 @@ startMindButtons.forEach(btn => {
         messageElement.classList.add('message');
         messageElement.classList.add(sender);
 
-        // Crear el contenedor de contenido del mensaje (el "globo")
-        const messageContentElement = document.createElement('div');
-        messageContentElement.classList.add('message-content');
+// Crear el contenedor de contenido (sin globo visual, solo bloque de texto)
+const messageContentElement = document.createElement('div');
+messageContentElement.classList.add(
+  'message-content',
+  sender === 'bot' ? 'bot-content' : 'user-content'
+);
 
-        const textContentElement = document.createElement('span');
-        textContentElement.textContent = text;
-
-        // Siempre añadir el texto al messageContentElement
-        messageContentElement.appendChild(textContentElement);
-
+// Bot: Markdown renderizado y sanitizado  |  Usuario: texto plano con <br>
+if (sender === 'bot') {
+  messageContentElement.innerHTML = renderBotMarkdown(text);
+} else {
+  const safe = (text ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br>');
+  messageContentElement.innerHTML = safe;
+}
         // Añadir el messageContentElement (el globo) al messageElement
         messageElement.appendChild(messageContentElement);
 
