@@ -1474,13 +1474,18 @@ input:checked + .slider:before {
   gap: 28px;
 }
 
-/* Mensajes en general aprovechan el nuevo ancho */
+/* 1) Quitar el límite del 70% que traía .message y dejar que ocupe la columna */
 .messages .message {
-  max-width: var(--chat-max-width) !important;
-  width: 100%;
+  width: 100% !important;                    /* anulamos width: fit-content */
+  max-width: var(--chat-max-width) !important; /* anulamos max-width: 70% */
 }
 
-/* Mensaje del usuario sigue con globo */
+/* El mensaje del bot toma toda la línea para que el texto pueda “respirar” */
+.message.bot {
+  width: 100% !important;
+}
+
+/* 2) Usuario conserva su globo, pero ya sin recortes de ancho */
 .message.user .message-content {
   background: var(--message-user-bg);
   border-radius: 16px;
@@ -1488,7 +1493,7 @@ input:checked + .slider:before {
   max-width: 100%;
 }
 
-/* Mensaje del bot sin globo, texto hasta mismo ancho */
+/* 3) Bot sin globo, texto al mismo ancho que el del usuario/columna */
 .message.bot .message-content {
   width: 100%;
   max-width: var(--chat-max-width);
@@ -1498,11 +1503,19 @@ input:checked + .slider:before {
   box-shadow: none;
 }
 
+/* 4) Indicador de escribiendo: mismo ancho de columna (no 70%) */
+.typing-indicator {
+  max-width: var(--chat-max-width) !important;
+  margin-right: auto;
+}
+
 /* Mobile: menos padding pero full width */
 @media (max-width: 768px) {
   :root { --chat-padding-x: 20px; }
   .messages .message,
-  .message.bot .message-content {
+  .message.bot .message-content,
+  .typing-indicator {
     max-width: 100% !important;
   }
 }
+
