@@ -1462,47 +1462,46 @@ input:checked + .slider:before {
 .logout-btn:hover {
   background-color: #eee;
 }
-/* === ESTILO DE CHAT MODERNO (GUTTER + COLUMNAS DIFERENTES) === */
-
-/* Ajusta solo estos valores */
+/* === ESTILO DE CHAT MODERNO (gutter + columnas + fixes) === */
 :root{
-  --chat-gutter: 120px;   /* margen lateral del chat (izq/der) */
-  --bot-column: 880px;    /* ancho máx. SOLO para el bot */
-  --user-column: 620px;   /* ancho máx. SOLO para el usuario */
+  --chat-gutter: 120px;   /* margen lateral del chat */
+  --bot-column: 880px;    /* ancho máx. del BOT */
+  --user-column: 620px;   /* ancho máx. del USUARIO */
 }
 
-/* No agregamos padding extra aquí */
+/* no padding extra aquí */
 .chat-area{ padding:0 !important; }
 
-/* Margen lateral para todo el feed (rojos de tu captura) */
+/* margen lateral para todo el feed */
 .messages{
   padding: 24px var(--chat-gutter) !important;
   gap: 24px;
   align-items: flex-start;
 }
 
-/* Anulamos el 70% y fit-content heredados, y delegamos por rol */
+/* por defecto ocupan toda la fila… */
 .messages .message{
   width: 100% !important;
   max-width: none !important;
 }
 
-/* ===== Usuario: a la derecha, con su propio límite de ancho ===== */
+/* …pero cada rol define su propia “columna” */
+.message.bot{
+  align-self: flex-start;
+  max-width: var(--bot-column) !important;
+}
 .message.user{
   align-self: flex-end;
   max-width: var(--user-column) !important;
+  width: auto !important;              /* 🔧 evita el espacio en blanco raro */
 }
+
+/* estilos del contenido (se mantienen tus globos) */
 .message.user .message-content{
   background: var(--message-user-bg);
   border-radius: 12px;
   padding: 12px 16px;
   max-width: 100%;
-}
-
-/* ===== Bot: a la izquierda, puede usar la columna más ancha ===== */
-.message.bot{
-  align-self: flex-start;
-  max-width: var(--bot-column) !important;
 }
 .message.bot .message-content{
   background: none;
@@ -1513,21 +1512,28 @@ input:checked + .slider:before {
   max-width: 100%;
 }
 
-/* Indicador de escribiendo usa la columna del bot */
+/* typing: vuelve a la izquierda, como estaba */
 .typing-indicator{
+  align-self: flex-start !important;
   max-width: var(--bot-column) !important;
-  margin-left: 0;
-  margin-right: auto;
+  margin-left: 0 !important;
+  margin-right: auto !important;
+
+  /* conserva su aspecto “burbuja” original */
+  background-color: var(--message-bg);
+  padding: 10px 15px;
+  border-radius: 10px;
+  width: fit-content;
 }
 
-/* Bloques de código del bot conservan fondo */
+/* bloques de código del bot */
 .message.bot .message-content pre{
   background: var(--message-bg);
   border-radius: 12px;
   padding: 12px 16px;
 }
 
-/* ===== Responsive ===== */
+/* responsive */
 @media (max-width: 768px){
   :root{
     --chat-gutter: 16px;
