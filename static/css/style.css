@@ -1464,16 +1464,21 @@ input:checked + .slider:before {
 }
 /* === Raavax Chat: estilo ChatGPT (márgenes amplios, bot sin burbuja) === */
 :root{
-  --chat-gap-left: 32px;              /* margen izquierdo grande */
-  --chat-gap-right: 36px;             /* respiro derecho */
-  --chat-max-width: min(720px, 68%);  /* ancho legible tipo ChatGPT */
+  --chat-gap-left: 56px;              /* margen izquierdo grande */
+  --chat-gap-right: 56px;             /* margen derecho amplio */
+  --chat-max-width: min(760px, 72%);  /* ancho legible tipo ChatGPT */
 }
 
 /* Evita centrados accidentales */
-.messages { align-items: flex-start !important; }
+.messages { 
+  align-items: flex-start !important;
+  padding-right: 12px !important; /* menos espacio a la derecha para que respire */
+}
 
 /* Limita ancho de todas las burbujas/bloques */
-.message { max-width: var(--chat-max-width) !important; }
+.message { 
+  max-width: var(--chat-max-width) !important; 
+}
 
 /* ===== BOT ===== */
 .message.bot{
