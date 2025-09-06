@@ -1463,59 +1463,64 @@ input:checked + .slider:before {
   background-color: #eee;
 }
 /* === ESTILO DE CHAT MODERNO (TIPO GEMINI/GPT) === */
+
+/* 1. Variables para controlar el diseño fácilmente */
 :root {
-  --chat-padding-x: 48px;    /* más aire lateral (antes 32px) */
-  --chat-max-width: 960px;   /* columna más ancha (antes 780px) */
+  --chat-max-width: 780px;  /* Ancho máximo del texto para que no sea demasiado largo y canse la vista. */
+  --chat-padding-x: 32px;  /* Margen generoso a los lados del área de chat. */
 }
 
-/* Contenedor de mensajes con más padding y separación */
+/* 2. Quitamos el padding del contenedor general del chat. */
+.chat-area {
+  padding: 0 !important;
+}
+
+/* 3. Añadimos el padding al contenedor de los mensajes y definimos su alineación. */
 .messages {
-  padding: 24px var(--chat-padding-x) !important;
-  gap: 28px;
+  padding: 20px var(--chat-padding-x); /* ¡Aquí creamos los márgenes laterales! */
+  align-items: flex-start; /* Hacemos que todos los mensajes se apilen desde la izquierda por defecto. */
+  gap: 24px; /* Aumentamos el espacio vertical entre mensajes. */
 }
 
-/* 1) Quitar el límite del 70% que traía .message y dejar que ocupe la columna */
-.messages .message {
-  width: 100% !important;                    /* anulamos width: fit-content */
-  max-width: var(--chat-max-width) !important; /* anulamos max-width: 70% */
-}
-
-/* El mensaje del bot toma toda la línea para que el texto pueda “respirar” */
-.message.bot {
-  width: 100% !important;
-}
-
-/* 2) Usuario conserva su globo, pero ya sin recortes de ancho */
-.message.user .message-content {
-  background: var(--message-user-bg);
-  border-radius: 16px;
-  padding: 12px 16px;
-  max-width: 100%;
-}
-
-/* 3) Bot sin globo, texto al mismo ancho que el del usuario/columna */
-.message.bot .message-content {
-  width: 100%;
+/* 4. Todos los mensajes (bot y usuario) respetarán el ancho máximo definido. */
+.message {
   max-width: var(--chat-max-width);
-  padding: 0;
+  width: 100%; /* Hará que el mensaje ocupe el espacio disponible hasta el máximo. */
+}
+
+/* 5. El mensaje del BOT (IA) pierde su "burbuja" para un look más integrado. */
+.message.bot .message-content {
   background: none;
   border: none;
   box-shadow: none;
+  padding: 0;
+  color: var(--text-color); /* Aseguramos que el texto sea visible. */
 }
 
-/* 4) Indicador de escribiendo: mismo ancho de columna (no 70%) */
+/* 6. El mensaje del USUARIO se alinea a la derecha, manteniendo su burbuja. */
+.message.user {
+  align-self: flex-end; /* Empuja toda la caja del mensaje a la derecha. */
+}
+
+/* 7. El indicador de "escribiendo..." también se alinea a la izquierda y sin burbuja. */
 .typing-indicator {
-  max-width: var(--chat-max-width) !important;
-  margin-right: auto;
+  align-self: flex-start;
+  max-width: var(--chat-max-width);
+  background: none;
+  padding-left: 0;
 }
 
-/* Mobile: menos padding pero full width */
+/* 8. Ajuste para que los bloques de código dentro de la respuesta del bot sí tengan un fondo. */
+.message.bot .message-content pre {
+  background: var(--message-bg);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+
+/* --- AJUSTES PARA MÓVILES --- */
 @media (max-width: 768px) {
-  :root { --chat-padding-x: 20px; }
-  .messages .message,
-  .message.bot .message-content,
-  .typing-indicator {
-    max-width: 100% !important;
+  :root {
+    --chat-padding-x: 16px; /* Reducimos los márgenes en pantallas pequeñas para aprovechar el espacio. */
   }
 }
-
