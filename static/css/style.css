@@ -1462,51 +1462,76 @@ input:checked + .slider:before {
 .logout-btn:hover {
   background-color: #eee;
 }
-/* === ESTILO DE CHAT MODERNO (SOLO MÁRGENES + MISMO ANCHO DE COLUMNA) === */
+/* === ESTILO DE CHAT MODERNO (GUTTER + COLUMNAS DIFERENTES) === */
 
-/* controla solo el aire lateral del chat */
+/* Ajusta solo estos valores */
 :root{
-  --chat-side-margin: 64px;   /* sube a 80/96 si quieres más */
+  --chat-gutter: 120px;   /* margen lateral del chat (izq/der) */
+  --bot-column: 880px;    /* ancho máx. SOLO para el bot */
+  --user-column: 620px;   /* ancho máx. SOLO para el usuario */
 }
 
-/* no cambiamos globos; solo movemos el feed hacia adentro */
+/* No agregamos padding extra aquí */
 .chat-area{ padding:0 !important; }
 
+/* Margen lateral para todo el feed (rojos de tu captura) */
 .messages{
-  padding: 24px var(--chat-side-margin) !important; /* margen horizontal p/ ambos */
+  padding: 24px var(--chat-gutter) !important;
   gap: 24px;
   align-items: flex-start;
 }
 
-/* misma “columna” para bot y usuario (NO full width, NO cortado a la mitad) */
-.message{
-  width: auto;           /* evita que se pegue al borde interno */
-  max-width: 70%;        /* el mismo límite que ya usas (ajústalo si quieres 75–80%) */
+/* Anulamos el 70% y fit-content heredados, y delegamos por rol */
+.messages .message{
+  width: 100% !important;
+  max-width: none !important;
 }
 
-/* usuario: se queda a la derecha con su globo, sin tocar estilos */
-.message.user{ align-self:flex-end; }
+/* ===== Usuario: a la derecha, con su propio límite de ancho ===== */
+.message.user{
+  align-self: flex-end;
+  max-width: var(--user-column) !important;
+}
+.message.user .message-content{
+  background: var(--message-user-bg);
+  border-radius: 12px;
+  padding: 12px 16px;
+  max-width: 100%;
+}
 
-/* bot: sin globo pero con el MISMO ancho de columna, no pantalla completa */
-.message.bot{ align-self:flex-start; }
+/* ===== Bot: a la izquierda, puede usar la columna más ancha ===== */
+.message.bot{
+  align-self: flex-start;
+  max-width: var(--bot-column) !important;
+}
 .message.bot .message-content{
-  background:none; border:none; box-shadow:none; padding:0;
-  max-width:100%; /* usa la misma caja .message (70%), no más ancho */
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  color: var(--text-color);
+  max-width: 100%;
 }
 
-/* typing con mismo margen/columna del bot */
+/* Indicador de escribiendo usa la columna del bot */
 .typing-indicator{
-  margin-left:0; margin-right:auto;
-  max-width:70%;
+  max-width: var(--bot-column) !important;
+  margin-left: 0;
+  margin-right: auto;
 }
 
-/* responsive: menos margen lateral en móvil */
-@media (max-width:768px){
-  :root{ --chat-side-margin:16px; }
-  .message, .typing-indicator{ max-width:100%; }
+/* Bloques de código del bot conservan fondo */
+.message.bot .message-content pre{
+  background: var(--message-bg);
+  border-radius: 12px;
+  padding: 12px 16px;
 }
 
-    --chat-max-width: 100%;
+/* ===== Responsive ===== */
+@media (max-width: 768px){
+  :root{
+    --chat-gutter: 16px;
+    --bot-column: 100%;
+    --user-column: 88%;
   }
 }
-
