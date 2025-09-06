@@ -1547,3 +1547,90 @@ input:checked + .slider:before {
   justify-content: flex-start !important;
   text-align: left !important;
 }
+/* === Overrides Chat estilo ChatGPT (forzado) === */
+:root{
+  --chat-gap-left: 56px;              /* margen izquierdo grande */
+  --chat-gap-right: 56px;             /* margen derecho grande */
+  --chat-max-width: min(760px, 72%);  /* ancho legible tipo ChatGPT */
+}
+
+/* Contenedor de mensajes: alineación a la izquierda y menos padding derecho */
+.chat-area .messages{
+  align-items: flex-start !important;
+  padding-right: 12px !important;
+}
+
+/* Limita ancho de todos los bloques de mensaje */
+.chat-area .messages .message{
+  max-width: var(--chat-max-width) !important;
+  width: auto !important;
+}
+
+/* ===== BOT ===== */
+.chat-area .messages .message.bot{
+  align-self: flex-start !important;
+  margin-left: var(--chat-gap-left) !important;
+  margin-right: var(--chat-gap-right) !important;
+}
+
+/* Bot SIN burbuja (plano) */
+.chat-area .messages .message.bot .message-content{
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  color: inherit !important;
+}
+
+/* Acciones del bot abajo a la izquierda */
+.chat-area .messages .message.bot .message-actions{
+  position: static !important;
+  display: flex !important;
+  gap: 10px !important;
+  align-self: flex-start !important;
+  justify-content: flex-start !important;
+  margin-top: 6px !important;
+  padding: 0 !important;
+}
+.chat-area .messages .message.bot .message-actions button,
+.chat-area .messages .message.bot .message-actions .action{
+  position: static !important;
+}
+
+/* ===== USUARIO ===== */
+/* Respetamos su globo, solo márgenes y ancho */
+.chat-area .messages .message.user{
+  align-self: flex-end !important;
+  margin-right: var(--chat-gap-left) !important;
+  margin-left: var(--chat-gap-right) !important;
+  max-width: var(--chat-max-width) !important;
+}
+
+/* ===== Typing (“escribiendo…”) ===== */
+.chat-area .typing-indicator{
+  align-self: flex-start !important;
+  margin-left: var(--chat-gap-left) !important;
+  margin-right: var(--chat-gap-right) !important;
+  max-width: var(--chat-max-width) !important;
+  width: fit-content !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+
+  /* sin burbuja */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Asegura alineación/texto plano en todo */
+.chat-area .messages .message,
+.chat-area .messages .message .message-content,
+.chat-area .messages .message .message-actions,
+.chat-area .typing-indicator{
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
