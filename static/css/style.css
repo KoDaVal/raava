@@ -1464,116 +1464,30 @@ input:checked + .slider:before {
 }
 /* === Raavax Chat: estilo ChatGPT (márgenes amplios, bot sin burbuja) === */
 :root{
-  --chat-gap-left: 56px;              /* margen izquierdo grande */
-  --chat-gap-right: 56px;             /* margen derecho amplio */
-  --chat-max-width: min(760px, 72%);  /* ancho legible tipo ChatGPT */
+  --chat-gap-x: 56px;                      /* margen lateral grande */
+  --chat-max-width: min(760px, 72vw);      /* ancho legible tipo ChatGPT */
 }
 
-/* Evita centrados accidentales */
-.messages { 
-  align-items: flex-start !important;
-  padding-right: 12px !important; /* menos espacio a la derecha para que respire */
-}
-
-/* Limita ancho de todas las burbujas/bloques */
-.message { 
-  max-width: var(--chat-max-width) !important; 
-}
-
-/* ===== BOT ===== */
-.message.bot{
-  align-self: flex-start !important;
-  margin-left: var(--chat-gap-left) !important;
-  margin-right: var(--chat-gap-right) !important;
-}
-
-/* Bot SIN burbuja: texto plano */
-.message.bot .message-content{
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
-  color: inherit !important;
-}
-
-/* Acciones del bot: abajo a la izquierda */
-.message.bot .message-actions{
-  position: static !important;
-  display: flex !important;
-  gap: 10px !important;
-  align-self: flex-start !important;
-  justify-content: flex-start !important;
-  margin-top: 6px !important;
-  padding: 0 !important;
-}
-
-/* Por si los iconos tenían posición absoluta */
-.message.bot .message-actions button,
-.message.bot .message-actions .action{
-  position: static !important;
-}
-
-/* ===== USUARIO ===== */
-/* Solo margen; NO tocamos su globo (se respeta tu style.css) */
-.message.user{
-  align-self: flex-end !important;
-  margin-right: var(--chat-gap-left) !important;
-  margin-left: var(--chat-gap-right) !important;
-}
-
-/* ===== Typing (“escribiendo…”) ===== */
-/* A la izquierda, SIN burbuja (plano) y con mismo margen */
-.typing-indicator{
-  align-self: flex-start !important;
-  margin-left: var(--chat-gap-left) !important;
-  margin-right: var(--chat-gap-right) !important;
-  max-width: var(--chat-max-width) !important;
-  width: fit-content !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-
-  /* sin burbuja */
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
-}
-
-/* Asegura alineación/texto plano */
-.message, .message-content, .message-actions, .typing-indicator{
-  justify-content: flex-start !important;
-  text-align: left !important;
-}
-/* === Overrides Chat estilo ChatGPT (forzado) === */
-:root{
-  --chat-gap-left: 56px;              /* margen izquierdo grande */
-  --chat-gap-right: 56px;             /* margen derecho grande */
-  --chat-max-width: min(760px, 72%);  /* ancho legible tipo ChatGPT */
-}
-
-/* Contenedor de mensajes: alineación a la izquierda y menos padding derecho */
+/* Contenedor de mensajes: a la izquierda y con padding lateral amplio */
 .chat-area .messages{
   align-items: flex-start !important;
-  padding-right: 12px !important;
+  padding: 0 var(--chat-gap-x) 20px var(--chat-gap-x) !important;
+  gap: 14px !important;
 }
 
-/* Limita ancho de todos los bloques de mensaje */
+/* Todos los mensajes limitan su ancho como ChatGPT */
 .chat-area .messages .message{
   max-width: var(--chat-max-width) !important;
-  width: auto !important;
+  width: auto !important;           /* mantiene tamaño al contenido */
 }
 
 /* ===== BOT ===== */
 .chat-area .messages .message.bot{
   align-self: flex-start !important;
-  margin-left: var(--chat-gap-left) !important;
-  margin-right: var(--chat-gap-right) !important;
+  margin: 0 !important;             /* márgenes los da el padding del contenedor */
 }
 
-/* Bot SIN burbuja (plano) */
+/* Bot SIN burbuja (texto plano) */
 .chat-area .messages .message.bot .message-content{
   background: transparent !important;
   border: none !important;
@@ -1583,7 +1497,7 @@ input:checked + .slider:before {
   color: inherit !important;
 }
 
-/* Acciones del bot abajo a la izquierda */
+/* Acciones del bot abajo a la izquierda, pegadas al texto */
 .chat-area .messages .message.bot .message-actions{
   position: static !important;
   display: flex !important;
@@ -1598,20 +1512,28 @@ input:checked + .slider:before {
   position: static !important;
 }
 
+/* Opcional: si hay bloques de código en respuestas del bot, dales “burbuja” propia */
+.chat-area .messages .message.bot .message-content pre,
+.chat-area .messages .message.bot .message-content code{
+  background: var(--message-bg) !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+  display: block !important;
+  overflow-x: auto !important;
+}
+
 /* ===== USUARIO ===== */
-/* Respetamos su globo, solo márgenes y ancho */
+/* Respetamos tu globo actual; solo ubicamos y limitamos ancho */
 .chat-area .messages .message.user{
   align-self: flex-end !important;
-  margin-right: var(--chat-gap-left) !important;
-  margin-left: var(--chat-gap-right) !important;
+  margin: 0 !important;             /* el padding lateral ya cuida los márgenes */
   max-width: var(--chat-max-width) !important;
 }
 
 /* ===== Typing (“escribiendo…”) ===== */
+/* A la izquierda, SIN burbuja (plano) y con el mismo ancho/márgenes */
 .chat-area .typing-indicator{
   align-self: flex-start !important;
-  margin-left: var(--chat-gap-left) !important;
-  margin-right: var(--chat-gap-right) !important;
   max-width: var(--chat-max-width) !important;
   width: fit-content !important;
   display: inline-flex !important;
@@ -1626,7 +1548,7 @@ input:checked + .slider:before {
   border-radius: 0 !important;
 }
 
-/* Asegura alineación/texto plano en todo */
+/* Asegura alineación a la izquierda para texto/acciones/typing */
 .chat-area .messages .message,
 .chat-area .messages .message .message-content,
 .chat-area .messages .message .message-actions,
@@ -1634,3 +1556,26 @@ input:checked + .slider:before {
   justify-content: flex-start !important;
   text-align: left !important;
 }
+
+/* ===== Responsive ===== */
+@media (max-width: 768px){
+  :root{
+    --chat-gap-x: 16px;                    /* menos margen en móvil */
+    --chat-max-width: min(680px, 92vw);    /* más ancho relativo en móvil */
+  }
+}
+/* Ajuste 1: evita “doble margen” lateral (tu .chat-area ya tenía padding) */
+.chat-area{
+  padding: 0 !important;              /* antes: 20px */
+}
+
+/* Ajuste 2: asegura que el contenedor de mensajes ponga todo el “aire” */
+.chat-area .messages{
+  padding: 0 var(--chat-gap-x) 24px var(--chat-gap-x) !important; /* mantiene tus márgenes grandes */
+}
+
+/* Ajuste 3: neutraliza cualquier padding heredado en acciones del bot */
+.chat-area .messages .message.bot .message-actions{
+  padding: 0 !important;
+}
+
