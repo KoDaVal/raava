@@ -197,23 +197,39 @@
     <img src="/static/icons/brainicon.png" alt="Iniciar mente">
   </button>
 </div>
+<!-- BARRA DE TEXTO -->
+<div class="input-bar initial" id="input-bar">
+  <!-- Botón: Adjuntar archivo -->
+  <label for="file-upload" class="file-button" title="Adjuntar archivo">+</label>
 
-  <!-- BARRA DE TEXTO -->
-  <div class="input-bar initial" id="input-bar">
-    <label for="file-upload" class="file-button" title="Adjuntar archivo">+</label>
-    <input type="file" id="file-upload" hidden>
-    <div id="file-display" style="display: none;" class="file-info">
+  <!-- Input de archivos UNIFICADO (admite imagen/video/pdf/txt) -->
+  <input
+    type="file"
+    id="file-upload"
+    accept="image/*,video/*,.txt,.md,.pdf"
+    hidden
+  >
+
+  <!-- Chip/Preview del archivo -->
+  <div id="file-display" class="file-info" style="display: none;">
+    <div id="file-thumb" class="file-thumb" aria-hidden="true"></div>
+    <div class="file-meta">
       <span id="file-name"></span>
-      <button id="clear-file" class="clear-file" title="Limpiar archivo adjunto">x</button>
+      <span id="file-size"></span>
     </div>
-    <textarea id="user-input" placeholder="Enviar un mensaje..." rows="1"></textarea>
-    <button id="send-button" class="send-button" title="Enviar mensaje">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
-      </svg>
-    </button>
+    <button id="clear-file" class="clear-file" title="Limpiar archivo adjunto">x</button>
   </div>
 
+  <!-- Texto -->
+  <textarea id="user-input" placeholder="Enviar un mensaje..." rows="1"></textarea>
+
+  <!-- Enviar -->
+  <button id="send-button" class="send-button" title="Enviar mensaje">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
+    </svg>
+  </button>
+</div>
   <!-- botones desktop -->
  <div class="action-buttons-row desktop-only">
   <!-- Botón: Subir voz -->
