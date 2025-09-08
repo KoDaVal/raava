@@ -1564,3 +1564,28 @@ input:checked + .slider:before {
     --user-column: 88%;
   }
 }
+/* --- Chip bonito de archivo adjunto --- */
+.file-info{
+  display:flex; align-items:center; gap:12px;
+  background: var(--message-user-bg,#2d2d2d);
+  border:1px solid var(--border-color,#1e1e1e);
+  padding:8px 10px; border-radius:12px;
+  max-width:520px; margin:10px 0;
+}
+.file-thumb{
+  width:48px; height:48px; border-radius:8px; overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+  background:#111; border:1px solid #222; flex:0 0 48px;
+}
+.file-thumb img,.file-thumb video{
+  width:100%; height:100%; object-fit:cover;
+}
+.file-meta{ display:flex; flex-direction:column; line-height:1.15; }
+#file-name{ font-weight:600; color:var(--avatar-name-color,#f0f0f0); }
+#file-size{ font-size:12px; color:var(--quote-color,#aaa); }
+.clear-file{
+  margin-left:auto; border:0; background:transparent; cursor:pointer;
+  font-size:16px; color:var(--link-color,#bbb);
+}
+.clear-file:hover{ color:var(--accent-color,#5EF38C); }
+
