@@ -1588,38 +1588,16 @@ input:checked + .slider:before {
   font-size:16px; color:var(--link-color,#bbb);
 }
 .clear-file:hover{ color:var(--accent-color,#5EF38C); }
-/* === FIX: listas dentro de los mensajes del chat === */
-
-/* Ajusta <ol>/<ul> renderizados en la burbuja de mensaje (Markdown/HTML) */
+/* Ajuste mínimo para listas dentro del chat */
 .message .content ol,
-.message .content ul,
-.chat-message .content ol,
-.chat-message .content ul,
-.markdown-body ol,
-.markdown-body ul {
-  margin: 0.5rem 0;           /* separa la lista del texto */
-  padding-left: 1.5rem;       /* espacio para el número/viñeta */
-  list-style-position: inside;/* evita que el número quede fuera del borde */
+.message .content ul {
+  padding-left: 2rem;    /* espacio para que el número quede dentro */
+  list-style-position: outside; /* mantiene el estilo normal, pero respeta el padding */
+  margin: 0.5rem 0;
 }
 
-/* Espaciado entre ítems */
-.message .content li,
-.chat-message .content li,
-.markdown-body li {
+.message .content li {
   margin-bottom: 0.35rem;
-}
-
-/* Asegura que el texto no “empuje” el borde */
-.message .content,
-.chat-message .content,
-.markdown-body {
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  word-break: normal;
-}
-
-/* Por si la burbuja recorta contenido */
-.message.bubble,
-.chat-message.bubble {
-  overflow-x: hidden; /* oculta scroll horizontal si se genera por error */
+  text-indent: 0;        /* evita que el texto se monte sobre el número */
+  line-height: 1.5;
 }
