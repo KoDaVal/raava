@@ -1601,3 +1601,15 @@ input:checked + .slider:before {
   text-indent: 0;        /* evita que el texto se monte sobre el número */
   line-height: 1.5;
 }
+/* Mantener listas ordenadas dentro del padding de la burbuja */
+.chat-message ol,
+.chat-message ul {
+  list-style-position: inside; /* el número vive dentro del recuadro */
+  padding-left: 0;             /* quitamos padding extra */
+  margin: 0.5rem 0;
+}
+
+.chat-message li {
+  line-height: 1.5;
+  margin: 0.25rem 0;
+}
