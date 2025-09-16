@@ -36,6 +36,33 @@ function rxBtnLoading(btn) {
   btn.title = 'Generando audio...';
 }
 document.addEventListener('DOMContentLoaded', () => {
+  // --- LÓGICA PARA EL MENÚ DE ADJUNTOS ---
+const attachmentMenuBtn = document.getElementById('attachment-menu-btn');
+const attachmentMenu = document.getElementById('attachment-menu');
+const uploadViaMenuLabel = document.getElementById('upload-via-menu');
+
+// Muestra/oculta el menú al hacer clic en '+'
+if (attachmentMenuBtn) {
+    attachmentMenuBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        attachmentMenu.classList.toggle('active');
+    });
+}
+
+// Cierra el menú cuando se hace clic en la opción de subir archivo
+if (uploadViaMenuLabel) {
+    uploadViaMenuLabel.addEventListener('click', () => {
+        attachmentMenu.classList.remove('active');
+    });
+}
+
+// Cierra el menú si se hace clic en cualquier otro lugar de la página
+document.addEventListener('click', (event) => {
+    if (attachmentMenu.classList.contains('active') && !attachmentMenu.contains(event.target) && event.target !== attachmentMenuBtn) {
+        attachmentMenu.classList.remove('active');
+    }
+});
+// --- FIN DE LA LÓGICA DEL MENÚ ---
     const userInput = document.getElementById('user-input');
     const newChatBtn = document.getElementById('new-chat-btn');
     const welcomeScreen = document.getElementById('welcome-screen');
