@@ -1613,3 +1613,15 @@ input:checked + .slider:before {
   line-height: 1.5;
   margin: 0.25rem 0;
 }
+/* === ESTILOS PARA LISTAS DENTRO DE LOS MENSAJES === */
+.message-content ol,
+.message-content ul {
+  list-style-position: inside; /* Dibuja los números/viñetas DENTRO del contenedor */
+  padding-left: 0;             /* Elimina el espacio extra que ya no es necesario */
+  margin: 0.5rem 0;
+}
+
+.message-content li {
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
