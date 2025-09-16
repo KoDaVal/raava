@@ -200,8 +200,20 @@
 <!-- BARRA DE TEXTO -->
 <div class="input-bar initial" id="input-bar">
   <!-- Botón: Adjuntar archivo -->
-  <label for="file-upload" class="file-button" title="Adjuntar archivo">+</label>
+ <button id="attachment-menu-btn" class="file-button" title="Adjuntar archivo">+</button>
 
+<div id="attachment-menu" class="attachment-menu">
+  
+  <label for="file-upload" id="upload-via-menu" class="attachment-menu-item">
+    <i class="fas fa-paperclip"></i> <span>Subir archivo</span>
+  </label>
+  
+  <div class="attachment-menu-item">
+    <i class="fas fa-brain"></i>
+    <span>Crear tu Raava</span>
+  </div>
+  
+</div>
   <!-- Input de archivos UNIFICADO (admite imagen/video/pdf/txt) -->
   <input
     type="file"
