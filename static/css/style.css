@@ -1666,3 +1666,119 @@ input:checked + .slider:before {
   text-align: center;
   color: var(--link-color);
 }
+/* === ESTILOS PARA EL OVERLAY DE CREACIÓN DE RAAVA === */
+.raava-creation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(5px);
+  z-index: 1010;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
+}
+
+.raava-creation-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.raava-creation-content {
+  background: var(--panel-bg);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transform: scale(0.95);
+  transition: transform 0.2s ease-out;
+}
+
+.raava-creation-overlay.active .raava-creation-content {
+  transform: scale(1);
+}
+
+.raava-creation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.raava-creation-header h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.close-raava-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: var(--link-color);
+  cursor: pointer;
+  padding: 0 8px;
+  transition: color 0.2s;
+}
+
+.close-raava-btn:hover {
+  color: var(--text-color);
+}
+
+.raava-creation-description {
+  font-size: 14px;
+  color: var(--quote-color);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.raava-creation-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.raava-creation-option {
+  all: unset;
+  background: var(--message-bg);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  text-align: left;
+}
+
+.raava-creation-option:hover {
+  background-color: var(--hover-color);
+  border-color: var(--link-color);
+}
+
+.option-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 6px;
+}
+
+.option-title i {
+  color: var(--accent-color);
+}
+
+.option-description {
+  font-size: 13px;
+  color: var(--quote-color);
+  line-height: 1.4;
+}
