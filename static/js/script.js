@@ -127,6 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let infoReady = false;
 
   // --- LÓGICA PARA MENÚS Y OVERLAYS ---
+  // Asigna el evento de clic a los botones de acción de escritorio
+if (uploadVoiceBtn) uploadVoiceBtn.addEventListener('click', () => { voiceFileInput.click(); });
+if (uploadImageBtn) uploadImageBtn.addEventListener('click', () => { imageFileInput.click(); });
+if (uploadInfoBtn)  uploadInfoBtn.addEventListener('click', () => { infoFileInput.click(); });
   
   // Función para cerrar el overlay de creación
   function closeCreationOverlay() {
