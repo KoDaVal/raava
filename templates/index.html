@@ -11,6 +11,7 @@
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
+
 <div id="forgot-password-container" style="display:none; text-align:center;">
   <p style="margin-bottom:10px;">Recuperar contraseña</p>
   <input type="email" id="forgot-password-email" placeholder="Tu correo electrónico">
@@ -24,15 +25,14 @@
   </div>
   <button id="forgot-password-cancel" class="auth-btn cancel-btn">Cancelar</button>
 </div>
-     <div
-      id="auth-success"
-      style="display:none; text-align:center; margin:16px 0;"
-    >
-      <p>Revisa tu correo electrónico. Te hemos enviado un enlace de verificación.</p>
-      <button id="auth-success-btn">Ir a Iniciar sesión</button>
-    </div>
-  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
-  <div class="settings-modal" id="settings-modal">
+
+<div id="auth-success" style="display:none; text-align:center; margin:16px 0;">
+  <p>Revisa tu correo electrónico. Te hemos enviado un enlace de verificación.</p>
+  <button id="auth-success-btn">Ir a Iniciar sesión</button>
+</div>
+
+<div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+<div class="settings-modal" id="settings-modal">
     <div class="settings-content">
       <div class="settings-header">
         <h3>Settings</h3>
@@ -48,29 +48,29 @@
           <div class="settings-nav-item" id="nav-account">Account</div>
         </div>
         <div class="settings-pane" id="account-pane" style="display:none;">
-  <div class="account-section">
-    <div class="account-avatar">
-      <img id="account-avatar-img" src="/static/person.jpg" alt="Avatar">
-      <input type="file" id="account-avatar-input" accept="image/*" hidden>
-      <button id="account-avatar-btn" class="account-btn">Change photo</button>
-    </div>
-    <div class="account-details">
-      <div class="account-field">
-        <label>Email</label>
-        <input type="text" id="account-email" disabled value="...">
-      </div>
-      <div class="account-field">
-        <label>Plan</label>
-        <input type="text" id="account-plan" disabled value="...">
-        <small id="account-expiry">Expires: N/A</small>
-      </div>
-    </div>
-    <div class="account-actions">
-      <button id="cancel-plan-btn" class="cancel-btn">Cancel plan</button>
-      <button id="logout-btn" class="logout-btn">Log out</button>
-    </div>
-  </div>
-</div>
+          <div class="account-section">
+            <div class="account-avatar">
+              <img id="account-avatar-img" src="/static/person.jpg" alt="Avatar">
+              <input type="file" id="account-avatar-input" accept="image/*" hidden>
+              <button id="account-avatar-btn" class="account-btn">Change photo</button>
+            </div>
+            <div class="account-details">
+              <div class="account-field">
+                <label>Email</label>
+                <input type="text" id="account-email" disabled value="...">
+              </div>
+              <div class="account-field">
+                <label>Plan</label>
+                <input type="text" id="account-plan" disabled value="...">
+                <small id="account-expiry">Expires: N/A</small>
+              </div>
+            </div>
+            <div class="account-actions">
+              <button id="cancel-plan-btn" class="cancel-btn">Cancel plan</button>
+              <button id="logout-btn" class="logout-btn">Log out</button>
+            </div>
+          </div>
+        </div>
         <div class="settings-pane" id="general-pane">
           <div class="setting-row">
             <label>Theme</label>
@@ -83,13 +83,13 @@
             <label>Language</label>
             <select>
               <option value="auto">Auto-detect</option>
-              </select>
+            </select>
           </div>
           <div class="setting-row">
             <label>Spoken language</label>
             <select>
               <option value="auto">Auto-detect</option>
-              </select>
+            </select>
           </div>
           <div class="setting-row">
             <label>Voice</label>
@@ -108,149 +108,132 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <div class="main-container">
-    <div class="sidebar">
-  <div class="sidebar-header">
-   <img src="/static/raava_logo.png" alt="Raava AI Logo" class="sidebar-raava-logo" id="sidebar-toggle-btn">
-    <button id="hide-sidebar-btn" class="hide-sidebar-btn"><i class="fas fa-bars"></i></button>
-  </div>
-
-<a href="https://raavax.framer.website/">
-    <img src="/static/icons/home.png" alt="Inicio" class="theme-icon" data-dark-src="/static/icons/home-dark.png" data-light-src="/static/icons/home.png">
-    <span>Inicio</span>
-</a>
-<a href="#" id="search-chat-btn">
-    <img src="/static/icons/find.png" alt="Buscar chat" class="theme-icon" data-dark-src="/static/icons/find-dark.png" data-light-src="/static/icons/find.png">
-    <span>Tus Raava's</span>
-</a>
-<a href="#" id="new-chat-btn">
-    <img src="/static/icons/new.png" alt="Nuevo chat" class="theme-icon" data-dark-src="/static/icons/new-dark.png" data-light-src="/static/icons/new.png">
-    <span>Nuevo chat</span>
-</a>
-<a href="https://discord.gg/v5a6Vw94">
-    <img src="/static/icons/community.png" alt="Comunidad" class="theme-icon" data-dark-src="/static/icons/community-dark.png" data-light-src="/static/icons/community.png">
-    <span>Comunidad</span>
-</a>
-<a href="https://raavax.framer.website/pricing#pricing" id="premium-button">
-    <img src="/static/icons/premium.png" alt="Premium">
-    <span>Premium</span>
-</a>
 </div>
+
+<div class="main-container">
+    <div class="sidebar">
+      <div class="sidebar-header">
+       <img src="/static/raava_logo.png" alt="Raava AI Logo" class="sidebar-raava-logo" id="sidebar-toggle-btn">
+        <button id="hide-sidebar-btn" class="hide-sidebar-btn"><i class="fas fa-bars"></i></button>
+      </div>
+      <a href="https://raavax.framer.website/">
+        <img src="/static/icons/home.png" alt="Inicio" class="theme-icon" data-dark-src="/static/icons/home-dark.png" data-light-src="/static/icons/home.png">
+        <span>Inicio</span>
+      </a>
+      <a href="#" id="search-chat-btn">
+        <img src="/static/icons/find.png" alt="Buscar chat" class="theme-icon" data-dark-src="/static/icons/find-dark.png" data-light-src="/static/icons/find.png">
+        <span>Tus Raava's</span>
+      </a>
+      <a href="#" id="new-chat-btn">
+        <img src="/static/icons/new.png" alt="Nuevo chat" class="theme-icon" data-dark-src="/static/icons/new-dark.png" data-light-src="/static/icons/new.png">
+        <span>Nuevo chat</span>
+      </a>
+      <a href="https://discord.gg/v5a6Vw94">
+        <img src="/static/icons/community.png" alt="Comunidad" class="theme-icon" data-dark-src="/static/icons/community-dark.png" data-light-src="/static/icons/community.png">
+        <span>Comunidad</span>
+      </a>
+      <a href="https://raavax.framer.website/pricing#pricing" id="premium-button">
+        <img src="/static/icons/premium.png" alt="Premium">
+        <span>Premium</span>
+      </a>
+    </div>
 
     <div class="chat-main-section">
- <div class="header">
-  <div class="header-left">
-    <button id="mobile-hamburger-btn" class="hamburger-btn mobile-show">
-      <i class="fas fa-bars"></i>
-    </button>
-    <span class="mobile-hide">Raavax AI</span>
-  </div>
+      <div class="header">
+          <div class="header-left">
+            <button id="mobile-hamburger-btn" class="hamburger-btn mobile-show">
+              <i class="fas fa-bars"></i>
+            </button>
+            <span class="mobile-hide">Raavax AI</span>
+          </div>
+          <div class="header-center mobile-show">
+            Raavax AI
+          </div>
+          <div class="header-right">
+            <img src="/static/person.jpg" alt="Foto de perfil" class="profile-pic" id="header-profile-pic">
+            <div class="settings-menu" id="settings-menu">
+              <div id="user-plan-label" class="menu-plan">Plan: ...</div>
+              <div class="settings-menu-item" id="settings-option">Ajustes</div>
+              <div class="settings-menu-item">Ayuda</div>
+              <div class="settings-menu-item" id="logout-option">Cerrar sesión</div>
+            </div>
+          </div>
+      </div>
 
-  <div class="header-center mobile-show">
-    Raavax AI
-  </div>
-
-  <div class="header-right">
-    <img src="/static/person.jpg" alt="Foto de perfil" class="profile-pic" id="header-profile-pic">
-    <div class="settings-menu" id="settings-menu">
-      <div id="user-plan-label" class="menu-plan">Plan: ...</div> <div class="settings-menu-item" id="settings-option">Ajustes</div>
-      <div class="settings-menu-item">Ayuda</div>
-      <div class="settings-menu-item" id="logout-option">Cerrar sesión</div>
+      <div class="chat-area">
+        <div class="messages"></div>
+        <div id="welcome-screen" class="welcome-screen">
+          <img src="/static/raava_logo.png" alt="Raavax Logo">
+          <h1>¿En qué puedo ayudarte hoy?</h1>
+        </div>
+        <div class="action-buttons-row mobile-only">
+          <label for="voice-file-input" class="action-button voice-button" title="Subir voz">
+            <img src="/static/icons/micicon.png" alt="Micrófono">
+          </label>
+          <input type="file" id="voice-file-input" accept="audio/*" hidden>
+          <label for="info-file-input" class="action-button file-button" title="Subir información">
+            <img src="/static/icons/fileicon.png" alt="Archivo de información">
+          </label>
+          <input type="file" id="info-file-input" accept=".txt" hidden>
+          <button id="start-mind-button-mobile" class="action-button mind-button" title="Iniciar mente">
+            <img src="/static/icons/brainicon.png" alt="Iniciar mente">
+          </button>
+        </div>
+        <div class="input-bar initial" id="input-bar">
+          <button id="attachment-menu-btn" class="file-button" title="Adjuntar archivo">+</button>
+          <div id="attachment-menu" class="attachment-menu">
+            <label for="file-upload" id="upload-via-menu" class="attachment-menu-item">
+              <i class="fas fa-paperclip"></i> <span>Subir archivo</span>
+            </label>
+            <div class="attachment-menu-item" id="create-raava-menu-btn">
+              <i class="fas fa-brain"></i>
+              <span>Crear tu Raava</span>
+            </div>
+          </div>
+          <input type="file" id="file-upload" accept="image/*,video/*,.txt,.md,.pdf" hidden>
+          <div id="file-display" class="file-info" style="display: none;">
+            <div id="file-thumb" class="file-thumb" aria-hidden="true"></div>
+            <div class="file-meta">
+              <span id="file-name"></span>
+              <span id="file-size"></span>
+            </div>
+            <button id="clear-file" class="clear-file" title="Limpiar archivo adjunto">x</button>
+          </div>
+          <textarea id="user-input" placeholder="Enviar un mensaje..." rows="1"></textarea>
+          <button id="send-button" class="send-button" title="Enviar mensaje">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="action-buttons-row desktop-only">
+          <button id="upload-voice-btn" class="action-button voice-button" title="Subir voz">
+            <img src="/static/icons/micicon.png" alt="Micrófono">
+          </button>
+          <button id="upload-info-btn" class="action-button file-button" title="Subir información">
+            <img src="/static/icons/fileicon.png" alt="Archivo de información">
+          </button>
+          <button id="start-mind-button" class="action-button mind-button" title="Iniciar mente">
+            <img src="/static/icons/brainicon.png" alt="Iniciar mente">
+          </button>
+          <input type="file" id="voice-file-input" accept="audio/*" hidden>
+          <input type="file" id="info-file-input"  accept=".txt" hidden>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-        <div id="status-message" style="margin-top: 10px; text-align: center; color: #888; font-size: 0.9em;"></div>
-<div class="chat-area">
-  <div class="messages"></div>
-  <div id="welcome-screen" class="welcome-screen">
-  <img src="/static/raava_logo.png" alt="Raavax Logo">
-  <h1>¿En qué puedo ayudarte hoy?</h1>
 </div>
 
-<div class="action-buttons-row mobile-only">
-  <label for="voice-file-input" class="action-button voice-button" title="Subir voz">
-    <img src="/static/icons/micicon.png" alt="Micrófono">
-  </label>
-  <input type="file" id="voice-file-input" accept="audio/*" hidden>
-
-  <label for="info-file-input" class="action-button file-button" title="Subir información">
-    <img src="/static/icons/fileicon.png" alt="Archivo de información">
-  </label>
-  <input type="file" id="info-file-input" accept=".txt" hidden>
-
-  <button id="start-mind-button-mobile" class="action-button mind-button" title="Iniciar mente">
-    <img src="/static/icons/brainicon.png" alt="Iniciar mente">
-  </button>
-</div>
-<div class="input-bar initial" id="input-bar">
-  <button id="attachment-menu-btn" class="file-button" title="Adjuntar archivo">+</button>
-
-<div id="attachment-menu" class="attachment-menu">
-  
-  <label for="file-upload" id="upload-via-menu" class="attachment-menu-item">
-    <i class="fas fa-paperclip"></i> <span>Subir archivo</span>
-  </label>
-  
- <div class="attachment-menu-item" id="create-raava-menu-btn">
-    <i class="fas fa-brain"></i>
-    <span>Crear tu Raava</span>
-  </div>
-  
-</div>
-  <input
-    type="file"
-    id="file-upload"
-    accept="image/*,video/*,.txt,.md,.pdf"
-    hidden
-  >
-
-  <div id="file-display" class="file-info" style="display: none;">
-    <div id="file-thumb" class="file-thumb" aria-hidden="true"></div>
-    <div class="file-meta">
-      <span id="file-name"></span>
-      <span id="file-size"></span>
-    </div>
-    <button id="clear-file" class="clear-file" title="Limpiar archivo adjunto">x</button>
-  </div>
-
-  <textarea id="user-input" placeholder="Enviar un mensaje..." rows="1"></textarea>
-
-  <button id="send-button" class="send-button" title="Enviar mensaje">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
-    </svg>
-  </button>
-</div>
-  <div class="action-buttons-row desktop-only">
-  <button id="upload-voice-btn" class="action-button voice-button" title="Subir voz">
-    <img src="/static/icons/micicon.png" alt="Micrófono">
-  </button>
-
-  <button id="upload-info-btn" class="action-button file-button" title="Subir información">
-    <img src="/static/icons/fileicon.png" alt="Archivo de información">
-  </button>
-
-  <button id="start-mind-button" class="action-button mind-button" title="Iniciar mente">
-    <img src="/static/icons/brainicon.png" alt="Iniciar mente">
-  </button>
-
-  <input type="file" id="voice-file-input" accept="audio/*" hidden>
-  <input type="file" id="info-file-input"  accept=".txt" hidden>
-</div>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
-
-  <script src="/static/js/script.js"></script>
-  <script>
+<script src="/static/js/script.js"></script>
+<script>
   (async () => {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) window.location.href = "/login";
   })();
 </script>
+
 <div id="chat-search-modal" class="chat-search-modal">
   <div class="chat-search-content">
     <div class="chat-search-header">
@@ -259,12 +242,12 @@
     </div>
     <button id="new-chat-modal-btn" class="new-chat-btn">+ New chat</button>
     <div class="chat-list-container" id="chat-list">
-      </div>
+    </div>
   </div>
 </div>
+
 <div id="raava-creator-overlay" class="raava-creation-overlay">
   <div class="raava-creation-content">
-    
     <header class="creator-header">
       <div class="creator-header-title">
         <div class="creator-header-icon">
@@ -285,9 +268,7 @@
         <button id="close-raava-creator" class="close-raava-btn">&times;</button>
       </div>
     </header>
-
     <div class="creator-body">
-      
       <div id="creator-stage-intro" class="creator-stage active-stage">
         <div class="intro-content">
           <div class="intro-glow"></div>
@@ -296,7 +277,6 @@
           <button class="primary-button" data-next-stage="creator-stage-form">Crear Raava</button>
         </div>
       </div>
-
       <div id="creator-stage-form" class="creator-stage">
         <div id="form-scroll-container" class="form-scroll-container">
           <div class="form-content">
@@ -333,13 +313,13 @@
               <p class="form-section-description">Describe su historia, tono, valores, límites y ejemplos de respuesta.</p>
               <textarea id="form-advancedDescription" rows="6" class="form-textarea" placeholder='Ej. "Mentor exigente pero justo, comparte anécdotas reales..."'></textarea>
             </div>
-            <div style="height: 100px;"></div> </div>
+            <div style="height: 100px;"></div>
+          </div>
         </div>
         <div id="form-footer" class="form-footer">
             <button id="form-continue-btn" class="primary-button" data-next-stage="creator-stage-voice" disabled>Siguiente: Subir Voz</button>
         </div>
       </div>
-
       <div id="creator-stage-voice" class="creator-stage">
         <div id="voice-upload-area" class="voice-upload-area">
           <i class="fas fa-microphone-alt fa-3x" style="color: #8A3FFC;"></i>
@@ -353,12 +333,10 @@
             <p class="voice-upload-subtitle">Pronto la escucharás cobrar vida en tu RaavaX</p>
         </div>
       </div>
-      
       <div id="creator-stage-creating" class="creator-stage">
         <div class="spinner"></div>
         <p class="voice-upload-title">Estamos dando vida a tu Raava...</p>
       </div>
-
       <div id="creator-stage-done" class="creator-stage">
         <svg viewBox="0 0 200 200" class="done-brain-svg">
           <defs><radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#a78bfa" stop-opacity="0.35" /><stop offset="100%" stop-color="#7c3aed" stop-opacity="0" /></radialGradient></defs>
@@ -369,7 +347,6 @@
         <p class="done-subtitle">Puedes iniciarlo cuando quieras.</p>
         <button id="creator-finish-btn" class="primary-button">Finalizar</button>
       </div>
-
     </div>
   </div>
 </div>
