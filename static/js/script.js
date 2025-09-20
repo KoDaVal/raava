@@ -184,8 +184,182 @@ if (uploadInfoBtn)  uploadInfoBtn.addEventListener('click', () => { infoFileInpu
   });
   
   // --- FIN DE LÓGICA PARA MENÚS Y OVERLAYS ---
+  // --- LÓGICA PARA EL CREADOR DE RAAVA MULTI-PASO ---
+
+  const creatorOverlay = document.getElementById('raava-creator-overlay');
+  const creatorStages = document.querySelectorAll('.creator-stage');
+  const creatorTitle = document.getElementById('creator-title');
+  const creatorProgressBarContainer = document.getElementById('creator-progress-bar-container');
+  const creatorProgressBar = document.getElementById('creator-progress-bar');
+  const formContinueBtn = document.getElementById('form-continue-btn');
+  const formScrollContainer = document.getElementById('form-scroll-container');
+  const formFooter = document.getElementById('form-footer');
+  
+  // Inputs del formulario
+  const formInputs = {
+      characterName: document.getElementById('form-characterName'),
+      personalityBrief: document.getElementById('form-personalityBrief'),
+      advancedDescription: document.getElementById('form-advancedDescription')
+  };
+  const chipGroups = document.querySelectorAll('.chip-group');
+
+  // Botones de navegación
+  const nextButtons = document.querySelectorAll('[data-next-stage]');
+  document.getElementById('close-raava-creator').addEventListener('click', closeCreator);
+  document.getElementById('creator-finish-btn').addEventListener('click', closeCreator);
+
+  // Subida de voz
+  const voiceUploadArea = document.getElementById('voice-upload-area');
+  const voiceProcessingArea = document.getElementById('voice-processing-area');
+  const voiceFileInputCreator = document.getElementById('voice-file-input-creator');
 
 
+  let raavaFormData = {
+      characterName: '',
+      gender: '',
+      category: '',
+      personalityBrief: '',
+      advancedDescription: ''
+  };
+
+  const requiredFields = ['characterName', 'gender', 'category', 'personalityBrief'];
+
+  // Función principal para cambiar de etapa
+  function showCreatorStage(stageId) {
+      creatorStages.forEach(stage => stage.classList.remove('active-stage'));
+      document.getElementById(stageId)?.classList.add('active-stage');
+
+      // Actualizar UI según la etapa
+      creatorProgressBarContainer.style.display = 'none';
+      if (stageId === 'creator-stage-intro') {
+          creatorTitle.textContent = 'Comienza a crear';
+      } else if (stageId === 'creator-stage-form') {
+          creatorTitle.textContent = 'Define tu Raava';
+          creatorProgressBarContainer.style.display = 'block';
+          updateProgress();
+      } else if (stageId === 'creator-stage-voice') {
+          creatorTitle.textContent = 'Sube tu voz';
+          creatorProgressBarContainer.style.display = 'block';
+      } else if (stageId === 'creator-stage-creating') {
+          creatorTitle.textContent = 'Procesando...';
+          // Simular proceso de creación
+          setTimeout(() => showCreatorStage('creator-stage-done'), 2000);
+      } else if (stageId === 'creator-stage-done') {
+          creatorTitle.textContent = '¡Listo!';
+      }
+  }
+
+  // Abrir el creador
+  createRaavaMenuBtn.addEventListener('click', () => {
+      attachmentMenu.classList.remove('active');
+      creatorOverlay.classList.add('active');
+      showCreatorStage('creator-stage-intro');
+      // Resetear formulario por si se abre de nuevo
+      Object.keys(raavaFormData).forEach(k => raavaFormData[k] = '');
+      Object.values(formInputs).forEach(input => input.value = '');
+      chipGroups.forEach(g => g.querySelectorAll('.chip').forEach(c => c.classList.remove('active')));
+      updateProgress();
+  });
+
+  // Cerrar el creador
+  function closeCreator() {
+      creatorOverlay.classList.remove('active');
+  }
+
+  // Navegación con botones "Siguiente"
+  nextButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+          const nextStage = btn.dataset.nextStage;
+          if (nextStage) {
+              showCreatorStage(nextStage);
+          }
+      });
+  });
+
+  // --- Lógica del formulario ---
+  function updateProgress() {
+      const filledCount = requiredFields.filter(key => !!raavaFormData[key]?.trim()).length;
+      const progress = filledCount / requiredFields.length;
+      creatorProgressBar.style.width = `${progress * 100}%`;
+
+      // Habilitar/deshabilitar botón de continuar
+      formContinueBtn.disabled = progress < 1;
+  }
+
+  // Listeners para inputs de texto
+  Object.entries(formInputs).forEach(([key, input]) => {
+      input.addEventListener('input', () => {
+          raavaFormData[key] = input.value;
+          updateProgress();
+      });
+  });
+
+  // Listeners para los botones tipo chip
+  chipGroups.forEach(group => {
+      const field = group.dataset.field;
+      const chips = group.querySelectorAll('.chip');
+      chips.forEach(chip => {
+          chip.addEventListener('click', () => {
+              const value = chip.dataset.value;
+              raavaFormData[field] = value;
+              chips.forEach(c => c.classList.remove('active'));
+              chip.classList.add('active');
+              updateProgress();
+          });
+      });
+  });
+  
+  // Mostrar el botón de "Siguiente" en el formulario solo al llegar al final
+  formScrollContainer.addEventListener('scroll', () => {
+      const { scrollTop, scrollHeight, clientHeight } = formScrollContainer;
+      if (scrollHeight - scrollTop - clientHeight < 50) {
+          formFooter.classList.add('visible');
+      } else {
+          formFooter.classList.remove('visible');
+      }
+  });
+
+
+  // --- Lógica de subida de voz ---
+  voiceUploadArea.addEventListener('click', () => voiceFileInputCreator.click());
+  voiceUploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      voiceUploadArea.classList.add('drag-over');
+  });
+  voiceUploadArea.addEventListener('dragleave', () => voiceUploadArea.classList.remove('drag-over'));
+  voiceUploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      voiceUploadArea.classList.remove('drag-over');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+          handleVoiceFile(files[0]);
+      }
+  });
+  voiceFileInputCreator.addEventListener('change', (e) => {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+          handleVoiceFile(files[0]);
+      }
+  });
+
+  function handleVoiceFile(file) {
+      if (file && file.type.startsWith('audio/')) {
+          console.log("Archivo de voz seleccionado:", file.name);
+          // Aquí iría la lógica para subir el archivo
+          
+          // Simular procesamiento
+          voiceUploadArea.style.display = 'none';
+          voiceProcessingArea.style.display = 'flex';
+          setTimeout(() => {
+              showCreatorStage('creator-stage-creating');
+              // Resetear para la proxima vez
+              voiceUploadArea.style.display = 'flex';
+              voiceProcessingArea.style.display = 'none';
+          }, 2500);
+      }
+  }
+
+// --- FIN DE LA LÓGICA DEL CREADOR ---
   // --- LÓGICA DEL CHAT ---
   if (newChatBtn) {
     newChatBtn.addEventListener('click', (e) => {
