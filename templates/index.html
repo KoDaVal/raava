@@ -11,7 +11,6 @@
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
-<!-- MOVIDO FUERA DEL FORM -->
 <div id="forgot-password-container" style="display:none; text-align:center;">
   <p style="margin-bottom:10px;">Recuperar contraseña</p>
   <input type="email" id="forgot-password-email" placeholder="Tu correo electrónico">
@@ -25,14 +24,13 @@
   </div>
   <button id="forgot-password-cancel" class="auth-btn cancel-btn">Cancelar</button>
 </div>
-     <!-- Mensaje tras registro: revisar correo -->
-    <div
+     <div
       id="auth-success"
       style="display:none; text-align:center; margin:16px 0;"
     >
       <p>Revisa tu correo electrónico. Te hemos enviado un enlace de verificación.</p>
       <button id="auth-success-btn">Ir a Iniciar sesión</button>
-</div>
+    </div>
   <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
   <div class="settings-modal" id="settings-modal">
     <div class="settings-content">
@@ -49,9 +47,7 @@
           <div class="settings-nav-item">Data controls</div>
           <div class="settings-nav-item" id="nav-account">Account</div>
         </div>
-        <!-- PANE NUEVO PARA ACCOUNT -->
-<!-- PANE REDISEÑADO PARA ACCOUNT -->
-<div class="settings-pane" id="account-pane" style="display:none;">
+        <div class="settings-pane" id="account-pane" style="display:none;">
   <div class="account-section">
     <div class="account-avatar">
       <img id="account-avatar-img" src="/static/person.jpg" alt="Avatar">
@@ -145,7 +141,6 @@
 
     <div class="chat-main-section">
  <div class="header">
-  <!-- Botón hamburguesa solo visible en móvil -->
   <div class="header-left">
     <button id="mobile-hamburger-btn" class="hamburger-btn mobile-show">
       <i class="fas fa-bars"></i>
@@ -153,7 +148,6 @@
     <span class="mobile-hide">Raavax AI</span>
   </div>
 
-  <!-- Título centrado solo visible en móvil -->
   <div class="header-center mobile-show">
     Raavax AI
   </div>
@@ -161,8 +155,7 @@
   <div class="header-right">
     <img src="/static/person.jpg" alt="Foto de perfil" class="profile-pic" id="header-profile-pic">
     <div class="settings-menu" id="settings-menu">
-      <div id="user-plan-label" class="menu-plan">Plan: ...</div> <!-- NUEVO -->
-      <div class="settings-menu-item" id="settings-option">Ajustes</div>
+      <div id="user-plan-label" class="menu-plan">Plan: ...</div> <div class="settings-menu-item" id="settings-option">Ajustes</div>
       <div class="settings-menu-item">Ayuda</div>
       <div class="settings-menu-item" id="logout-option">Cerrar sesión</div>
     </div>
@@ -176,29 +169,23 @@
   <h1>¿En qué puedo ayudarte hoy?</h1>
 </div>
 
-<!-- BOTONES SOLO PARA MÓVIL -->
 <div class="action-buttons-row mobile-only">
-  <!-- Botón: Subir voz (como label) -->
   <label for="voice-file-input" class="action-button voice-button" title="Subir voz">
     <img src="/static/icons/micicon.png" alt="Micrófono">
   </label>
   <input type="file" id="voice-file-input" accept="audio/*" hidden>
 
-  <!-- Botón: Subir información (como label) -->
   <label for="info-file-input" class="action-button file-button" title="Subir información">
     <img src="/static/icons/fileicon.png" alt="Archivo de información">
   </label>
   <input type="file" id="info-file-input" accept=".txt" hidden>
 
-  <!-- Botón: Iniciar mente (sigue siendo botón real) -->
   <button id="start-mind-button-mobile" class="action-button mind-button" title="Iniciar mente">
     <img src="/static/icons/brainicon.png" alt="Iniciar mente">
   </button>
 </div>
-<!-- BARRA DE TEXTO -->
 <div class="input-bar initial" id="input-bar">
-  <!-- Botón: Adjuntar archivo -->
- <button id="attachment-menu-btn" class="file-button" title="Adjuntar archivo">+</button>
+  <button id="attachment-menu-btn" class="file-button" title="Adjuntar archivo">+</button>
 
 <div id="attachment-menu" class="attachment-menu">
   
@@ -212,7 +199,6 @@
   </div>
   
 </div>
-  <!-- Input de archivos UNIFICADO (admite imagen/video/pdf/txt) -->
   <input
     type="file"
     id="file-upload"
@@ -220,7 +206,6 @@
     hidden
   >
 
-  <!-- Chip/Preview del archivo -->
   <div id="file-display" class="file-info" style="display: none;">
     <div id="file-thumb" class="file-thumb" aria-hidden="true"></div>
     <div class="file-meta">
@@ -230,42 +215,33 @@
     <button id="clear-file" class="clear-file" title="Limpiar archivo adjunto">x</button>
   </div>
 
-  <!-- Texto -->
   <textarea id="user-input" placeholder="Enviar un mensaje..." rows="1"></textarea>
 
-  <!-- Enviar -->
   <button id="send-button" class="send-button" title="Enviar mensaje">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
       <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
     </svg>
   </button>
 </div>
-  <!-- botones desktop -->
- <div class="action-buttons-row desktop-only">
-  <!-- Botón: Subir voz -->
+  <div class="action-buttons-row desktop-only">
   <button id="upload-voice-btn" class="action-button voice-button" title="Subir voz">
     <img src="/static/icons/micicon.png" alt="Micrófono">
   </button>
 
-  <!-- Botón: Subir información -->
   <button id="upload-info-btn" class="action-button file-button" title="Subir información">
     <img src="/static/icons/fileicon.png" alt="Archivo de información">
   </button>
 
-  <!-- Botón: Iniciar mente -->
   <button id="start-mind-button" class="action-button mind-button" title="Iniciar mente">
     <img src="/static/icons/brainicon.png" alt="Iniciar mente">
   </button>
 
-  <!-- Inputs ocultos -->
   <input type="file" id="voice-file-input" accept="audio/*" hidden>
   <input type="file" id="info-file-input"  accept=".txt" hidden>
 </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <!-- Parser Markdown -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-<!-- (Opcional pero recomendado) Sanitizador para evitar HTML raro -->
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 
   <script src="/static/js/script.js"></script>
@@ -275,7 +251,6 @@
     if (!session) window.location.href = "/login";
   })();
 </script>
-<!-- MODAL PARA BUSCAR CHATS -->
 <div id="chat-search-modal" class="chat-search-modal">
   <div class="chat-search-content">
     <div class="chat-search-header">
@@ -284,35 +259,119 @@
     </div>
     <button id="new-chat-modal-btn" class="new-chat-btn">+ New chat</button>
     <div class="chat-list-container" id="chat-list">
-      <!-- Aquí se inyectarán los chats dinámicamente -->
-    </div>
+      </div>
   </div>
 </div>
-<div id="create-raava-overlay" class="raava-creation-overlay">
+<div id="raava-creator-overlay" class="raava-creation-overlay">
   <div class="raava-creation-content">
-    <div class="raava-creation-header">
-      <h3>Crea tu Raava</h3>
-      <button id="close-raava-creation" class="close-raava-btn">&times;</button>
-    </div>
-    <p class="raava-creation-description">Elige cómo quieres empezar a darle forma a la personalidad de tu nuevo asistente.</p>
-    <div class="raava-creation-options">
-      <button class="raava-creation-option">
-        <div class="option-title">
-          <i class="fas fa-rocket"></i>
-          <span>Simple</span>
+    
+    <header class="creator-header">
+      <div class="creator-header-title">
+        <div class="creator-header-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#8A3FFC" stroke-width="1.5">
+            <path d="M6 12c0-4 3-7 6-7s6 3 6 7-3 7-6 7-6-3-6-7Z" />
+            <path d="M12 5v14M8 9h8M8 15h8" />
+          </svg>
         </div>
-        <div class="option-description">Una configuración rápida y guiada. Ideal para empezar.</div>
-      </button>
-      <button class="raava-creation-option">
-        <div class="option-title">
-          <i class="fas fa-drafting-compass"></i>
-          <span>Complejo</span>
+        <div>
+          <p class="creator-header-subtitle">Creador de Raava</p>
+          <h1 id="creator-title" class="creator-header-main-title">Comienza a crear</h1>
         </div>
-        <div class="option-description">Control detallado sobre la personalidad, el conocimiento y las capacidades.</div>
-      </button>
+      </div>
+      <div class="creator-header-controls">
+        <div id="creator-progress-bar-container" class="progress-bar-container">
+          <div id="creator-progress-bar" class="progress-bar"></div>
+        </div>
+        <button id="close-raava-creator" class="close-raava-btn">&times;</button>
+      </div>
+    </header>
+
+    <div class="creator-body">
+      
+      <div id="creator-stage-intro" class="creator-stage active-stage">
+        <div class="intro-content">
+          <div class="intro-glow"></div>
+          <h2 class="intro-title">Crea un Raava único</h2>
+          <p class="intro-subtitle">Su legado ahora te guía, crea tu RaavaX</p>
+          <button class="primary-button" data-next-stage="creator-stage-form">Crear Raava</button>
+        </div>
+      </div>
+
+      <div id="creator-stage-form" class="creator-stage">
+        <div id="form-scroll-container" class="form-scroll-container">
+          <div class="form-content">
+            <div class="form-section">
+              <h3 class="form-section-title">Nombre del personaje</h3>
+              <p class="form-section-description">Ejemplos: Kobe Bryant, Albert Camus, "Mi abuelo José".</p>
+              <input type="text" id="form-characterName" placeholder='Ej. "Kobe Bryant"' class="form-input">
+            </div>
+            <div class="form-section">
+              <h3 class="form-section-title">Género</h3>
+              <div class="chip-group" data-field="gender">
+                <button class="chip" data-value="masculino">Masculino</button>
+                <button class="chip" data-value="femenino">Femenino</button>
+                <button class="chip" data-value="otro">Otro</button>
+              </div>
+            </div>
+            <div class="form-section">
+                <h3 class="form-section-title">Categoría (etiqueta principal)</h3>
+                <div class="chip-group" data-field="category">
+                    <button class="chip" data-value="negocios">Negocios</button>
+                    <button class="chip" data-value="mentoria">Mentoría Inspiracional</button>
+                    <button class="chip" data-value="artistico">Artístico</button>
+                    <button class="chip" data-value="personal">Personal</button>
+                    <button class="chip" data-value="intelectual">Intelectual/Filosófico</button>
+                </div>
+            </div>
+            <div class="form-section">
+              <h3 class="form-section-title">Personalidad breve</h3>
+              <p class="form-section-description">¿Cómo quieres que se comporte? Ej: "disciplinado e intenso", "cálido y paciente".</p>
+              <input type="text" id="form-personalityBrief" placeholder='Ej. "disciplinado e intenso"' class="form-input">
+            </div>
+            <div class="form-section">
+              <h3 class="form-section-title">Descripción avanzada <span class="form-optional-text">(opcional)</span></h3>
+              <p class="form-section-description">Describe su historia, tono, valores, límites y ejemplos de respuesta.</p>
+              <textarea id="form-advancedDescription" rows="6" class="form-textarea" placeholder='Ej. "Mentor exigente pero justo, comparte anécdotas reales..."'></textarea>
+            </div>
+            <div style="height: 100px;"></div> </div>
+        </div>
+        <div id="form-footer" class="form-footer">
+            <button id="form-continue-btn" class="primary-button" data-next-stage="creator-stage-voice" disabled>Siguiente: Subir Voz</button>
+        </div>
+      </div>
+
+      <div id="creator-stage-voice" class="creator-stage">
+        <div id="voice-upload-area" class="voice-upload-area">
+          <i class="fas fa-microphone-alt fa-3x" style="color: #8A3FFC;"></i>
+          <p class="voice-upload-title">Subir archivo de voz</p>
+          <p class="voice-upload-subtitle">Haz clic o arrastra tu audio aquí (mp3, wav...)</p>
+        </div>
+        <input type="file" id="voice-file-input-creator" accept="audio/*" hidden>
+        <div id="voice-processing-area" class="voice-processing-area">
+            <div class="spinner"></div>
+            <p class="voice-upload-title">Tomando la voz del audio...</p>
+            <p class="voice-upload-subtitle">Pronto la escucharás cobrar vida en tu RaavaX</p>
+        </div>
+      </div>
+      
+      <div id="creator-stage-creating" class="creator-stage">
+        <div class="spinner"></div>
+        <p class="voice-upload-title">Estamos dando vida a tu Raava...</p>
+      </div>
+
+      <div id="creator-stage-done" class="creator-stage">
+        <svg viewBox="0 0 200 200" class="done-brain-svg">
+          <defs><radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#a78bfa" stop-opacity="0.35" /><stop offset="100%" stop-color="#7c3aed" stop-opacity="0" /></radialGradient></defs>
+          <circle cx="100" cy="100" r="90" fill="url(#glow)"></circle>
+          <path d="M70 70c-12 0-22 10-22 22 0 7 3 13 8 17-5 4-8 10-8 17 0 12 10 22 22 22h60c12 0 22-10 22-22 0-7-3-13-8-17 5-4 8-10 8-17 0-12-10-22-22-22H70Z" fill="none" stroke="#8A3FFC" stroke-width="3.5" stroke-linecap="round"></path>
+        </svg>
+        <h3 class="done-title">Tu Raava ha sido creado</h3>
+        <p class="done-subtitle">Puedes iniciarlo cuando quieras.</p>
+        <button id="creator-finish-btn" class="primary-button">Finalizar</button>
+      </div>
+
     </div>
   </div>
 </div>
 </body>
 </html>
-
