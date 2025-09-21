@@ -611,10 +611,8 @@ def delete_chat(chat_id):
     # Solo borrar si pertenece al usuario
     supabase.table("chats").delete().eq("id", chat_id).eq("user_id", user_id).execute()
     return jsonify({"message": "Chat eliminado"})
-
 @app.route("/start_mind", methods=["POST"])
 def start_mind():
-    global cloned_voice_id
     try:
         # --- Autenticación ---
         token = request.headers.get("Authorization", "").replace("Bearer ", "")
@@ -622,49 +620,48 @@ def start_mind():
         if not user_data:
             return jsonify({"error": "No autorizado"}), 401
         user_id = user_data["id"]
+
         # --- Lectura de datos ---
         instruction = request.form.get('instruction', '')
         audio_file = request.files.get('audio_file')
 
-        if not instruction or not audio_file:
-            return jsonify({'error': 'Se requieren instrucción y archivo de voz.'}), 400
+        if not instruction:
+            return jsonify({'error': 'Se requiere una instrucción.'}), 400
 
-        # --- Validar tamaño de archivo ---
-        if audio_file.content_length > MAX_AUDIO_SIZE:
-            return jsonify({"error": "Archivo de audio demasiado grande (máx 2MB)."}), 400      
+        cloned_voice_id = None # Valor por defecto
 
-        if not eleven_labs_api_key or eleven_labs_api_key == "sk_try_only":
-            return jsonify({'error': 'Clave API de Eleven Labs no configurada o inválida.'}), 500
+        # --- Procesar el archivo de voz SOLO si fue enviado ---
+        if audio_file and audio_file.filename != '':
+            if audio_file.content_length > MAX_AUDIO_SIZE:
+                return jsonify({"error": "Archivo de audio demasiado grande (máx 2MB)."}), 400
 
-        # --- Subir archivo a ElevenLabs para clonar voz ---
-        url = "https://api.elevenlabs.io/v1/voices/add"
-        headers = {"xi-api-key": eleven_labs_api_key}
-        data = {
-            "name": f"UserVoice_{user_id}",
-            "description": "Clonada desde muestra de usuario"
-        }
-        files = {
-            'files': (audio_file.filename, audio_file.read(), audio_file.content_type)
-        }
+            if not eleven_labs_api_key or eleven_labs_api_key == "sk_try_only":
+                return jsonify({'error': 'Clave API de Eleven Labs no configurada o inválida.'}), 500
 
-        response = requests.post(url, headers=headers, data=data, files=files)
-        response.raise_for_status()
-        voice_data = response.json()
-        cloned_voice_id = voice_data.get('voice_id')
+            # --- Subir archivo a ElevenLabs para clonar voz ---
+            url = "https://api.elevenlabs.io/v1/voices/add"
+            headers = {"xi-api-key": eleven_labs_api_key}
+            data = {"name": f"UserVoice_{user_id}", "description": "Clonada desde el creador de RaavaX"}
+            files = {'files': (audio_file.filename, audio_file.read(), audio_file.content_type)}
+            
+            response = requests.post(url, headers=headers, data=data, files=files)
+            response.raise_for_status()
+            voice_data = response.json()
+            cloned_voice_id = voice_data.get('voice_id')
 
         # --- Respuesta ---
         return jsonify({
             'message': 'Mente iniciada correctamente.',
-            'voice_id': cloned_voice_id
+            'voice_id': cloned_voice_id # Devolverá el ID o None
         }), 200
 
     except requests.exceptions.RequestException as e:
         print(f"Error al conectar con Eleven Labs: {e}")
         return jsonify({'error': 'Error al procesar la voz.'}), 500
     except Exception as e:
-        print(f"Error inesperado en /start_mind: {e}")
+        import traceback
+        print(f"Error inesperado en /start_mind: {traceback.format_exc()}")
         return jsonify({'error': 'Error interno al iniciar la mente.'}), 500
-
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
     """
