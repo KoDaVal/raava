@@ -1967,3 +1967,23 @@ input:checked + .slider:before {
     animation: spin 1s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* === ESTILOS PARA NUEVOS ELEMENTOS DEL CREADOR === */
+.form-checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+.form-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #8A3FFC;
+}
+.form-checkbox-container label {
+  font-size: 14px;
+  color: var(--quote-color);
+  cursor: pointer;
+}
+.creator-stage-footer {
+  margin-top: 24px;
+}
