@@ -284,6 +284,10 @@
               <h3 class="form-section-title">Nombre del personaje</h3>
               <p class="form-section-description">Ejemplos: Kobe Bryant, Albert Camus, "Mi abuelo José".</p>
               <input type="text" id="form-characterName" placeholder='Ej. "Kobe Bryant"' class="form-input">
+              <div class="form-checkbox-container">
+  <input type="checkbox" id="form-is-public-figure" class="form-checkbox">
+  <label for="form-is-public-figure">Es un personaje público (investigar automáticamente)</label>
+</div>
             </div>
             <div class="form-section">
               <h3 class="form-section-title">Género</h3>
@@ -332,6 +336,9 @@
             <p class="voice-upload-title">Tomando la voz del audio...</p>
             <p class="voice-upload-subtitle">Pronto la escucharás cobrar vida en tu RaavaX</p>
         </div>
+        <div class="creator-stage-footer">
+    <button id="voice-finish-btn" class="primary-button">Finalizar sin Voz</button>
+</div>
       </div>
       <div id="creator-stage-creating" class="creator-stage">
         <div class="spinner"></div>
