@@ -1987,3 +1987,30 @@ input:checked + .slider:before {
 .creator-stage-footer {
   margin-top: 24px;
 }
+/* ===== ESTILO PARA EL SCROLL DEL FORMULARIO DEL CREADOR ===== */
+
+/* Para Firefox */
+.form-scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: var(--link-color) transparent;
+}
+
+/* Para navegadores WebKit (Chrome, Safari, Edge, etc.) */
+.form-scroll-container::-webkit-scrollbar {
+  width: 8px; /* Ancho de la barra de desplazamiento */
+}
+
+.form-scroll-container::-webkit-scrollbar-track {
+  background: transparent; /* Hacemos que el fondo (track) sea invisible */
+}
+
+.form-scroll-container::-webkit-scrollbar-thumb {
+  background-color: var(--link-color); /* Usamos tu variable de color para la "cápsula" */
+  border-radius: 20px; /* Esto le da la forma de cápsula */
+  /* Añadimos un borde del color del fondo del panel para un efecto flotante */
+  border: 2px solid var(--panel-bg); 
+}
+
+.form-scroll-container::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-color); /* Cambia de color al pasar el cursor por encima */
+}
