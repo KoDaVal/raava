@@ -245,6 +245,12 @@ def gpt4o_mini_generate(history, base_instruction):
     tokens_in = sum(len(encoder.encode(m["content"])) for m in messages)
     tokens_out = len(encoder.encode(text))
     return {"text": text, "tokens_in": tokens_in, "tokens_out": tokens_out}
+    
+# ========== ELEVEN LABS ==========
+eleven_labs_api_key = os.getenv("ELEVEN_LABS_API_KEY", "sk_try_only")
+default_eleven_labs_voice_id = "21m00Tcm4TlvDq8ikWAM"
+cloned_voice_id = None
+
 
 # ========== HELPERS ==========
 def api_error(message, status=400):
