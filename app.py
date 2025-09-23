@@ -496,16 +496,13 @@ def chat():
             "- Usa viñetas o numeración únicamente cuando el contenido natural lo requiera (pasos, listas de ideas, pros/contras, resúmenes).\n"
             "- No mantengas un formato solo porque se usó en el turno anterior; elige el que mejor exprese la respuesta actual.\n"
         )
-
-        persistent_instruction = request.form.get('persistent_instruction', '')  # MOD
-        # NUEVO: Sanitizamos persistent_instruction para que SOLO sea identidad/tono.
-        identity_tone = sanitize_persistent_instruction(persistent_instruction)
-        if identity_tone:
-            base_instruction += f"\n\n[Identidad/Tono del personaje (persistente): {identity_tone}]"
-
-        # ELIM: Ya NO insertamos base_instruction como primer 'user' del historial
-        # (antes se hacía insertando base_instruction en conversation_history[0])
-
+        # === Overlay (persistente) SIN sanitizar ===
+        persistent_instruction = request.form.get('persistent_instruction', '')
+        if persistent_instruction:
+            base_instruction += (
+                "\n\nInstrucciones adicionales del usuario (persistentes, prioridad alta):\n"
+                f"{persistent_instruction}"
+            )
         # Adjuntos
         current_user_parts = []
         if user_message:
