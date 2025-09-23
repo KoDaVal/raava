@@ -499,19 +499,9 @@ def chat():
 
         persistent_instruction = request.form.get('persistent_instruction', '')  # MOD
         # NUEVO: Sanitizamos persistent_instruction para que SOLO sea identidad/tono.
+        identity_tone = sanitize_persistent_instruction(persistent_instruction)
         if identity_tone:
-            conversation_history.append({
-                "role": "user",
-                "parts": [{
-                    "text": (
-                        "Instrucción de identidad/tono (persistente):\n"
-                        f"{identity_tone}\n"
-                        "Adopta y mantén esta identidad en PRIMERA PERSONA en todas tus respuestas, "
-                        "hasta que el usuario la cambie o la quite."
-                    )
-                }]
-            })
-
+            base_instruction += f"\n\n[Identidad/Tono del personaje (persistente): {identity_tone}]"
 
         # ELIM: Ya NO insertamos base_instruction como primer 'user' del historial
         # (antes se hacía insertando base_instruction en conversation_history[0])
