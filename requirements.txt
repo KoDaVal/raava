@@ -1,6 +1,6 @@
 Flask
 Flask-Cors
-google-generativeai
+google-generativeai>=0.5.0
 gunicorn
 requests
 stripe
@@ -10,6 +10,7 @@ tiktoken>=0.7.0
 loguru>=0.7.0
 gTTS>=2.5.1
 edge-tts>=6.1,<7
+
 
 
 
