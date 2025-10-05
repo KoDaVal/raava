@@ -559,7 +559,7 @@ def chat():
 
             # NUEVO: crear el modelo por-request con system_instruction
             gemini_model = genai.GenerativeModel(
-                model_name='gemini-1.5-flash-latest',
+                model_name='gemini-1.5-flash',
                 system_instruction=effective_system
             )
 
