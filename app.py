@@ -72,7 +72,7 @@ PLAN_LIMITS = {
         "tokens": 100_000,  # Entrada + salida
         "voice_tokens": 500,  # ~3–4 minutos
         "saved_raavax": 1,
-        "model": "gemini",
+        "model": "llama3-8b",
         "fallback_model": None
     },
     "plus": {  # $18.99/mes
@@ -425,8 +425,12 @@ def chat():
         history_json = request.form.get('history', '[]')
         user_message = request.form.get('message', '')
         uploaded_file = request.files.get('file')
+
+        if profile['plan'] == 'essence' and uploaded_file and uploaded_file.content_type.startswith('image/'):
+            return api_error("La subida de imágenes no está disponible en el plan gratuito.", 403)
+
         persistent_instruction = request.form.get('persistent_instruction', '')
-        chat_id = request.form.get('chat_id') or None  # ID del chat si continuamos uno existente
+        chat_id = request.form.get('chat_id') or None
 
         try:
             conversation_history = json.loads(history_json)
