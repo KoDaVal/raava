@@ -175,6 +175,7 @@ app = Flask(__name__)
 CORS(app)
 
 # ========== MODELOS ==========
+# ==========Gemini 1.5 FLash ==========
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 if not gemini_api_key:
     raise EnvironmentError("Falta la variable de entorno GEMINI_API_KEY")
@@ -184,6 +185,38 @@ gemini_model = genai.GenerativeModel('gemini-1.5-flash')
 from openai import OpenAI
 import tiktoken
 
+# ========== LLAMA 3.8B (OpenRouter) ==========
+from openai import OpenAI as OpenRouterClient
+
+openrouter_client = OpenRouterClient(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url="https://openrouter.ai/api/v1"
+)
+
+def llama38b_generate(history, base_instruction):
+    messages = [{"role": "system", "content": base_instruction}]
+    for msg in history:
+        if msg["role"] in ["user", "assistant"]:
+            messages.append({
+                "role": msg["role"],
+                "content": msg["parts"][0].get("text", "")
+            })
+
+    try:
+        response = openrouter_client.chat.completions.create(
+            model="meta-llama/llama-3-8b-instruct",
+            messages=messages,
+            temperature=0.7
+        )
+        text = response.choices[0].message.content
+        tokens_in = sum(len(m["content"]) // 4 for m in messages)
+        tokens_out = len(text) // 4
+        return {"text": text, "tokens_in": tokens_in, "tokens_out": tokens_out}
+    except Exception as e:
+        print("Error en Llama 3.8B (OpenRouter):", e)
+        return {"text": "Error generando respuesta con Llama 3.8B (OpenRouter).", "tokens_in": 0, "tokens_out": 0}
+
+# ========== GPT 4o_mini==========
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 encoder = tiktoken.encoding_for_model("gpt-4o-mini")
 
@@ -519,6 +552,13 @@ def chat():
                 for m in conversation_history if 'parts' in m
             )
             tokens_out = len(response_message) // 4
+
+        elif plan_model == "llama3-8b":
+            llama_response = llama38b_generate(conversation_history, base_instruction)
+            response_message = llama_response["text"]
+            tokens_in = llama_response["tokens_in"]
+            tokens_out = llama_response["tokens_out"]
+
         else:
             gpt_response = gpt4o_mini_generate(conversation_history, base_instruction)
             response_message = gpt_response["text"]
