@@ -20,7 +20,7 @@ const { data: profile } = await supabaseClient
   .single();
 
 if (!profile || !profile.accepted_terms) {
-  window.location.href = "/terms.html";
+  window.location.href = "/terms";
   return;
 }
     let redirectTo = localStorage.getItem('oauth_redirect') || '/';
