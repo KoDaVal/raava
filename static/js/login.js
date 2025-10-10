@@ -12,6 +12,17 @@ if (urlRedirect) {
 (async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (data.session) {
+    const user = data.session.user;
+const { data: profile } = await supabaseClient
+  .from('profiles')
+  .select('accepted_terms')
+  .eq('id', user.id)
+  .single();
+
+if (!profile || !profile.accepted_terms) {
+  window.location.href = "/terms.html";
+  return;
+}
     let redirectTo = localStorage.getItem('oauth_redirect') || '/';
     if (redirectTo && redirectTo !== 'undefined' && redirectTo !== 'null') {
       try { redirectTo = decodeURIComponent(redirectTo); } catch (e) { redirectTo = '/'; }
