@@ -1035,6 +1035,9 @@ def check_email():
     except Exception as e:
         print("Error en /check_email:", e)
         return api_error("Error verificando el correo.", 500)
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
 @app.route('/cancel_subscription', methods=['POST'])
 def cancel_subscription():
     try:
