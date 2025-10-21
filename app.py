@@ -1,5 +1,12 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
+allowed_origins = [
+    "https://*.humancores.com",
+    "https://raavax.humancores.com",
+    "https://raavax.framer.website", 
+    "http://localhost:3000", # Para pruebas locales
+    "http://127.0.0.1:5000" # Para pruebas locales
+]
 import os
 import stripe
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
@@ -17,7 +24,12 @@ MAX_AUDIO_SIZE = 2 * 1024 * 1024  # 2 MB
 MAILERSEND_API_KEY = os.getenv("MAILERSEND_API_KEY")
 EMAIL_FROM = os.getenv("EMAIL_FROM", "no-reply@humancores.com")
 EMAIL_FROM_NAME = os.getenv("EMAIL_FROM_NAME", "RaavaX")
+# ========== FLASK ==========
+app = Flask(__name__)
 
+# Configura CORS para usar la lista blanca de orígenes
+# Nota: La librería flask-cors maneja la lógica de comodín (*.) para subdominios.
+CORS(app, resources={r"/*": {"origins": allowed_origins, "supports_credentials": True}})
 import re
 
 def is_strong_password(password):
