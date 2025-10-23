@@ -16,6 +16,14 @@ import json
 import requests
 import asyncio
 import edge_tts
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+logger = logging.getLogger("raavax")
+
 from io import BytesIO
 import random
 from datetime import date, datetime, timedelta, timezone
@@ -52,8 +60,8 @@ def send_mailersend_email(to_email, subject, html_content):
     response = requests.post(url, headers=headers, json=payload)
 
     # ==== LOGS PARA DEPURAR ====
-    print(f"[MAILERSEND DEBUG] Status: {response.status_code}")
-    print(f"[MAILERSEND DEBUG] Response: {response.text}")
+    logger.debug("[MAILERSEND DEBUG] Status: %s", response.status_code)
+    logger.debug("[MAILERSEND DEBUG] Response: %s", response.text)
     # ===========================
     
     response.raise_for_status()
@@ -74,7 +82,7 @@ def verify_token(token):
             return r.json()
         return None
     except Exception as e:
-        print("Error verificando token:", e)
+        logger.error("Error verificando token: %s", e)
         return None
 
 
@@ -178,7 +186,7 @@ def reset_monthly_usage(profile, user_id):
         return profile
 
     except Exception as e:
-        print("Error en reset_monthly_usage:", e)
+        logger.error("Error en reset_monthly_usage: %s", e)
         return profile
 
 def check_plan_limits(profile):
@@ -216,7 +224,7 @@ def get_user_by_email_admin(email):
     }
     try:
         r = requests.get(url, headers=headers)
-        print(f"[DEBUG] Respuesta Admin Supabase ({email}): {r.status_code} - {r.text}")  # Log para depurar
+        logger.debug("[DEBUG] Respuesta Admin Supabase (%s): %s - %s", email, r.status_code, r.text)  # Log para depurar
         if r.status_code != 200:
             return None
         data = r.json()
@@ -225,7 +233,7 @@ def get_user_by_email_admin(email):
             return users[0]  # Primer usuario encontrado
         return None
     except Exception as e:
-        print(f"Error en get_user_by_email_admin: {e}")
+        logger.error("Error en get_user_by_email_admin: %s", e)
         return None
 
 # ========== MODELOS ==========
@@ -373,7 +381,7 @@ def request_password_code():
         # Enviar correo
         try:
             if not MAILERSEND_API_KEY:
-                print("⚠️ MAILERSEND_API_KEY no configurada. No se envió correo.")
+                logger.warning("MAILERSEND_API_KEY no configurada. No se envió correo.")
             else:
                 send_mailersend_email(
                     email,
@@ -387,14 +395,14 @@ def request_password_code():
                     """
                 )
         except Exception as e:
-            print("Error enviando correo:", e)
+            logger.error("Error enviando correo: %s", e)
             return jsonify({'message': 'Código generado, pero no se pudo enviar el correo.'}), 200
 
         return jsonify({'message': 'Código enviado'}), 200
 
     except Exception as e:
         import traceback
-        print("Error inesperado en /request_password_code:", traceback.format_exc())
+        logger.exception("Error inesperado en /request_password_code")
         return api_error("Error interno al generar el código.", 500)
 
 @app.route('/reset_password_with_code', methods=['POST'])
@@ -437,7 +445,7 @@ def reset_password_with_code():
         }
         r = requests.put(url, headers=headers, json={"password": new_password})
         if r.status_code != 200:
-            print(f"Error al actualizar contraseña: {r.status_code} - {r.text}")
+            logger.error("Error al actualizar contraseña: %s - %s", r.status_code, r.text)
             return api_error("Error al cambiar la contraseña.", 500)
 
         # Borrar OTP
@@ -447,7 +455,7 @@ def reset_password_with_code():
 
     except Exception as e:
         import traceback
-        print("Error inesperado en /reset_password_with_code:", traceback.format_exc())
+        logger.exception("Error inesperado en /reset_password_with_code")
         return api_error("Error interno al cambiar la contraseña.", 500)
 @app.route("/create_checkout_session", methods=["POST"])
 def create_checkout_session():
@@ -486,7 +494,7 @@ def create_checkout_session():
         )
         return jsonify({"url": session.url})
     except Exception as e:
-        print("Error creando sesión:", e)
+        logger.error("Error creando sesión: %s", e)
         return api_error("Error interno", 500)
 # ========== RUTAS ==========
 @app.route('/')
