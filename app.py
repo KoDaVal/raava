@@ -134,17 +134,63 @@ def get_user_profile(user_id, email=None):
     return profile
 
 def reset_monthly_usage(profile, user_id):
-    if profile["tokens_reset_date"] < date.today().replace(day=1).isoformat():
-        supabase.table("profiles").update({
-            "tokens_used": 0,
-            "voice_tokens_used": 0,
-            "tokens_reset_date": date.today().isoformat()
-        }).eq("id", user_id).execute()
-        profile["tokens_used"] = 0
-        profile["voice_tokens_used"] = 0
-    return profile
+    """
+    Reinicia tokens según la fecha real de renovación Stripe.
+    Si no hay fecha de renovación (usuarios essence o antiguos),
+    mantiene la lógica mensual estándar.
+    """
+    try:
+        today = datetime.now(timezone.utc)
+        renewal_date_str = profile.get("subscription_renewal")
+
+        if renewal_date_str:
+            renewal_date = datetime.fromisoformat(renewal_date_str)
+            # Si ya pasó la fecha de renovación → reinicia contadores
+            if today >= renewal_date:
+                # Define la nueva fecha de renovación (30 días después)
+                new_renewal = renewal_date + timedelta(days=30)
+
+                supabase.table("profiles").update({
+                    "tokens_used": 0,
+                    "voice_tokens_used": 0,
+                    "tokens_reset_date": today.isoformat(),
+                    "subscription_renewal": new_renewal.isoformat()
+                }).eq("id", user_id).execute()
+
+                # Actualiza el perfil en memoria
+                profile["tokens_used"] = 0
+                profile["voice_tokens_used"] = 0
+                profile["tokens_reset_date"] = today.isoformat()
+                profile["subscription_renewal"] = new_renewal.isoformat()
+
+        else:
+            # Si no hay fecha de renovación, usar la lógica vieja mensual
+            if profile["tokens_reset_date"] < date.today().replace(day=1).isoformat():
+                supabase.table("profiles").update({
+                    "tokens_used": 0,
+                    "voice_tokens_used": 0,
+                    "tokens_reset_date": date.today().isoformat()
+                }).eq("id", user_id).execute()
+
+                profile["tokens_used"] = 0
+                profile["voice_tokens_used"] = 0
+
+        return profile
+
+    except Exception as e:
+        print("Error en reset_monthly_usage:", e)
+        return profile
 
 def check_plan_limits(profile):
+    """
+    Verifica si el usuario aún tiene tokens y si su suscripción está activa.
+    """
+    # Verificar si la suscripción está vencida
+    renewal_date_str = profile.get("subscription_renewal")
+    if renewal_date_str:
+        renewal_date = datetime.fromisoformat(renewal_date_str)
+        if datetime.now(timezone.utc) > renewal_date:
+            raise Exception("Tu suscripción ha expirado. Renueva tu plan para continuar usando RaavaX.")
     plan = profile["plan"]
     limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["essence"])
     if limits["tokens"] is not None and profile["tokens_used"] >= limits["tokens"]:
