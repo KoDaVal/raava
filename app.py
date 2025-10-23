@@ -228,10 +228,6 @@ def get_user_by_email_admin(email):
         print(f"Error en get_user_by_email_admin: {e}")
         return None
 
-# ========== FLASK ==========
-app = Flask(__name__)
-CORS(app)
-
 # ========== MODELOS ==========
 # ==========Gemini 1.5 FLash ==========
 gemini_api_key = os.getenv("GEMINI_API_KEY")
