@@ -945,14 +945,15 @@ def stripe_webhook():
     data = event["data"]["object"]
     print(f"[STRIPE] Evento recibido: {event_type}")
 
-    # Mapeo de planes (mensual y anual → mismo plan lógico)
+    # Mapeo coherente de planes
     plan_mapping = {
-        "plus_monthly": "Plus",
-        "plus_yearly": "Plus",
-        "legacy_monthly": "Legacy",
-        "legacy_yearly": "Legacy"
+        "plus_monthly": "plus",
+        "plus_yearly": "plus",
+        "legacy_monthly": "legacy",
+        "legacy_yearly": "legacy"
     }
 
+    # === PAGO EXITOSO ===
     if event_type == "checkout.session.completed":
         user_id = data.get("metadata", {}).get("user_id")
         plan = data.get("metadata", {}).get("plan")
@@ -975,7 +976,7 @@ def stripe_webhook():
             print("[STRIPE] No se pudo encontrar user_id. Abortando.")
             return jsonify({"status": "ignored"})
 
-        # Obtener fecha de renovación desde la suscripción
+        # Obtener fecha de renovación y subscription_id
         subscription_id = data.get("subscription")
         renewal_date = None
         if subscription_id:
@@ -987,7 +988,8 @@ def stripe_webhook():
         # Actualizar perfil en Supabase
         update_data = {
             "plan": final_plan,
-            "stripe_customer_id": customer_id
+            "stripe_customer_id": customer_id,
+            "stripe_subscription_id": subscription_id,
         }
         if renewal_date:
             update_data["subscription_renewal"] = renewal_date
@@ -995,29 +997,35 @@ def stripe_webhook():
         supabase.table("profiles").update(update_data).eq("id", user_id).execute()
         print(f"[STRIPE] Plan actualizado para {user_id}: {final_plan}")
 
+    # === PAGO FALLIDO ===
     elif event_type == "invoice.payment_failed":
         customer_id = data.get("customer")
-
-        if not customer_id:
-            print("[STRIPE] invoice.payment_failed sin customer_id")
-        else:
-            # Reestablecer a 'essence' si el pago falla
+        if customer_id:
             supabase.table("profiles").update({
                 "plan": "essence",
-                "subscription_renewal": None
+                "subscription_renewal": None,
+                "tokens_used": 0,
+                "voice_tokens_used": 0
             }).eq("stripe_customer_id", customer_id).execute()
             print(f"[STRIPE] Pago fallido. Cliente {customer_id} cambiado a plan essence.")
 
+    # === CAMBIO DE ESTADO (CANCELACIÓN / EXPIRACIÓN) ===
     elif event_type == "customer.subscription.updated":
         customer_id = data.get("customer")
         status = data.get("status")
         print(f"[STRIPE] Suscripción {customer_id} estado: {status}")
 
         if status in ["canceled", "unpaid", "incomplete", "incomplete_expired"]:
-            supabase.table("profiles").update({"plan": "essence"}).eq("stripe_customer_id", customer_id).execute()
-            print(f"[STRIPE] Suscripción cancelada. Cliente {customer_id} vuelto a essence.")
+            supabase.table("profiles").update({
+                "plan": "essence",
+                "subscription_renewal": None,
+                "tokens_used": 0,
+                "voice_tokens_used": 0
+            }).eq("stripe_customer_id", customer_id).execute()
+            print(f"[STRIPE] Suscripción cancelada. Cliente {customer_id} degradado a essence y uso reiniciado.")
 
     return jsonify({"status": "success"})
+
     
 @app.route('/load_chat/<chat_id>', methods=['GET'])
 def load_chat(chat_id):
@@ -1123,3 +1131,41 @@ def cancel_subscription():
     except Exception as e:
         print("Error cancelando suscripción:", e)
         return api_error("Error al cancelar suscripción", 500)
+@app.route('/cron/verify_subscriptions', methods=['GET'])
+def verify_subscriptions():
+    """
+    Verifica manualmente si alguna suscripción venció y no fue degradada.
+    Útil como respaldo si Stripe no envía el webhook.
+    """
+    try:
+        today = datetime.now(timezone.utc)
+        res = supabase.table("profiles").select("id,plan,subscription_renewal").execute()
+        if not res.data:
+            return jsonify({"message": "No hay perfiles para verificar."}), 200
+
+        expired_users = []
+        for user in res.data:
+            renewal_date_str = user.get("subscription_renewal")
+            if renewal_date_str:
+                try:
+                    renewal_date = datetime.fromisoformat(renewal_date_str)
+                    if today > renewal_date and user["plan"] != "essence":
+                        supabase.table("profiles").update({
+                            "plan": "essence",
+                            "subscription_renewal": None,
+                            "tokens_used": 0,
+                            "voice_tokens_used": 0
+                        }).eq("id", user["id"]).execute()
+                        expired_users.append(user["id"])
+                except Exception as fe:
+                    print(f"[VERIFY] Error analizando fecha para usuario {user['id']}: {fe}")
+
+        return jsonify({
+            "message": "Verificación completada",
+            "expired_users": expired_users
+        }), 200
+
+    except Exception as e:
+        print("Error en verify_subscriptions:", e)
+        return jsonify({"error": "Error verificando suscripciones."}), 500
+
