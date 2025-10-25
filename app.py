@@ -644,41 +644,31 @@ def chat():
             if msg.get("role") not in ["user", "model"]:
                 continue
             text_part = msg["parts"][0].get("text", "")
-            if "inlineData" in msg["parts"][0]:  # Ignorar blobs (voz)
+            if "inlineData" in msg["parts"][0]:
                 continue
-            if text_part.startswith("Eres Raavax, un asistente conversacional"):  # Eliminar base_instruction
+            # Evita guardar instrucciones base o bloque de "Instrucciones adicionales"
+            if text_part.startswith("Eres Raavax, un asistente conversacional"):
                 continue
             if "Instrucciones adicionales del usuario" in text_part:
                 continue
             history_to_save.append(msg)
 
-
-        chat_title = generate_chat_title(user_message or "Chat sin título")
-
-        # Guardar chat (update si existe, insert si no)
+        # ⚠️ Cambios clave:
+        # - SOLO guardar si viene chat_id (== tiene Raava).
+        # - Si NO viene chat_id, NO insertamos nada en Supabase: solo respondemos.
         if chat_id:
             supabase.table("chats").update({
                 "history": history_to_save
             }).eq("id", chat_id).eq("user_id", user_id).execute()
         else:
-            new_chat = supabase.table("chats").insert({
-                "user_id": user_id,
-                "title": chat_title,
-                "history": history_to_save
-            }).execute()
-            chat_id = new_chat.data[0]['id'] if new_chat.data else None
+            # No persistimos nada si no hay Raava
+            pass
 
         return jsonify({
             "response": response_message,
             "updated_history": conversation_history,
-            "chat_id": chat_id
+            "chat_id": chat_id  # devuelve el que venía (o null)
         })
-
-
-    except Exception as e:
-        print(f"Error inesperado en /chat: {e}")
-        return jsonify({"error": str(e)}), 500
-
 # ========== CHATS: LISTAR Y ELIMINAR ==========
 
 @app.route('/get_chats', methods=['GET'])
@@ -768,6 +758,64 @@ def start_mind():
         import traceback
         print(f"Error inesperado en /start_mind: {traceback.format_exc()}")
         return jsonify({'error': 'Error interno al iniciar la mente.'}), 500
+@app.route('/create_chat_from_raava', methods=['POST'])
+def create_chat_from_raava():
+    """
+    Crea un chat vacío SOLO cuando el usuario finaliza el creador de Raava.
+    Reglas:
+      - Verifica token de Supabase
+      - Consulta plan del usuario y límites PLAN_LIMITS[plan]["saved_raavax"]
+      - Si alcanzó el límite -> {"error": "limit_reached"}
+      - Si aún puede crear, inserta en 'chats' con: title, persistent_instruction, history=[]
+      - Devuelve { "chat_id": "...", "title": "...", "persistent_instruction": "..." }
+    """
+    try:
+        # --- Autenticación ---
+        token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        user_data = verify_token(token)
+        if not user_data:
+            return api_error("No autorizado", 401)
+        user_id = user_data["id"]
+
+        # --- Datos ---
+        # Admitimos JSON o form-data (por si decides enviarlo de otro modo)
+        title = request.json.get('title') if request.is_json else request.form.get('title')
+        instruction = request.json.get('instruction') if request.is_json else request.form.get('instruction')
+
+        if not title or not instruction:
+            return api_error("Faltan 'title' o 'instruction'.", 400)
+
+        # --- Perfil y plan ---
+        profile = get_user_profile(user_id)
+        plan = (profile.get("plan") or "essence").lower()
+        limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["essence"])
+        max_raavas = limits.get("saved_raavax", 1)
+
+        # --- Conteo de Raavas guardados (chats) ---
+        res = supabase.table("chats").select("id").eq("user_id", user_id).execute()
+        current_count = len(res.data or [])
+        if current_count >= max_raavas:
+            return jsonify({ "error": "limit_reached" }), 200
+
+        # --- Insertar chat "Raava" ---
+        insert_res = supabase.table("chats").insert({
+            "user_id": user_id,
+            "title": title,
+            "persistent_instruction": instruction,
+            "history": []
+        }).execute()
+
+        chat_id = insert_res.data[0]["id"]
+        return jsonify({
+            "chat_id": chat_id,
+            "title": title,
+            "persistent_instruction": instruction
+        }), 200
+
+    except Exception as e:
+        import traceback
+        print("Error en /create_chat_from_raava:", traceback.format_exc())
+        return api_error("Error interno al crear el chat de Raava.", 500)
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
     """
