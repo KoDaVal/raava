@@ -298,44 +298,101 @@ Estas directrices anulan cualquier otra instrucción si entran en conflicto.
       
       return finalPrompt;
   }
+// 🔹 Muestra mensajes de error o límite dentro del overlay del creador
+function showCreatorError(message) {
+  const container = document.querySelector('.raava-creation-content .creator-header');
+  if (!container) { alert(message); return; }
 
-  async function finalizeRaavaCreation() {
-      showCreatorStage('creator-stage-creating');
-      const finalPrompt = generatePrompt();
-      activePersistentInstruction = finalPrompt; 
-      
-      const formData = new FormData();
-      formData.append('instruction', finalPrompt);
-
-      if (creatorVoiceFile) {
-          formData.append('audio_file', creatorVoiceFile);
-      }
-      
-      try {
-          const { data: { session } } = await supabaseClient.auth.getSession();
-          const token = session?.access_token;
-          if (!token) throw new Error("No hay sesión activa.");
-
-          const response = await fetch('/start_mind', {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${token}` },
-              body: formData
-          });
-
-          if (!response.ok) throw new Error(`Error del servidor: ${response.statusText}`);
-          
-          const data = await response.json();
-          clonedVoiceId = data.voice_id;
-
-          showCreatorStage('creator-stage-done');
-          
-      } catch (error) {
-          console.error("Error al crear Raava:", error);
-          alert("Hubo un error al crear tu Raava. Inténtalo de nuevo.");
-          showCreatorStage('creator-stage-voice');
-      }
+  let banner = document.getElementById('creator-error-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'creator-error-banner';
+    banner.style.cssText = `
+      margin-top:8px;
+      background:#2c1b2f;
+      color:#ffb1c9;
+      border:1px solid #ff4da6;
+      padding:10px 12px;
+      border-radius:8px;
+      font-size:14px;
+    `;
+    container.appendChild(banner);
   }
+  banner.textContent = message;
+}
+// 🔹 Nueva versión de finalizeRaavaCreation
+async function finalizeRaavaCreation() {
+  showCreatorStage('creator-stage-creating');
 
+  // 1️⃣ Generar prompt final (personalidad del Raava)
+  const finalPrompt = generatePrompt();
+  activePersistentInstruction = finalPrompt;
+
+  // 2️⃣ Preparar formData para /start_mind
+  const formData = new FormData();
+  formData.append('instruction', finalPrompt);
+  if (creatorVoiceFile) formData.append('audio_file', creatorVoiceFile);
+
+  try {
+    // 🔐 Obtener sesión
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const token = session?.access_token;
+    if (!token) throw new Error("No hay sesión activa.");
+
+    // 3️⃣ Clonar voz (si aplica)
+    const startMindRes = await fetch('/start_mind', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    });
+
+    if (!startMindRes.ok) throw new Error(`Error en /start_mind: ${startMindRes.statusText}`);
+    const startMindData = await startMindRes.json();
+    clonedVoiceId = startMindData.voice_id || null;
+
+    // 4️⃣ Crear chat vacío en Supabase
+    const title = (raavaFormData.characterName || '').trim() || 'Raava sin título';
+    const createRes = await fetch('/create_chat_from_raava', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        title,
+        instruction: finalPrompt
+      })
+    });
+
+    const createData = await createRes.json();
+
+    // 🚫 Límite alcanzado
+    if (createData?.error === 'limit_reached') {
+      showCreatorError("Has llegado al límite de Raavas de tu plan. Por favor elimina uno para continuar.");
+      showCreatorStage('creator-stage-form');
+      return;
+    }
+
+    if (!createRes.ok) throw new Error(createData?.error || 'Error creando chat.');
+
+    // ✅ Todo bien: guardamos el chat_id y limpiamos pantalla
+    currentChatId = createData.chat_id;
+    messagesContainer.innerHTML = '';
+    conversationHistory = [];
+    if (welcomeScreen) {
+      welcomeScreen.classList.remove('hidden');
+      welcomeScreen.style.display = 'flex';
+    }
+
+    // 5️⃣ Mostrar pantalla final
+    showCreatorStage('creator-stage-done');
+
+  } catch (error) {
+    console.error("Error al crear Raava:", error);
+    showCreatorError("Hubo un error al crear tu Raava. Inténtalo de nuevo.");
+    showCreatorStage('creator-stage-voice');
+  }
+}
   if (createRaavaMenuBtn) {
       createRaavaMenuBtn.addEventListener('click', () => {
           creatorOverlay.classList.add('active');
