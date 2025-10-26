@@ -669,6 +669,11 @@ def chat():
             "updated_history": conversation_history,
             "chat_id": chat_id  # devuelve el que venía (o null)
         })
+    except Exception as e:
+        import traceback
+        logger.exception("Error inesperado en /chat")
+        return api_error("Error interno en /chat.", 500)
+
 # ========== CHATS: LISTAR Y ELIMINAR ==========
 
 @app.route('/get_chats', methods=['GET'])
