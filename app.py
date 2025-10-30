@@ -457,6 +457,28 @@ def reset_password_with_code():
         import traceback
         logger.exception("Error inesperado en /reset_password_with_code")
         return api_error("Error interno al cambiar la contraseña.", 500)
+@app.route("/create_billing_portal_session", methods=["POST"])
+def create_billing_portal_session():
+    try:
+        token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        user_data = verify_token(token)
+        if not user_data:
+            return api_error("No autorizado", 401)
+        user_id = user_data["id"]
+
+        profile = get_user_profile(user_id)
+        customer_id = profile.get("stripe_customer_id")
+        if not customer_id:
+            return api_error("No tienes una suscripción activa.", 400)
+
+        session = stripe.billing_portal.Session.create(
+            customer=customer_id,
+            return_url="https://raavax.humancores.com/settings"  # o donde tengas tu panel de usuario
+        )
+        return jsonify({"url": session.url})
+    except Exception as e:
+        logger.error("Error creando portal de facturación: %s", e)
+        return api_error("Error interno al crear el portal de facturación.", 500)
 @app.route("/create_checkout_session", methods=["POST"])
 def create_checkout_session():
     try:
@@ -992,6 +1014,7 @@ def stripe_webhook():
     payload = request.data
     sig_header = request.headers.get("Stripe-Signature")
     webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
     except stripe.error.SignatureVerificationError:
@@ -1010,7 +1033,7 @@ def stripe_webhook():
         "legacy_yearly": "legacy"
     }
 
-    # === PAGO EXITOSO ===
+    # === PAGO EXITOSO (Nueva suscripción) ===
     if event_type == "checkout.session.completed":
         user_id = data.get("metadata", {}).get("user_id")
         plan = data.get("metadata", {}).get("plan")
@@ -1054,6 +1077,25 @@ def stripe_webhook():
         supabase.table("profiles").update(update_data).eq("id", user_id).execute()
         print(f"[STRIPE] Plan actualizado para {user_id}: {final_plan}")
 
+    # === RENOVACIÓN EXITOSA ===
+    elif event_type == "invoice.paid":
+        customer_id = data.get("customer")
+        subscription_id = data.get("subscription")
+        if not customer_id or not subscription_id:
+            return jsonify({"status": "ignored"})
+
+        try:
+            sub = stripe.Subscription.retrieve(subscription_id)
+            if sub and sub.get("current_period_end"):
+                renewal_ts = sub["current_period_end"]
+                renewal_date = datetime.fromtimestamp(renewal_ts, tz=timezone.utc).isoformat()
+                supabase.table("profiles").update({
+                    "subscription_renewal": renewal_date
+                }).eq("stripe_customer_id", customer_id).execute()
+                print(f"[STRIPE] Renovación actualizada para {customer_id} -> {renewal_date}")
+        except Exception as e:
+            print(f"[STRIPE] Error al actualizar renovación: {e}")
+
     # === PAGO FALLIDO ===
     elif event_type == "invoice.payment_failed":
         customer_id = data.get("customer")
@@ -1066,7 +1108,7 @@ def stripe_webhook():
             }).eq("stripe_customer_id", customer_id).execute()
             print(f"[STRIPE] Pago fallido. Cliente {customer_id} cambiado a plan essence.")
 
-    # === CAMBIO DE ESTADO (CANCELACIÓN / EXPIRACIÓN) ===
+    # === CAMBIO DE ESTADO / CANCELACIÓN ===
     elif event_type == "customer.subscription.updated":
         customer_id = data.get("customer")
         status = data.get("status")
