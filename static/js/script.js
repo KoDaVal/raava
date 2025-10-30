@@ -78,8 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const accountAvatarInput = document.getElementById('account-avatar-input');
   const accountPlan = document.getElementById('account-plan');
   const accountExpiry = document.getElementById('account-expiry');
-  const cancelPlanBtn = document.getElementById('cancel-plan-btn');
-
+ 
   const startMindButtons = [
     document.getElementById('start-mind-button'),
     document.getElementById('start-mind-button-mobile')
@@ -1259,17 +1258,6 @@ async function finalizeRaavaCreation() {
       document.getElementById('header-profile-pic').src = publicUrl;
   });
 
-  cancelPlanBtn.addEventListener('click', async () => {
-      if (!confirm('¿Seguro que deseas cancelar tu plan?')) return;
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) return;
-      await fetch('/cancel_subscription', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${session.access_token}` }
-      });
-      alert('Tu plan ha sido cancelado.');
-      loadAccountData();
-  });
 
   document.getElementById('logout-option')?.addEventListener('click', async () => {
       await supabaseClient.auth.signOut();
