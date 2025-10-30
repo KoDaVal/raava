@@ -1273,7 +1273,6 @@ async function finalizeRaavaCreation() {
           'Sin fecha';
       const accountEmail = document.getElementById('account-email');
       if (accountEmail) accountEmail.value = user.email || 'Sin correo';
-      cancelPlanBtn.disabled = (profile?.plan || 'essence') === 'essence';
   }
 
   accountAvatarBtn.addEventListener('click', () => accountAvatarInput.click());
