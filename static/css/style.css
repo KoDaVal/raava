@@ -1433,10 +1433,10 @@ input:checked + .slider:before {
   flex-wrap: wrap;
 }
 
-.cancel-btn {
+.account-btn {
   background: transparent;
-  border: 2px solid #d9534f;
-  color: #d9534f;
+  border: 2px solid var(--accent-color, #5EF38C);
+  color: var(--accent-color, #5EF38C);
   padding: 10px 24px;
   border-radius: 999px;
   font-weight: 500;
@@ -1444,9 +1444,9 @@ input:checked + .slider:before {
   transition: all 0.3s;
 }
 
-.cancel-btn:hover {
-  background-color: #d9534f;
-  color: white;
+.account-btn:hover {
+  background-color: var(--accent-color, #5EF38C);
+  color: #000;
 }
 
 .logout-btn {
