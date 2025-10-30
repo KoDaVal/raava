@@ -1,3 +1,36 @@
+// ════════════════════════ STRIPE BILLING PORTAL ════════════════════════
+const manageBillingBtn = document.getElementById("manage-billing-btn");
+if (manageBillingBtn) {
+  manageBillingBtn.addEventListener("click", openBillingPortal);
+}
+
+async function openBillingPortal() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    alert("Debes iniciar sesión para administrar tu suscripción.");
+    return;
+  }
+
+  try {
+    const res = await fetch("/create_billing_portal_session", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${session.access_token}` }
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.url) {
+      alert("No se pudo abrir el portal de facturación.");
+      console.error(data);
+      return;
+    }
+
+    // Redirige al portal oficial de Stripe
+    window.location.href = data.url;
+  } catch (error) {
+    console.error("Error abriendo portal:", error);
+    alert("Error al abrir el portal de facturación.");
+  }
+}
 // ═══════════════ Supabase Setup ═══════════════
 const SUPABASE_URL     = 'https://awzyyjifxlklzbnvvlfv.supabase.co';
 const SUPABASE_ANON_KEY= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3enl5amlmeGxrbHpibnZ2bGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDk4MDAsImV4cCI6MjA2ODUyNTgwMH0.qx0UsdkXR5vg0ZJ1ClB__Xc1zI10fkA8Tw1V-n0miT8';
@@ -1268,5 +1301,38 @@ async function finalizeRaavaCreation() {
       await supabaseClient.auth.signOut();
       location.reload();
   });
+// ════════════════════════ STRIPE BILLING PORTAL ════════════════════════
+const manageBillingBtn = document.getElementById("manage-billing-btn");
+if (manageBillingBtn) {
+  manageBillingBtn.addEventListener("click", openBillingPortal);
+}
+
+async function openBillingPortal() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    alert("Debes iniciar sesión para administrar tu suscripción.");
+    return;
+  }
+
+  try {
+    const res = await fetch("/create_billing_portal_session", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${session.access_token}` }
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.url) {
+      alert("No se pudo abrir el portal de facturación.");
+      console.error(data);
+      return;
+    }
+
+    // Redirige al portal oficial de Stripe
+    window.location.href = data.url;
+  } catch (error) {
+    console.error("Error abriendo portal:", error);
+    alert("Error al abrir el portal de facturación.");
+  }
+}
 
 });
